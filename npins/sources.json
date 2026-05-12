@@ -18,6 +18,19 @@
       "name": "nixpkgs-unstable",
       "url": "https://releases.nixos.org/nixpkgs/nixpkgs-26.05pre996447.0a0bf409f359/nixexprs.tar.xz",
       "hash": "sha256-0hmdfQTKUIqUzAYvNiOmoxIwm1hqBl9U6l7s1N3HaoI="
+    },
+    "wrappers": {
+      "type": "Git",
+      "repository": {
+        "type": "GitHub",
+        "owner": "Lassulus",
+        "repo": "wrappers"
+      },
+      "branch": "main",
+      "submodules": false,
+      "revision": "7e4f77dd0afe3453cc41bdb91513784e9ff50d8a",
+      "url": "https://github.com/Lassulus/wrappers/archive/7e4f77dd0afe3453cc41bdb91513784e9ff50d8a.tar.gz",
+      "hash": "sha256-2tDw4bqspsxLevqOOGjK7u5igHYGQDBWqfSoQYFRT6A="
     }
   },
   "version": 7

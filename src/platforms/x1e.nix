@@ -1,5 +1,5 @@
 {
   platforms.x1e = {
-    environment.persistence."/persist" = {};
+    environment.persistence."/persist" = { };
   };
 }

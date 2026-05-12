@@ -1,43 +1,47 @@
-{ config, lib, sources, ... }:
+{
+  config,
+  lib,
+  sources,
+  ...
+}:
 {
   options = {
     systems = lib.mkOption {
-    type = lib.types.attrsOf (
-      lib.types.submodule (
-        let
-          inherit (config._systems) defaultModules;
-        in
-        {
-          config,
-          options,
-          name,
-          ...
-        }:
-        {
-          options = {
-            config = lib.mkOption {
-              type = lib.mkOptionType {
-                name = "Toplevel NixOS config";
-                merge =
-                  loc: defs:
+      type = lib.types.attrsOf (
+        lib.types.submodule (
+          let
+            inherit (config._systems) defaultModules;
+          in
+          { config, ... }:
+          {
+            options = {
+              config = lib.mkOption {
+                type = lib.mkOptionType {
+                  name = "Toplevel NixOS config";
+                };
+                readOnly = true;
+                default =
                   (import "${config.nixpkgs}/nixos/lib/eval-config.nix" {
-                    modules = defaultModules ++ map (x: x.value) defs;
+                    inherit (config) modules;
                   }).config;
               };
+              modules = lib.mkOption {
+                type = lib.types.listOf lib.types.deferredModule;
+              };
+              nixpkgs = lib.mkOption {
+                type = lib.types.path;
+                default = sources.nixpkgs;
+              };
             };
-            nixpkgs = lib.mkOption {
-              type = lib.types.path;
-              default = sources.nixpkgs;
-            };
-          };
-        }
-      )
-    );
-    default = { };
+            config.modules = defaultModules;
+          }
+        )
+      );
+      default = { };
+    };
+    _systems.defaultModules = lib.mkOption {
+      type = lib.types.listOf lib.types.deferredModule;
+      default = [ ];
+    };
   };
-  _systems.defaultModules = lib.mkOption {
-    type = lib.types.listOf lib.types.deferredModule;
-    default = [];
-  };
-};
 }
