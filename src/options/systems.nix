@@ -25,6 +25,16 @@
                     inherit (config) modules;
                   }).config;
               };
+              options = lib.mkOption {
+                type = lib.mkOptionType {
+                  name = "Toplevel NixOS config";
+                };
+                readOnly = true;
+                default =
+                  (import "${config.nixpkgs}/nixos/lib/eval-config.nix" {
+                    inherit (config) modules;
+                  }).options;
+              };
               modules = lib.mkOption {
                 type = lib.types.listOf lib.types.deferredModule;
               };
