@@ -6,7 +6,7 @@
     QEMU_OPTS="''${QEMU_OPTS:+$QEMU_OPTS }"'-virtfs local,path='"$secrets"',security_model=mapped-xattr,mount_tag=secrets'
     export QEMU_OPTS
   '';
-  nixosModules.vmVariant =
+  nixosModules.vm-variant =
     { config, lib, ... }:
     lib.mkMerge [
       {
