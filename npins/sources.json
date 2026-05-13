@@ -1,5 +1,18 @@
 {
   "pins": {
+    "cake": {
+      "type": "Git",
+      "repository": {
+        "type": "GitHub",
+        "owner": "aforemny",
+        "repo": "cake"
+      },
+      "branch": "main",
+      "submodules": false,
+      "revision": "73f12461cb2d7f537af18612697df4855ea7542a",
+      "url": "https://github.com/aforemny/cake/archive/73f12461cb2d7f537af18612697df4855ea7542a.tar.gz",
+      "hash": "sha256-cQc64eRSIqPUXUaM8IDLdHcpZgmJWCsbLHMxHobKbh4="
+    },
     "impermanence": {
       "type": "Git",
       "repository": {

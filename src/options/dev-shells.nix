@@ -5,4 +5,8 @@
     apply = defs: pkgs.mkShell defs;
     default = {};
   };
+  config.devShell.packages = with pkgs; [
+    npins
+    cake-cli
+  ];
 }

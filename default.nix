@@ -1,13 +1,11 @@
 {
-  pkgs ? import sources.nixpkgs { },
+  lib ? import "${sources.nixpkgs}/lib",
   sources ? import ./npins,
 }:
 let
-  inherit (pkgs) lib;
   specialArgs = {
     inherit
       lib
-      pkgs
       sources
       ;
   };
