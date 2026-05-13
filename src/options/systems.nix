@@ -41,7 +41,7 @@
     };
     _systems.defaultModules = lib.mkOption {
       type = lib.types.listOf lib.types.deferredModule;
-      default = [ ];
     };
   };
+  config._systems.defaultModules = lib.attrValues config.nixosModules;
 }

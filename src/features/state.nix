@@ -10,5 +10,4 @@
       };
     };
   };
-  _systems.defaultModules = [ config.nixosModules.state ];
 }

@@ -23,7 +23,4 @@
         }).wrapper
       ];
     };
-  _systems.defaultModules = [
-    config.nixosModules.jujutsu
-  ];
 }

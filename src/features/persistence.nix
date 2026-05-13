@@ -25,8 +25,5 @@
         }
       ];
     };
-  _systems.defaultModules = [
-    "${sources.impermanence}/nixos.nix"
-    config.nixosModules.persistence
-  ];
+  _systems.defaultModules = [ "${sources.impermanence}/nixos.nix" ];
 }
