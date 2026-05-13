@@ -26,6 +26,22 @@
       "url": "https://github.com/aforemny/cake/archive/73f12461cb2d7f537af18612697df4855ea7542a.tar.gz",
       "hash": "sha256-cQc64eRSIqPUXUaM8IDLdHcpZgmJWCsbLHMxHobKbh4="
     },
+    "disko": {
+      "type": "GitRelease",
+      "repository": {
+        "type": "GitHub",
+        "owner": "nix-community",
+        "repo": "disko"
+      },
+      "pre_releases": false,
+      "version_upper_bound": null,
+      "release_prefix": null,
+      "submodules": false,
+      "version": "v1.13.0",
+      "revision": "56ef5e72fec74b993ad0973b2dfa4eadeb48ba41",
+      "url": "https://api.github.com/repos/nix-community/disko/tarball/refs/tags/v1.13.0",
+      "hash": "sha256-CNzzBsRhq7gg4BMBuTDObiWDH/rFYHEuDRVOwCcwXw4="
+    },
     "impermanence": {
       "type": "Git",
       "repository": {
@@ -38,6 +54,19 @@
       "revision": "7b1d382faf603b6d264f58627330f9faa5cba149",
       "url": "https://github.com/nix-community/impermanence/archive/7b1d382faf603b6d264f58627330f9faa5cba149.tar.gz",
       "hash": "sha256-03+JxvzmfwRu+5JafM0DLbxgHttOQZkUtDWBmeUkN8Y="
+    },
+    "nixos-apple-silicon": {
+      "type": "Git",
+      "repository": {
+        "type": "GitHub",
+        "owner": "nix-community",
+        "repo": "nixos-apple-silicon"
+      },
+      "branch": "main",
+      "submodules": false,
+      "revision": "3d7fe422ef6162154830209b9e50bf69e150cff7",
+      "url": "https://github.com/nix-community/nixos-apple-silicon/archive/3d7fe422ef6162154830209b9e50bf69e150cff7.tar.gz",
+      "hash": "sha256-usIHfvSt7aXvMvRGtcbsue3rA13Z+9TW/7I3WBzLqFY="
     },
     "nixpkgs": {
       "type": "Channel",
