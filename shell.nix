@@ -1,1 +1,1 @@
-(import ./. {}).config.devShell
+(import ./. { }).config.devShell.package

@@ -1,4 +1,9 @@
-{ config, lib, sources, ... }:
+{
+  config,
+  lib,
+  sources,
+  ...
+}:
 {
   imports = [
     "${/home/aforemny/s/cake}/cake-modules/cake-build/" # TODO
@@ -14,8 +19,8 @@
     overlays.cake-commands = self: super: {
       cake-commands = config._cake.cake-cli.top; # TODO
     };
-    _cake.show.systems = lib.mapAttrsToList (name: { config, ... }: 
-      "${name} (${config.nixpkgs.system}, ${config.system.nixos.release})"
+    _cake.show.systems = lib.mapAttrsToList (
+      name: { config, ... }: "${name} (${config.nixpkgs.system}, ${config.system.nixos.release})"
     ) config.systems;
   };
 }

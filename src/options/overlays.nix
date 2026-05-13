@@ -1,4 +1,10 @@
-{ config, lib, pkgs, sources, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  sources,
+  ...
+}:
 {
   options.overlays = lib.mkOption {
     type = lib.types.attrsOf lib.types.raw;
