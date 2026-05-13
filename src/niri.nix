@@ -25,8 +25,7 @@
       };
     };
   _systems.defaultModules = [
-    # TODO
-    #config.nixosModules.niri
+    config.nixosModules.niri
     #{
     #  virtualisation.vmVariant.virtualisation.qemu.options = [
     #    "-device virtio-vga"
