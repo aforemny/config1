@@ -43,7 +43,7 @@
         name:
         { config, ... }:
         lib.trim ''
-          ${name} (${config.nixpkgs.hostPlatform.system}, ${config.system.nixos.release})
+          ${name} (${config.nixpkgs.hostPlatform.system}, ${config.system.nixos.version})
         ''
       ) config.systems;
       tests = lib.mapAttrsToList (
