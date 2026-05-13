@@ -20,8 +20,38 @@
     overlays.cake-commands = self: super: {
       cake-commands = config._cake.cake-cli.top; # TODO
     };
-    _cake.show.systems = lib.mapAttrsToList (
-      name: { config, ... }: "${name} (${config.nixpkgs.system}, ${config.system.nixos.release})"
-    ) config.systems;
+    _cake.show = {
+      nixosModules = lib.mapAttrsToList (
+        name: _:
+        lib.trim ''
+          ${name}
+        ''
+      ) config.nixosModules;
+      overlays = lib.mapAttrsToList (
+        name: _:
+        lib.trim ''
+          ${name}
+        ''
+      ) config.overlays;
+      platforms = lib.mapAttrsToList (
+        name: _:
+        lib.trim ''
+          ${name}
+        ''
+      ) config.platforms;
+      systems = lib.mapAttrsToList (
+        name:
+        { config, ... }:
+        lib.trim ''
+          ${name} (${config.nixpkgs.system}, ${config.system.nixos.release})
+        ''
+      ) config.systems;
+      tests = lib.mapAttrsToList (
+        name: _:
+        lib.trim ''
+          ${name}
+        ''
+      ) config.tests;
+    };
   };
 }
