@@ -21,7 +21,7 @@
           (wrapperModules.kitty.apply {
             inherit pkgs;
             settings = {
-              inherit (config.systemFont) font_family font_size;
+              inherit (config.systemFont) font_family; # TODO font_size;
             };
           }).wrapper;
       };

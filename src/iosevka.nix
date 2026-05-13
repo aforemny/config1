@@ -16,7 +16,7 @@
         ];
         systemFont = {
           font_family = "IosevkaTerm Nerd Font";
-          font_size = 22;
+          #font_size = 22;
         };
       };
     };

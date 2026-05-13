@@ -1,5 +1,18 @@
 {
   "pins": {
+    "asecret": {
+      "type": "Git",
+      "repository": {
+        "type": "GitHub",
+        "owner": "aforemny",
+        "repo": "asecret"
+      },
+      "branch": "main",
+      "submodules": false,
+      "revision": "d56990e50ec64be7912b0e31516514c0d34a3b17",
+      "url": "https://github.com/aforemny/asecret/archive/d56990e50ec64be7912b0e31516514c0d34a3b17.tar.gz",
+      "hash": "sha256-aTRnzZne1f4jOdbL6p7W83WEP5mcOzPply8AqEvrx6o="
+    },
     "cake": {
       "type": "Git",
       "repository": {

@@ -11,7 +11,11 @@ let
   };
 in
 lib.evalModules {
-  modules = lib.filesystem.listFilesRecursive (lib.cleanSource ./src);
+  modules = lib.filesystem.listFilesRecursive (lib.cleanSource ./src) ++ [
+    {
+      _asecret.PASSWORD_STORE_DIR = toString ./secrets;
+    }
+  ];
   inherit specialArgs;
 }
 // specialArgs
