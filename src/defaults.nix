@@ -2,12 +2,27 @@
 {
   nixosModules.defaults =
     { lib, pkgs, ... }:
-    {
-      boot.zfs.forceImportRoot = false;
-      environment.systemPackages = with pkgs; [ btop ];
-      networking.networkmanager.enable = true;
-      networking.useNetworkd = true;
-      services.resolved.enable = true;
-      users.mutableUsers = false;
-    };
+    lib.mkMerge [
+      {
+        boot.zfs.forceImportRoot = false;
+        environment.enableAllTerminfo = true;
+        networking.useNetworkd = true;
+        services.resolved.enable = true;
+        users.mutableUsers = false;
+      }
+      {
+        networking.networkmanager = {
+          enable = true;
+          unmanaged = [
+            "interface-name:enp*"
+          ];
+        };
+      }
+      {
+        environment.systemPackages = with pkgs; [
+          btop
+          ethtool
+        ];
+      }
+    ];
 }
