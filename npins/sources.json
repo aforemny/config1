@@ -42,6 +42,22 @@
       "url": "https://api.github.com/repos/nix-community/disko/tarball/refs/tags/v1.13.0",
       "hash": "sha256-CNzzBsRhq7gg4BMBuTDObiWDH/rFYHEuDRVOwCcwXw4="
     },
+    "hyprspace": {
+      "type": "GitRelease",
+      "repository": {
+        "type": "GitHub",
+        "owner": "hyprspace",
+        "repo": "hyprspace"
+      },
+      "pre_releases": false,
+      "version_upper_bound": null,
+      "release_prefix": null,
+      "submodules": false,
+      "version": "v0.13.1",
+      "revision": "28d48c325e12a1f21e25fac1419bd58b4b2ae317",
+      "url": "https://api.github.com/repos/hyprspace/hyprspace/tarball/refs/tags/v0.13.1",
+      "hash": "sha256-AsOgnnYZRoB/t2XwrTMD8XIHoy/bl6bqUvIT5e02uNo="
+    },
     "impermanence": {
       "type": "Git",
       "repository": {
