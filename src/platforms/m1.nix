@@ -84,9 +84,12 @@
         };
       }
       {
-        hardware.facter = {
-          enable = true;
-          reportPath = ./m1.json;
+        hardware = {
+          asahi.enable = true;
+          facter = {
+            enable = true;
+            reportPath = ./m1.json;
+          };
         };
       }
       {
