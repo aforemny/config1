@@ -22,7 +22,9 @@
         environment.systemPackages = with pkgs; [
           btop
           ethtool
+          fio
           jq
+          wev
         ];
       }
     ];

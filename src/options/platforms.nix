@@ -1,6 +1,6 @@
 { lib, ... }:
 {
   options.platforms = lib.mkOption {
-    type = lib.types.attrsOf lib.types.raw;
+    type = lib.types.attrsOf lib.types.deferredModule;
   };
 }

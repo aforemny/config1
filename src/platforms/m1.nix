@@ -4,83 +4,74 @@
     lib.mkMerge [
       {
         disko.devices = {
-          disk = {
-            main = {
-              type = "disk";
-              device = "/dev/disk/by-id/nvme-APPLE_SSD_AP0256Q_0ba01463c4dd4433_1";
-              destroy = false; # TODO
-              content = {
-                type = "gpt";
-                partitions = {
-                  iBootSystemContainer = {
-                    label = "iBootSystemContainer";
-                    priority = 1;
-                    type = "AF0B";
-                    uuid = "9b208117-ca48-4c66-97cc-316bdc17d91f";
-                    start = 6;
-                    end = 128005;
-                  };
-                  Container = {
-                    label = "Container";
-                    priority = 2;
-                    type = "AF0A";
-                    uuid = "616feeb0-5d98-4947-8257-882cea1787da";
-                    start = 128006;
-                    end = 14536453;
-                  };
-                  NixOSContainer = {
-                    priority = 3;
-                    type = "AF0A";
-                    uuid = "29198fa3-3044-40e6-bfc8-5f4e51db64e4";
-                    start = 14536454;
-                    end = 15146757;
-                  };
-                  ESP = {
-                    priority = 4;
-                    type = "EF00";
-                    uuid = "eab932c7-700e-4dd2-bd74-65796f693a98";
-                    start = 15146758;
-                    end = 15268869;
-                    content = {
-                      type = "filesystem";
-                      format = "vfat";
-                      mountpoint = "/boot";
-                      mountOptions = [
-                        "rw"
-                        "relatime"
-                        "fmask=0022"
-                        "dmask=0022"
-                        "codepage=437"
-                        "iocharset=ascii"
-                        "shortname=mixed"
-                        "errors=remount-ro"
-                      ];
-                    };
-                  };
-                  root = {
-                    priority = 5;
-                    type = "8300";
-                    uuid = "6e40af2b-9bec-4703-a5e2-c2c11f190275";
-                    start = 15268870;
-                    end = 59968629;
-                    content = {
-                      type = "filesystem";
-                      format = "ext4";
-                      mountpoint = "/";
-                    };
-                  };
-                  RecoveryOSContainer = {
-                    label = "RecoveryOSContainer";
-                    priority = 6;
-                    type = "AF0C";
-                    uuid = "813c5213-2c63-42e0-b4ab-644d5a9cd277";
-                    start = 59968630;
-                    end = 61279338;
-                  };
-                };
-              };
+          disk.esp = {
+            type = "disk";
+            device = "/dev/disk/by-partuuid/eab932c7-700e-4dd2-bd74-65796f693a98";
+            content = {
+              type = "filesystem";
+              format = "vfat";
+              mountpoint = "/boot";
+              mountOptions = [ "umask=0077" ];
             };
           };
+          disk.linux = {
+            type = "disk";
+            device = "/dev/disk/by-partuuid/6e40af2b-9bec-4703-a5e2-c2c11f190275";
+            #content = {
+            #  type = "zfs";
+            #  pool = "zroot";
+            #};
+            content = {
+              type = "filesystem";
+              format = "ext4";
+              mountpoint = "/";
+            };
+          };
+          #zpool.zroot = {
+          #  type = "zpool";
+          #  rootFsOptions = {
+          #    acltype = "posixacl";
+          #    atime = "off";
+          #    compression = "zstd";
+          #    mountpoint = "none";
+          #    xattr = "sa";
+          #    encryption = "aes-256-gcm";
+          #    keyformat = "passphrase";
+          #    keylocation = "prompt";
+          #  };
+          #  options = {
+          #    ashift = "12";
+          #  };
+          #  datasets = {
+          #    "local" = {
+          #      type = "zfs_fs";
+          #      options.mountpoint = "none";
+          #      options."com.sun:auto-snapshot" = "false";
+          #    };
+          #    "local/nix" = {
+          #      type = "zfs_fs";
+          #      mountpoint = "/nix";
+          #    };
+          #    "local/cache" = {
+          #      type = "zfs_fs";
+          #      mountpoint = "/var/cache";
+          #    };
+          #    "local/root" = {
+          #      type = "zfs_fs";
+          #      mountpoint = "/";
+          #      postCreateHook = "zfs list -t snapshot -H -o name | grep -E '^zroot/local/root@blank$' || zfs snapshot zroot/local/root@blank";
+          #    };
+          #    "safe" = {
+          #      type = "zfs_fs";
+          #      options.mountpoint = "none";
+          #      options."com.sun:auto-snapshot" = "true";
+          #    };
+          #    "safe/persist" = {
+          #      type = "zfs_fs";
+          #      mountpoint = "/persist";
+          #    };
+          #  };
+          #};
         };
       }
       {
@@ -98,13 +89,38 @@
           systemd-boot.enable = true;
         };
         hardware = {
-          asahi.extractPeripheralFirmware = false; # TODO
+          asahi = {
+            extractPeripheralFirmware = true;
+            peripheralFirmwareDirectory = ./m1;
+          };
           asahi.setupAsahiSound = true;
           graphics.enable = true;
         };
-        networking.wireless.iwd.enable = true;
+        networking.networkmanager.wifi.backend = "iwd";
         services.libinput.enable = true;
         system.stateVersion = "23.11";
+        #fileSystems."/persist".neededForBoot = true;
+      }
+      {
+        services.kmonad = {
+          enable = true;
+          keyboards = {
+            "m1-internal" = {
+              defcfg = {
+                enable = true;
+                fallthrough = true;
+              };
+              device = "/dev/input/by-path/platform-23510c000.spi-cs-0-event-kbd";
+              config = ''
+                (deflayer default caps esc)
+                (defsrc esc caps)
+              '';
+            };
+          };
+        };
+        boot.extraModprobeConfig = ''
+          options hid_apple fnmode=2
+        '';
       }
     ];
 }

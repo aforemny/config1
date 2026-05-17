@@ -1,4 +1,7 @@
-{ sources, ... }:
+{ config, sources, ... }:
+let
+  inherit (config) wrapperModules;
+in
 {
   nixosModules.kitty =
     {
@@ -7,9 +10,6 @@
       pkgs,
       ...
     }:
-    let
-      inherit (import sources.wrappers { inherit pkgs; }) wrapperModules;
-    in
     {
       options.programs.kitty = {
         enable = lib.mkEnableOption "Kitty Terminal Emulator";

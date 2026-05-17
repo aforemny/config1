@@ -26,4 +26,15 @@
       ];
     };
   _systems.defaultModules = [ "${sources.impermanence}/nixos.nix" ];
+  homeManagerModules.persistence =
+    { osConfig, config, ... }:
+    let
+      cfg = osConfig.environment.persistence."/persist";
+    in
+    {
+      home.persistence."/persist" = {
+        directories = lib.mkIf cfg.enable config.state.directories;
+        files = lib.mkIf cfg.enable config.state.files;
+      };
+    };
 }
