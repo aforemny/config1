@@ -17,61 +17,56 @@
           disk.linux = {
             type = "disk";
             device = "/dev/disk/by-partuuid/6e40af2b-9bec-4703-a5e2-c2c11f190275";
-            #content = {
-            #  type = "zfs";
-            #  pool = "zroot";
-            #};
             content = {
-              type = "filesystem";
-              format = "ext4";
-              mountpoint = "/";
+              type = "zfs";
+              pool = "zroot";
             };
           };
-          #zpool.zroot = {
-          #  type = "zpool";
-          #  rootFsOptions = {
-          #    acltype = "posixacl";
-          #    atime = "off";
-          #    compression = "zstd";
-          #    mountpoint = "none";
-          #    xattr = "sa";
-          #    encryption = "aes-256-gcm";
-          #    keyformat = "passphrase";
-          #    keylocation = "prompt";
-          #  };
-          #  options = {
-          #    ashift = "12";
-          #  };
-          #  datasets = {
-          #    "local" = {
-          #      type = "zfs_fs";
-          #      options.mountpoint = "none";
-          #      options."com.sun:auto-snapshot" = "false";
-          #    };
-          #    "local/nix" = {
-          #      type = "zfs_fs";
-          #      mountpoint = "/nix";
-          #    };
-          #    "local/cache" = {
-          #      type = "zfs_fs";
-          #      mountpoint = "/var/cache";
-          #    };
-          #    "local/root" = {
-          #      type = "zfs_fs";
-          #      mountpoint = "/";
-          #      postCreateHook = "zfs list -t snapshot -H -o name | grep -E '^zroot/local/root@blank$' || zfs snapshot zroot/local/root@blank";
-          #    };
-          #    "safe" = {
-          #      type = "zfs_fs";
-          #      options.mountpoint = "none";
-          #      options."com.sun:auto-snapshot" = "true";
-          #    };
-          #    "safe/persist" = {
-          #      type = "zfs_fs";
-          #      mountpoint = "/persist";
-          #    };
-          #  };
-          #};
+          zpool.zroot = {
+            type = "zpool";
+            rootFsOptions = {
+              acltype = "posixacl";
+              atime = "off";
+              compression = "zstd";
+              mountpoint = "none";
+              xattr = "sa";
+              encryption = "aes-256-gcm";
+              keyformat = "passphrase";
+              keylocation = "prompt";
+            };
+            options = {
+              ashift = "12";
+            };
+            datasets = {
+              "local" = {
+                type = "zfs_fs";
+                options.mountpoint = "none";
+                options."com.sun:auto-snapshot" = "false";
+              };
+              "local/nix" = {
+                type = "zfs_fs";
+                mountpoint = "/nix";
+              };
+              "local/cache" = {
+                type = "zfs_fs";
+                mountpoint = "/var/cache";
+              };
+              "local/root" = {
+                type = "zfs_fs";
+                mountpoint = "/";
+                postCreateHook = "zfs list -t snapshot -H -o name | grep -E '^zroot/local/root@blank$' || zfs snapshot zroot/local/root@blank";
+              };
+              "safe" = {
+                type = "zfs_fs";
+                options.mountpoint = "none";
+                options."com.sun:auto-snapshot" = "true";
+              };
+              "safe/persist" = {
+                type = "zfs_fs";
+                mountpoint = "/persist";
+              };
+            };
+          };
         };
       }
       {
@@ -99,7 +94,7 @@
         networking.networkmanager.wifi.backend = "iwd";
         services.libinput.enable = true;
         system.stateVersion = "23.11";
-        #fileSystems."/persist".neededForBoot = true;
+        fileSystems."/persist".neededForBoot = true;
       }
       {
         services.kmonad = {
