@@ -1,4 +1,14 @@
 {
+  nixosModules.qutebrowser = (
+    { lib, ... }:
+    {
+      nixpkgs.config.allowUnfreePredicate =
+        pkg:
+        builtins.elem (lib.getName pkg) [
+          "widevine-cdm"
+        ];
+    }
+  );
   homeManagerModules.qutebrowser =
     {
       config,
@@ -69,6 +79,7 @@
               zoom.default = "175%";
             };
           };
+
         }
         {
           programs.qutebrowser.searchEngines = {
