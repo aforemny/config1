@@ -17,6 +17,7 @@
         fuzzel
         playerctl
         swaylock
+        wl-clipboard
       ];
       programs = {
         niri = {

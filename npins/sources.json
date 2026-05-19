@@ -97,6 +97,19 @@
       "url": "https://github.com/nix-community/nixos-apple-silicon/archive/3d7fe422ef6162154830209b9e50bf69e150cff7.tar.gz",
       "hash": "sha256-usIHfvSt7aXvMvRGtcbsue3rA13Z+9TW/7I3WBzLqFY="
     },
+    "nixos-images": {
+      "type": "Git",
+      "repository": {
+        "type": "GitHub",
+        "owner": "nix-community",
+        "repo": "nixos-images"
+      },
+      "branch": "main",
+      "submodules": false,
+      "revision": "66fe34a02cc29c825fdb4ece1a79c17e8f2ade2e",
+      "url": "https://github.com/nix-community/nixos-images/archive/66fe34a02cc29c825fdb4ece1a79c17e8f2ade2e.tar.gz",
+      "hash": "sha256-UlPBPrqOYTDB9g/8pUaIUzYpGgjQL/YMK3Ein6m9DkY="
+    },
     "nixpkgs": {
       "type": "Channel",
       "name": "nixpkgs-unstable",

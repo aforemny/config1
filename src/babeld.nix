@@ -25,8 +25,10 @@
         lib.map (mkInterface "wired") (wiredInterfaces ++ ethernetDongles)
         ++ lib.map (mkInterface "wireless") wirelessInterfaces
       );
-      address = if config.networking.hostName == "x1e" then "10.42.0.1" else "10.42.0.2"; # TODO
-      prefixLength = 32;
+      inherit (pkgs.lib.mkIPv6 "fd42:1234:5678:90ab" config.networking.hostName "babel0")
+        address
+        prefixLength
+        ;
     in
     lib.mkMerge [
       # depends on facter
@@ -50,10 +52,10 @@
             redistribute local deny
           '';
         };
-        networking.interfaces.lo.ipv4.addresses = [
+        networking.interfaces.lo.ipv6.addresses = [
           {
             address = address;
-            prefixLength = 32;
+            inherit prefixLength;
           }
         ];
       }
@@ -75,8 +77,9 @@
       {
         networking.hosts = {
           # TODO
-          "10.42.0.1" = [ "x1e" ];
-          "10.42.0.2" = [ "tower" ];
+          "${(pkgs.lib.mkIPv6 "fd42:1234:5678:90ab" "x1e" "babel0").address}" = [ "x1e" ];
+          "${(pkgs.lib.mkIPv6 "fd42:1234:5678:90ab" "tower" "babel0").address}" = [ "tower" ];
+          "${(pkgs.lib.mkIPv6 "fd42:1234:5678:90ab" "m1" "babel0").address}" = [ "m1" ];
         };
       }
     ];

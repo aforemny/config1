@@ -41,6 +41,9 @@ in
             );
           }
         )
+        (self: super: {
+          nixos-anywhere = super.nixos-anywhere.override { nix = super.nix; };
+        })
       ];
     };
     devShell = {
@@ -58,6 +61,15 @@ in
     };
     _cake.cake-cli.cake-deploy.postCopyClosure = ''
       ASECRET_OUT=$target1:/var/src/secrets asecret export
+    '';
+    _cake.cake-cli.cake-install.preInstall = ''
+      extra_files=$(
+        out=$tmp/asecret
+        mkdir -p "$out"/persist/var/src/secrets
+        ASECRET_OUT="$out"/persist/var/src/secrets asecret export
+        echo "$out"
+      )
+      nixos_anywhere_args+=(--extra-files "$extra_files")
     '';
   };
 }

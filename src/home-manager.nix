@@ -8,23 +8,28 @@
     let
       inherit (config) homeManagerModules;
     in
-    { config, lib, ... }:
+    {
+      config,
+      lib,
+      pkgs,
+      ...
+    }:
     {
       imports = [ "${sources.home-manager}/nixos" ];
       config = {
-        home-manager.users.aforemny = {
-          imports = lib.attrValues homeManagerModules;
-          config = {
-            home.stateVersion = "25.11";
+        home-manager = {
+          useGlobalPkgs = true;
+          users = {
+            aforemny = {
+              imports = lib.attrValues homeManagerModules;
+              config.home.stateVersion = "25.11";
+            };
+            root = {
+              imports = lib.attrValues homeManagerModules;
+              config.home.stateVersion = "25.11";
+            };
           };
         };
-        #home-manager.users.root = {
-        #  imports = lib.attrValues homeManagerModules;
-        #  specialArgs = { osConfig = config; };
-        #  config = {
-        #    home.stateVersion = "25.11";
-        #  };
-        #};
       };
     };
 }

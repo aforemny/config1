@@ -12,6 +12,7 @@
     "${/home/aforemny/s/cake}/cake-modules/cake-deploy/" # TODO
     "${/home/aforemny/s/cake}/cake-modules/cake-eval/" # TODO
     "${/home/aforemny/s/cake}/cake-modules/cake-install/" # TODO
+    "${/home/aforemny/s/cake}/cake-modules/cake-install/" # TODO
     "${/home/aforemny/s/cake}/cake-modules/cake-repl/" # TODO
     "${/home/aforemny/s/cake}/cake-modules/cake-run-vm/" # TODO
     "${/home/aforemny/s/cake}/cake-modules/cake-show/" # TODO

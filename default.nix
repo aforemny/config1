@@ -4,22 +4,19 @@
 }:
 let
   specialArgs = {
-    inherit
-      lib
-      sources
-      ;
+    inherit sources;
+  };
+  eval = lib.evalModules {
+    modules =
+      lib.filter (name: lib.hasSuffix ".nix" name) (
+        lib.filesystem.listFilesRecursive (lib.cleanSource ./src)
+      )
+      ++ [
+        {
+          _asecret.PASSWORD_STORE_DIR = toString ./secrets;
+        }
+      ];
+    inherit specialArgs;
   };
 in
-lib.evalModules {
-  modules =
-    lib.filter (name: lib.hasSuffix ".nix" name) (
-      lib.filesystem.listFilesRecursive (lib.cleanSource ./src)
-    )
-    ++ [
-      {
-        _asecret.PASSWORD_STORE_DIR = toString ./secrets;
-      }
-    ];
-  inherit specialArgs;
-}
-// specialArgs
+eval // specialArgs
