@@ -74,6 +74,7 @@
       # assign hostnames
       {
         networking.hosts = {
+          # TODO
           "10.42.0.1" = [ "x1e" ];
           "10.42.0.2" = [ "tower" ];
         };
