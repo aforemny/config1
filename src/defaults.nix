@@ -12,7 +12,7 @@
       }
       {
         networking.networkmanager = {
-          enable = true;
+          enable = lib.mkDefault true;
           unmanaged = [
             "interface-name:enp*"
           ];

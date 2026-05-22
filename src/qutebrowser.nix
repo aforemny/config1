@@ -71,18 +71,18 @@
             settings = {
               fonts = {
                 default_family = "IosevkaTerm Nerd Font";
-               #default_size = "28px";
-               #web.size = {
-               #  default = 16;
-               #  default_fixed = 16;
-               #};
+                #default_size = "28px";
+                #web.size = {
+                #  default = 16;
+                #  default_fixed = 16;
+                #};
               };
               #qt.highdpi = true;
               tabs.tabs_are_windows = true;
               #zoom.default = "175%";
             };
           };
-          state.directories = [ ".config/qutebrowser" ];
+          state.directories = [ ".local/share/qutebrowser" ];
         }
         {
           programs.qutebrowser.searchEngines = {
@@ -109,7 +109,8 @@
           programs.qutebrowser = {
             userScripts.qute-pass.enable = true;
             keyBindings.normal = {
-              ",p" = "spawn --userscript qute-pass --username-pattern '[uU]sername: ?(.*)' --username-target secret";
+              ",p" =
+                "spawn --userscript qute-pass --username-pattern '[uU]sername: ?(.*)' --username-target secret";
               ",up" = "spawn --userscript qute-pass --username-only";
               ",pp" = "spawn --userscript qute-pass --password-only";
               ",op" = "spawn --userscript qute-pass --otp-only";

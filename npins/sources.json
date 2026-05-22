@@ -84,6 +84,19 @@
       "url": "https://github.com/nix-community/impermanence/archive/7b1d382faf603b6d264f58627330f9faa5cba149.tar.gz",
       "hash": "sha256-03+JxvzmfwRu+5JafM0DLbxgHttOQZkUtDWBmeUkN8Y="
     },
+    "nix-minecraft": {
+      "type": "Git",
+      "repository": {
+        "type": "GitHub",
+        "owner": "Infinidoge",
+        "repo": "nix-minecraft"
+      },
+      "branch": "master",
+      "submodules": false,
+      "revision": "82585753a96d9e2161850541750127febb761497",
+      "url": "https://github.com/Infinidoge/nix-minecraft/archive/82585753a96d9e2161850541750127febb761497.tar.gz",
+      "hash": "sha256-ATcnQv0i/B54pZkGnORRIJO8N+Z+bC13ED4jGK43B5k="
+    },
     "nixos-apple-silicon": {
       "type": "Git",
       "repository": {

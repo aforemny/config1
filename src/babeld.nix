@@ -76,7 +76,7 @@
       # assign hostnames
       {
         networking.hosts = {
-          # TODO
+          # TODO pkgs.lib
           "${(pkgs.lib.mkIPv6 "fd42:1234:5678:90ab" "x1e" "babel0").address}" = [ "x1e" ];
           "${(pkgs.lib.mkIPv6 "fd42:1234:5678:90ab" "tower" "babel0").address}" = [ "tower" ];
           "${(pkgs.lib.mkIPv6 "fd42:1234:5678:90ab" "m1" "babel0").address}" = [ "m1" ];
