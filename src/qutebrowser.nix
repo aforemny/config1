@@ -65,30 +65,28 @@
         {
           programs.qutebrowser = {
             enable = true;
+            package = pkgs.qutebrowser.override {
+              enableWideVine = pkgs.stdenv.hostPlatform.system == "x86_64-linux";
+            };
             settings = {
               fonts = {
                 default_family = "IosevkaTerm Nerd Font";
-                default_size = "28px";
-                web.size = {
-                  default = 16;
-                  default_fixed = 16;
-                };
+               #default_size = "28px";
+               #web.size = {
+               #  default = 16;
+               #  default_fixed = 16;
+               #};
               };
-              qt.highdpi = true;
+              #qt.highdpi = true;
               tabs.tabs_are_windows = true;
-              zoom.default = "175%";
+              #zoom.default = "175%";
             };
           };
-
+          state.directories = [ ".config/qutebrowser" ];
         }
         {
           programs.qutebrowser.searchEngines = {
             g = "https://github.com/search?q={}";
-          };
-        }
-        {
-          programs.qutebrowser.package = pkgs.qutebrowser.override {
-            enableWideVine = pkgs.stdenv.hostPlatform.system == "x86_64-linux";
           };
         }
         {
@@ -111,19 +109,13 @@
           programs.qutebrowser = {
             userScripts.qute-pass.enable = true;
             keyBindings.normal = {
-              ",p" = "spawn --userscript qute-pass";
+              ",p" = "spawn --userscript qute-pass --username-pattern '[uU]sername: ?(.*)' --username-target secret";
               ",up" = "spawn --userscript qute-pass --username-only";
-              ",pp" = "spawn --userscript qute-pass --username-only";
+              ",pp" = "spawn --userscript qute-pass --password-only";
               ",op" = "spawn --userscript qute-pass --otp-only";
             };
           };
           programs.rofi.enable = true;
-        }
-        {
-          state.directories = [
-            ".config/qutebrowser/bookmarks"
-            ".config/qutebrowser/quickmarks"
-          ];
         }
         # TODO colorscheme
         #{

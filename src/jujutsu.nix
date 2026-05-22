@@ -7,16 +7,9 @@
     in
     {
       environment.systemPackages = [
-        (wrapperModules.git.apply {
-          inherit pkgs;
-          settings.user = {
-            name = "Alexander Foremny";
-            email = "aforemny@posteo.de";
-          };
-        }).wrapper
         (wrapperModules.jujutsu.apply {
           inherit pkgs;
-          settings = {
+          settings.user = {
             name = "Alexander Foremny";
             email = "aforemny@posteo.de";
           };
