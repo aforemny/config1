@@ -80,6 +80,10 @@
                 bogus-priv = true;
               };
             };
+
+            services.resolved.enable = false;
+            networking.nameservers = [ "127.0.0.1" ];
+
             systemd.network.networks."40-ppp0" = {
               matchConfig.Name = "ppp0";
               networkConfig = {
@@ -128,37 +132,37 @@
             #  }
             #'';
 
-            services.bind.enable = true;
-            services.bind.cacheNetworks = [
-              "127.0.0.0/24"
-              "192.168.1.0/24"
-              "10.1.1.0/24"
-            ];
-            services.bind.extraOptions = ''
-              allow-recursion { cachenetworks; };
-            '';
-            services.bind.zones."apu" = {
-              master = true;
-              file = pkgs.writeTextFile {
-                name = "apu.zone";
-                text = ''
-                  $TTL 2h
-                  @          IN SOA ns1 hostmaster (
-                                      1
-                                      8h
-                                      30m
-                                      1w
-                                      1h )
-                  @          IN NS  apu.
-                  @          IN A   192.168.1.1
-                  cgit       IN A   192.168.1.1
-                  hass       IN A   192.168.1.1
-                  radicale   IN A   192.168.1.1
-                  news       IN A   192.168.1.110
-                '';
-              };
-            };
-            networking.nameservers = [ "8.8.8.8" ];
+            #services.bind.enable = true;
+            #services.bind.cacheNetworks = [
+            #  "127.0.0.0/24"
+            #  "192.168.1.0/24"
+            #  "10.1.1.0/24"
+            #];
+            #services.bind.extraOptions = ''
+            #  allow-recursion { cachenetworks; };
+            #'';
+            #services.bind.zones."apu" = {
+            #  master = true;
+            #  file = pkgs.writeTextFile {
+            #    name = "apu.zone";
+            #    text = ''
+            #      $TTL 2h
+            #      @          IN SOA ns1 hostmaster (
+            #                          1
+            #                          8h
+            #                          30m
+            #                          1w
+            #                          1h )
+            #      @          IN NS  apu.
+            #      @          IN A   192.168.1.1
+            #      cgit       IN A   192.168.1.1
+            #      hass       IN A   192.168.1.1
+            #      radicale   IN A   192.168.1.1
+            #      news       IN A   192.168.1.110
+            #    '';
+            #  };
+            #};
+            #networking.nameservers = [ "8.8.8.8" ];
           })
           (
             # pppd
