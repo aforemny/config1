@@ -80,6 +80,10 @@
                 bogus-priv = true;
               };
             };
+            systemd.services.dnsmasq = {
+              after = [ "sys-subsystem-net-devices-wlp5s0.device" ];
+              requires = [ "sys-subsystem-net-devices-wlp5s0.device" ];
+            };
 
             services.resolved.enable = false;
             networking.nameservers = [ "127.0.0.1" ];
@@ -178,7 +182,6 @@
                   enable = true;
                   config = ''
                     plugin pppoe.so wan
-                    #plugin rp-pppoe.so
 
                     nic-wan
                     # pppd supports multiple ways of entering credentials,
@@ -187,6 +190,7 @@
                     password "${password}"
 
                     persist
+                    nodetach
                     maxfail 0
                     holdoff 5
 
@@ -194,23 +198,37 @@
                     defaultroute
                     replacedefaultroute
 
-                    #hide-password
-                    #lcp-echo-interval 20
-                    #lcp-echo-failure 3
-                    #connect /bin/true
-                    #noauth
-                    #noaccomp
-                    #default-asyncmap
-                    #nodetach
-                    #persist
+                    hide-password
+                    lcp-echo-interval 20
+                    lcp-echo-failure 3
+                    noauth
                   '';
                 };
               };
-              networking.vlans.wan = {
-                id = 7;
-                interface = "enp4s0";
+              systemd.services.pppd-1und1.unitConfig.StartLimitIntervalSec = 0;
+              networking = {
+                vlans.wan = {
+                  id = 7;
+                  interface = "enp4s0";
+                };
+                # bring up interface
+                interfaces.wan = {
+                  useDHCP = false;
+                  ipv4.addresses = [ ];
+                };
               };
               networking.interfaces.enp4s0.useDHCP = false;
+              systemd.tmpfiles.rules = [
+                "f /etc/ppp/chap-secrets 0600 root root -"
+              ];
+              fileSystems."/etc/ppp/chap-secrets" = {
+                device = pkgs.asecret-lib.password "isp/1und1/password";
+                fsType = "auto";
+                options = [
+                  "bind"
+                  "ro"
+                ];
+              };
             }
           )
           {

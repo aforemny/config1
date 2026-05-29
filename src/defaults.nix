@@ -7,7 +7,7 @@
         boot.zfs.forceImportRoot = false;
         environment.enableAllTerminfo = true;
         networking.useNetworkd = true;
-        services.resolved.enable = true;
+        services.resolved.enable = lib.mkDefault true;
         users.mutableUsers = false;
       }
       {
@@ -24,6 +24,7 @@
           ethtool
           fio
           jq
+          nm2nix
           wev
         ];
       }

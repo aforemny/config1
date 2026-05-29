@@ -129,6 +129,19 @@
       "url": "https://releases.nixos.org/nixpkgs/nixpkgs-26.05pre996447.0a0bf409f359/nixexprs.tar.xz",
       "hash": "sha256-0hmdfQTKUIqUzAYvNiOmoxIwm1hqBl9U6l7s1N3HaoI="
     },
+    "nm2nix": {
+      "type": "Git",
+      "repository": {
+        "type": "GitHub",
+        "owner": "Janik-Haag",
+        "repo": "nm2nix"
+      },
+      "branch": "main",
+      "submodules": false,
+      "revision": "6d018aaad4093097fd647f867425a15f294e483e",
+      "url": "https://github.com/Janik-Haag/nm2nix/archive/6d018aaad4093097fd647f867425a15f294e483e.tar.gz",
+      "hash": "sha256-etI2VY39TIKl+W/MzraxTYE3eaqH9VYThe3YJzydV0E="
+    },
     "wrappers": {
       "type": "Git",
       "repository": {
