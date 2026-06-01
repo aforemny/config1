@@ -77,9 +77,8 @@
                 #  default_fixed = 16;
                 #};
               };
-              qt.highdpi = true;
+              #qt.highdpi = false;
               tabs.tabs_are_windows = true;
-              #zoom.default = "175%";
             };
           };
           state.directories = [ ".local/share/qutebrowser" ];

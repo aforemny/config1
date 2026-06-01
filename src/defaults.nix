@@ -26,6 +26,7 @@
           iw
           jq
           nm2nix
+          python3
           wev
         ];
       }
