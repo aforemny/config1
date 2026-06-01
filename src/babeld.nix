@@ -24,7 +24,7 @@ in
         "enp44s0u1"
         "enp44s0u2"
       ];
-      mkInterface = type: name: lib.nameValuePair name { type = "wired"; };
+      mkInterface = type: name: lib.nameValuePair name { inherit type; };
       localInterfaces = lib.listToAttrs (
         lib.map (mkInterface "wired") (wiredInterfaces ++ ethernetDongles)
         ++ lib.map (mkInterface "wireless") wirelessInterfaces
