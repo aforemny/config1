@@ -10,7 +10,7 @@
     let
       inherit (import sources.wrappers { inherit pkgs; }) wrapperModules;
     in
-    {
+    lib.mkIf (config.tags.graphical or false) {
       environment.systemPackages = with pkgs; [
         alacritty
         brightnessctl

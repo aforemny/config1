@@ -11,6 +11,9 @@
       {
         config = lib.mkMerge [
           {
+            tags.graphical = false;
+          }
+          {
             hardware.cpu.amd.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
             hardware.enableRedistributableFirmware = true;
             #hardware.enableAllFirmware = true;
