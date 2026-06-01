@@ -23,6 +23,7 @@
           btop
           ethtool
           fio
+          iw
           jq
           nm2nix
           wev
