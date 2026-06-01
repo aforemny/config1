@@ -225,6 +225,7 @@
             }).wrapper;
         };
         dms-shell.enable = true;
+        xwayland.enable = true;
       };
       services = {
         displayManager.dms-greeter = {
