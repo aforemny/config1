@@ -54,7 +54,6 @@
 
             networking.nat = {
               enable = true;
-              enableIPv6 = true;
               externalInterface = "ppp0";
               internalInterfaces = [ "wlp5s0" ];
             };
