@@ -84,6 +84,19 @@
       "url": "https://github.com/nix-community/impermanence/archive/7b1d382faf603b6d264f58627330f9faa5cba149.tar.gz",
       "hash": "sha256-03+JxvzmfwRu+5JafM0DLbxgHttOQZkUtDWBmeUkN8Y="
     },
+    "llm-agents.nix": {
+      "type": "Git",
+      "repository": {
+        "type": "GitHub",
+        "owner": "numtide",
+        "repo": "llm-agents.nix"
+      },
+      "branch": "main",
+      "submodules": false,
+      "revision": "0e4618ed6c946427e3d036925f98211220834892",
+      "url": "https://github.com/numtide/llm-agents.nix/archive/0e4618ed6c946427e3d036925f98211220834892.tar.gz",
+      "hash": "sha256-OdVUSGJCuIi33eWsIT0Cmvw3HvfsSslwuKTBUrY1zcc="
+    },
     "nix-minecraft": {
       "type": "Git",
       "repository": {
@@ -141,6 +154,19 @@
       "revision": "6d018aaad4093097fd647f867425a15f294e483e",
       "url": "https://github.com/Janik-Haag/nm2nix/archive/6d018aaad4093097fd647f867425a15f294e483e.tar.gz",
       "hash": "sha256-etI2VY39TIKl+W/MzraxTYE3eaqH9VYThe3YJzydV0E="
+    },
+    "sbox": {
+      "type": "Git",
+      "repository": {
+        "type": "GitHub",
+        "owner": "DavHau",
+        "repo": "sbox"
+      },
+      "branch": "main",
+      "submodules": false,
+      "revision": "1071beb193c1448b252e3996e0722bb89350bd04",
+      "url": "https://github.com/DavHau/sbox/archive/1071beb193c1448b252e3996e0722bb89350bd04.tar.gz",
+      "hash": "sha256-5gPHX6kmTfpn/C/sfHLlmGNCWoGYPFqfKObuhrdF1RU="
     },
     "wrappers": {
       "type": "Git",
