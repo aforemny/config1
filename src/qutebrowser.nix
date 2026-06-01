@@ -77,7 +77,7 @@
                 #  default_fixed = 16;
                 #};
               };
-              #qt.highdpi = true;
+              qt.highdpi = true;
               tabs.tabs_are_windows = true;
               #zoom.default = "175%";
             };
