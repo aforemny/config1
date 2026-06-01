@@ -1,3 +1,7 @@
+{ config, ... }:
+let
+  inherit (config) systems;
+in
 {
   nixosModules.babeld =
     {
@@ -25,7 +29,8 @@
         lib.map (mkInterface "wired") (wiredInterfaces ++ ethernetDongles)
         ++ lib.map (mkInterface "wireless") wirelessInterfaces
       );
-      inherit (pkgs.lib.mkIPv6 "fd42:1234:5678:90ab" config.networking.hostName "babel0")
+      prefix = "fd42:1234:5678:90ab";
+      inherit (pkgs.lib.mkIPv6 prefix config.networking.hostName "babel0")
         address
         prefixLength
         ;
@@ -75,12 +80,13 @@
       }
       # assign hostnames
       {
-        networking.hosts = {
-          # TODO pkgs.lib
-          "${(pkgs.lib.mkIPv6 "fd42:1234:5678:90ab" "x1e" "babel0").address}" = [ "x1e" ];
-          "${(pkgs.lib.mkIPv6 "fd42:1234:5678:90ab" "tower" "babel0").address}" = [ "tower" ];
-          "${(pkgs.lib.mkIPv6 "fd42:1234:5678:90ab" "m1" "babel0").address}" = [ "m1" ];
-        };
+        networking.hosts = lib.mapAttrs' (
+          name:
+          { config, ... }:
+          lib.nameValuePair "${(pkgs.lib.mkIPv6 prefix config.networking.hostName "babel0").address}" [
+            config.networking.hostName
+          ]
+        ) systems;
       }
     ];
 }
