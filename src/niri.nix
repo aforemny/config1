@@ -18,6 +18,7 @@
         playerctl
         swaylock
         wl-clipboard
+        xwayland-satellite
       ];
       programs = {
         niri = {
@@ -225,7 +226,6 @@
             }).wrapper;
         };
         dms-shell.enable = true;
-        xwayland.enable = true;
       };
       services = {
         displayManager.dms-greeter = {
