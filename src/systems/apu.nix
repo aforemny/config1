@@ -149,18 +149,16 @@
               953
             ];
 
-            # MSS clamping to fix MTU issues with PPPoE
-            # PPPoE has MTU of 1492, so we clamp MSS to Path MTU to prevent fragmentation
-            networking.firewall.extraCommands = ''
-              # IPv4 MSS clamping for forwarded packets
-              iptables -t mangle -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
-              # IPv6 MSS clamping for forwarded packets
-              ip6tables -t mangle -A FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
-            '';
-            networking.firewall.extraStopCommands = ''
-              iptables -t mangle -D FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu 2>/dev/null || true
-              ip6tables -t mangle -D FORWARD -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu 2>/dev/null || true
-            '';
+            networking.nftables.enable = true;
+            networking.nftables.tables.mss-clamp = {
+              family = "inet";
+              content = ''
+                chain forward {
+                  type filter hook forward priority mangle; policy accept;
+                  tcp flags syn / syn,rst tcp option maxseg size set rt mtu
+                }
+              '';
+            };
             #services.dhcpd4.enable = true;
             #services.dhcpd4.interfaces = [ "wlp5s0" ];
             #services.dhcpd4.extraConfig = ''
@@ -206,6 +204,33 @@
             #};
             #networking.nameservers = [ "8.8.8.8" ];
           })
+          (
+            {
+              networking.nftables.tables.wan-inbound-filter = {
+                family = "ip6";
+                content = ''
+                  chain forward {
+                    type filter hook forward priority filter; policy accept;
+
+                    # Replies to connections a client itself opened.
+                    iifname "ppp0" ct state { established, related } accept
+
+                    # Exception: tower is reachable from the public internet.
+                    # The delegated /56 rotates daily, so match tower by its
+                    # stable interface identifier (low 64 bits) only, which is
+                    # independent of the current prefix. tower pins this IID
+                    # (= lib.mkIPv6 _ "tower" "lan") on its side; see
+                    # systems/tower.nix.
+                    iifname "ppp0" ip6 daddr & ::ffff:ffff:ffff:ffff == ::5143:4fdf:f468:2801 accept
+
+                    # Everything else new from the WAN: no other client behind
+                    # apu is reachable from the public internet.
+                    iifname "ppp0" drop
+                  }
+                '';
+              };
+            }
+          )
           (
             # pppd
             let
