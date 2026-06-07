@@ -97,6 +97,19 @@
       "url": "https://github.com/numtide/llm-agents.nix/archive/0e4618ed6c946427e3d036925f98211220834892.tar.gz",
       "hash": "sha256-OdVUSGJCuIi33eWsIT0Cmvw3HvfsSslwuKTBUrY1zcc="
     },
+    "nix-colors": {
+      "type": "Git",
+      "repository": {
+        "type": "GitHub",
+        "owner": "aforemny",
+        "repo": "nix-colors"
+      },
+      "branch": "main",
+      "submodules": false,
+      "revision": "61a670c91e9a24f72381593d9caf0e08a9c0b8b4",
+      "url": "https://github.com/aforemny/nix-colors/archive/61a670c91e9a24f72381593d9caf0e08a9c0b8b4.tar.gz",
+      "hash": "sha256-z6im4qJi0Pu8eJXR/ZVW8aaWlTjbXU/lUEojGKMCnys="
+    },
     "nix-minecraft": {
       "type": "Git",
       "repository": {
