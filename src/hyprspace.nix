@@ -1,5 +1,4 @@
-{ sources, ... }:
-{
+{ sources, ... }: {
   nixosModules.hyprspace =
     {
       config,

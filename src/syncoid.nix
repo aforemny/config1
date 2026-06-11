@@ -26,9 +26,7 @@
             };
           };
         };
-        systemd.services."syncoid-zroot-safe".serviceConfig.BindReadOnlyPaths = [
-          sshKey.privateKeyFile
-        ];
+        systemd.services."syncoid-zroot-safe".serviceConfig.BindReadOnlyPaths = [ sshKey.privateKeyFile ];
         programs.ssh.knownHosts."tower".publicKey =
           "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIE5mTSll0rgxudcdaEwvOE4IFnA6rfcxROhpS6sTSK0u root@tower"; # TODO
         users.users.root.openssh.authorizedKeys.keys = [ sshKey.publicKey ]; # TODO

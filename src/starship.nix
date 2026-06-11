@@ -1,5 +1,4 @@
-{ sources, ... }:
-{
+{ sources, ... }: {
   nixosModules.kitty =
     { pkgs, ... }:
     let
@@ -8,10 +7,7 @@
     {
       programs.starship = {
         enable = true;
-        package =
-          (wrapperModules.starship.apply {
-            inherit pkgs;
-          }).wrapper;
+        package = (wrapperModules.starship.apply { inherit pkgs; }).wrapper;
       };
     };
 }

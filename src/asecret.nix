@@ -8,20 +8,14 @@ let
   cfg = config._asecret;
 in
 {
-  options._asecret.PASSWORD_STORE_DIR = lib.mkOption {
-    type = lib.types.path;
-  };
+  options._asecret.PASSWORD_STORE_DIR = lib.mkOption { type = lib.types.path; };
   config = {
-    nixosModules.asecret =
-      { lib, options, ... }:
-      {
-        imports = [
-          "${/home/aforemny/s/asecret}/modules" # TODO
-        ];
-        config = lib.mkIf (options ? "state") {
-          state.directories = [ "/var/src/secrets" ];
-        };
-      };
+    nixosModules.asecret = { lib, options, ... }: {
+      imports = [
+        "${/home/aforemny/s/asecret}/modules" # TODO
+      ];
+      config = lib.mkIf (options ? "state") { state.directories = [ "/var/src/secrets" ]; };
+    };
     overlays = {
       asecret = lib.composeManyExtensions [
         (import "${/home/aforemny/s/asecret}/pkgs" # TODO
@@ -35,15 +29,11 @@ in
           {
             nix = super.nixVersions."nix_${major}_${minor}"; # TODO
             nix-plugins = (
-              super.nix-plugins.override {
-                nixComponents = super.nixVersions."nixComponents_${major}_${minor}";
-              }
+              super.nix-plugins.override { nixComponents = super.nixVersions."nixComponents_${major}_${minor}"; }
             );
           }
         )
-        (self: super: {
-          nixos-anywhere = super.nixos-anywhere.override { nix = super.nix; };
-        })
+        (self: super: { nixos-anywhere = super.nixos-anywhere.override { nix = super.nix; }; })
       ];
     };
     devShell = {

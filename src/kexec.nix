@@ -21,9 +21,7 @@
       (
         #{ lib, ... }:
         {
-          disabledModules = [
-            "${sources.nixos-images}/nix/latest-zfs-kernel.nix"
-          ];
+          disabledModules = [ "${sources.nixos-images}/nix/latest-zfs-kernel.nix" ];
           #system.stateVersion = lib.mkForce lib.trivial.release;
           hardware.asahi.peripheralFirmwareDirectory = ./platforms/m1;
         })

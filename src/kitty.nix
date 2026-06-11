@@ -16,11 +16,7 @@ in
         package = lib.mkPackageOption pkgs "kitty" { };
       };
       config = lib.mkMerge [
-        {
-          environment.systemPackages = [
-            config.programs.kitty.package
-          ];
-        }
+        { environment.systemPackages = [ config.programs.kitty.package ]; }
         {
           programs.kitty = {
             enable = true;

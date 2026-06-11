@@ -40,15 +40,10 @@
     in
     {
       config = {
-        home.file =
-          lib.mapAttrs
-            (name: source: {
-              source = linkTo source;
-            })
-            {
-              ".ssh/id_ed25519.pub" = ".secrets/id_ed25519.pub";
-              ".ssh/id_ed25519" = ".secrets/id_ed25519";
-            };
+        home.file = lib.mapAttrs (name: source: { source = linkTo source; }) {
+          ".ssh/id_ed25519.pub" = ".secrets/id_ed25519.pub";
+          ".ssh/id_ed25519" = ".secrets/id_ed25519";
+        };
       };
     };
 }

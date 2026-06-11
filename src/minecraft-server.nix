@@ -1,5 +1,4 @@
-{ sources, ... }:
-{
+{ sources, ... }: {
   nixosModules.minecraft-server =
     {
       config,
@@ -46,15 +45,9 @@
       };
       networking.firewall.allowedUDPPorts = [ 24454 ];
       nixpkgs = {
-        config.allowUnfreePredicate =
-          pkg:
-          lib.elem (lib.getName pkg) [
-            "minecraft-server"
-          ];
+        config.allowUnfreePredicate = pkg: lib.elem (lib.getName pkg) [ "minecraft-server" ];
         overlays = [ (import "${sources.nix-minecraft}/overlay.nix") ];
       };
     };
-  _systems.defaultModules = [
-    "${sources.nix-minecraft}/modules/minecraft-servers.nix"
-  ];
+  _systems.defaultModules = [ "${sources.nix-minecraft}/modules/minecraft-servers.nix" ];
 }

@@ -1,5 +1,4 @@
-{ lib, pkgs, ... }:
-{
+{ lib, pkgs, ... }: {
   _cake.cake-cli.cake-run-vm.preStart = ''
     secrets="$tmp"/secrets
     ASECRET_OUT="$secrets" ${lib.getExe pkgs.asecret} export

@@ -1,5 +1,4 @@
-{ sources, ... }:
-{
+{ sources, ... }: {
   nixosModules.omp =
     {
       config,
@@ -25,10 +24,7 @@
       ]
     );
   homeManagerModules.omp =
-    { lib, osConfig, ... }:
-    lib.mkIf osConfig.tags.graphical {
-      state.directories = [ ".omp" ];
-    };
+    { lib, osConfig, ... }: lib.mkIf osConfig.tags.graphical { state.directories = [ ".omp" ]; };
   _systems.defaultModules = [
     (builtins.getFlake "${builtins.unsafeDiscardStringContext sources.sbox}").nixosModules.sbox
   ];

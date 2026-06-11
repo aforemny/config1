@@ -1,5 +1,4 @@
-{ config, lib, ... }:
-{
+{ config, lib, ... }: {
   systems = lib.mapAttrs (name: _: {
     modules = [
       #{
@@ -7,9 +6,7 @@
       #  imports = [ config.platforms.${name} ];
       #}
       config.platforms.${name}
-      {
-        networking.hostName = name;
-      }
+      { networking.hostName = name; }
     ];
   }) config.platforms;
 }

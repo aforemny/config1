@@ -30,10 +30,7 @@ in
         ++ lib.map (mkInterface "wireless") wirelessInterfaces
       );
       prefix = "fd42:1234:5678:90ab";
-      inherit (pkgs.lib.mkIPv6 prefix config.networking.hostName "babel0")
-        address
-        prefixLength
-        ;
+      inherit (pkgs.lib.mkIPv6 prefix config.networking.hostName "babel0") address prefixLength;
     in
     lib.mkMerge [
       # depends on facter

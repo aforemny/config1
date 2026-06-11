@@ -12,32 +12,21 @@
           let
             inherit (config._systems) defaultModules;
           in
-          { config, ... }:
-          {
+          { config, ... }: {
             options = {
               config = lib.mkOption {
-                type = lib.mkOptionType {
-                  name = "Toplevel NixOS config";
-                };
+                type = lib.mkOptionType { name = "Toplevel NixOS config"; };
                 readOnly = true;
                 default =
-                  (import "${config.nixpkgs}/nixos/lib/eval-config.nix" {
-                    inherit (config) modules;
-                  }).config;
+                  (import "${config.nixpkgs}/nixos/lib/eval-config.nix" { inherit (config) modules; }).config;
               };
               options = lib.mkOption {
-                type = lib.mkOptionType {
-                  name = "Toplevel NixOS config";
-                };
+                type = lib.mkOptionType { name = "Toplevel NixOS config"; };
                 readOnly = true;
                 default =
-                  (import "${config.nixpkgs}/nixos/lib/eval-config.nix" {
-                    inherit (config) modules;
-                  }).options;
+                  (import "${config.nixpkgs}/nixos/lib/eval-config.nix" { inherit (config) modules; }).options;
               };
-              modules = lib.mkOption {
-                type = lib.types.listOf lib.types.deferredModule;
-              };
+              modules = lib.mkOption { type = lib.types.listOf lib.types.deferredModule; };
               nixpkgs = lib.mkOption {
                 type = lib.types.path;
                 default = sources.nixpkgs;
@@ -49,9 +38,7 @@
       );
       default = { };
     };
-    _systems.defaultModules = lib.mkOption {
-      type = lib.types.listOf lib.types.deferredModule;
-    };
+    _systems.defaultModules = lib.mkOption { type = lib.types.listOf lib.types.deferredModule; };
   };
   config._systems.defaultModules = lib.attrValues config.nixosModules;
 }

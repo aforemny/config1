@@ -1,5 +1,4 @@
-{ config, ... }:
-{
+{ config, ... }: {
   nixosModules.defaults =
     { lib, pkgs, ... }:
     lib.mkMerge [
@@ -13,9 +12,7 @@
       {
         networking.networkmanager = {
           enable = lib.mkDefault true;
-          unmanaged = [
-            "interface-name:enp*"
-          ];
+          unmanaged = [ "interface-name:enp*" ];
         };
       }
       {
@@ -30,8 +27,6 @@
           wev
         ];
       }
-      {
-        systemd.services.systemd-networkd-wait-online.wantedBy = lib.mkForce [];
-      }
+      { systemd.services.systemd-networkd-wait-online.wantedBy = lib.mkForce [ ]; }
     ];
 }
