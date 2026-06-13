@@ -27,6 +27,8 @@
           wev
         ];
       }
-      { systemd.services.systemd-networkd-wait-online.wantedBy = lib.mkForce [ ]; }
+      {
+        systemd.services.systemd-networkd-wait-online.wantedBy = lib.mkForce [ ];
+      }
     ];
 }

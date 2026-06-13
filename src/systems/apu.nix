@@ -111,7 +111,7 @@
             systemd.network.networks."40-ppp0" = {
               matchConfig.Name = "ppp0";
               networkConfig = {
-                DHCP = "ipv6";
+                DHCP = lib.mkForce "ipv6";
                 DefaultRouteOnDevice = true;
                 KeepConfiguration = "static";
               };
