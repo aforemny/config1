@@ -13,6 +13,8 @@
               zfsSupport = true;
             };
           };
+          zfs.extraPools = [ "zdata" ];
+          # do NOT request encryption credentials for filesystems `zdata/*`
           zfs.requestEncryptionCredentials = [
             "zdata"
             "zroot"
@@ -23,7 +25,7 @@
           hdd1.device = "/dev/disk/by-id/ata-ST16000NM000J-2TW103_ZR61AGS6";
           hdd2.device = "/dev/disk/by-id/ata-ST16000NM000J-2TW103_ZR7148PL";
           hdd3.device = "/dev/disk/by-id/ata-ST16000NM001G-2KK103_ZL29JM8P";
-          msata.device = "/dev/disk/by-id/ata-SATA_SSD_A45A0786058600351379";
+          msata.device = "/dev/disk/by-id/ata-SAMSUNG_MZMTD128HAFV-000L1_S15FNSAD327896";
         };
         hardware.facter = {
           enable = true;
@@ -154,6 +156,7 @@
                 datasets = {
                   "replicas" = {
                     type = "zfs_fs";
+                    options.mountpoint = "none";
                     options."com.sun:auto-snapshot" = "false";
                   };
                 };

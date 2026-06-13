@@ -48,6 +48,7 @@
         config.allowUnfreePredicate = pkg: lib.elem (lib.getName pkg) [ "minecraft-server" ];
         overlays = [ (import "${sources.nix-minecraft}/overlay.nix") ];
       };
+      state.directories = [ config.services.minecraft-servers.dataDir ];
     };
   _systems.defaultModules = [ "${sources.nix-minecraft}/modules/minecraft-servers.nix" ];
 }

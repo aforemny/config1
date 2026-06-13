@@ -5,6 +5,7 @@
         hostId = "c32250b5";
         hostName = "tower";
       };
+      tags.graphical = false;
     }
     (
       # TODO reconcile with wifi profile
