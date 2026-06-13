@@ -1,6 +1,12 @@
 {
   nixosModules.ssh = {
-    services.sshd.enable = true;
+    services.openssh = {
+      enable = true;
+      settings = {
+        PasswordAuthentication = false;
+        KbdInteractiveAuthentication = false;
+      };
+    };
     networking.firewall.allowedTCPPorts = [ 22 ];
     state = {
       files = [
@@ -10,5 +16,6 @@
         "/etc/ssh/ssh_host_rsa_key.pub"
       ];
     };
+    services.fail2ban.enable = true;
   };
 }
