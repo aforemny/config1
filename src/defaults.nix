@@ -5,6 +5,7 @@
       {
         boot.zfs.forceImportRoot = false;
         environment.enableAllTerminfo = true;
+        networking.nftables.enable = true;
         networking.useNetworkd = true;
         services.resolved.enable = lib.mkDefault true;
         users.mutableUsers = false;
