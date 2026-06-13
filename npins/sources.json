@@ -66,10 +66,10 @@
        "version_upper_bound": null,
        "release_prefix": null,
        "submodules": false,
-       "version": "v0.13.1",
-       "revision": "28d48c325e12a1f21e25fac1419bd58b4b2ae317",
-       "url": "https://api.github.com/repos/hyprspace/hyprspace/tarball/refs/tags/v0.13.1",
-       "hash": "sha256-AsOgnnYZRoB/t2XwrTMD8XIHoy/bl6bqUvIT5e02uNo="
+       "version": "v0.14.1",
+       "revision": "105806fa992ad3e21f4f0dfc4fa858fae2b87b13",
+       "url": "https://api.github.com/repos/hyprspace/hyprspace/tarball/refs/tags/v0.14.1",
+       "hash": "sha256-BtotGhctQKfP68VgG6+NsrDdEOmN/wiAzvBqloHU5BQ="
      },
      "impermanence": {
        "type": "Git",
