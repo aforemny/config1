@@ -20,6 +20,7 @@
           btop
           ethtool
           fio
+          inetutils
           iw
           jq
           nm2nix
