@@ -73,7 +73,12 @@ in
             }
           ) localInterfaces;
         };
-        networking.firewall.allowedUDPPorts = [ 6696 ];
+        # Babel speaks only to directly-connected neighbors over IPv6
+        # link-local (multicast ff02::1:6 / link-local unicast); never accept
+        # protocol traffic from routable (e.g. public) source addresses.
+        networking.firewall.extraInputRules = ''
+          ip6 saddr fe80::/10 udp dport 6696 accept
+        '';
       }
       # assign hostnames
       {
