@@ -133,16 +133,11 @@
               };
             };
 
-            networking.firewall.allowedUDPPorts = [
+            networking.firewall.interfaces.wlp5s0.allowedUDPPorts = [
               53
               67
-              953
             ];
-            networking.firewall.allowedTCPPorts = [
-              53
-              67
-              953
-            ];
+            networking.firewall.interfaces.wlp5s0.allowedTCPPorts = [ 53 ];
 
             networking.nftables.enable = true;
             networking.nftables.tables.mss-clamp = {
