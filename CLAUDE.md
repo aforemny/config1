@@ -6,25 +6,32 @@ This repository contains NixOS configurations for multiple systems (apu, x1e, to
 ## Project Structure
 ```
 src/
-├── systems/        # System-specific configurations
-├── platforms/      # Hardware platform definitions  
-├── features/       # Reusable feature modules
-├── options/        # Custom NixOS options
+├── systems/        # Per-host config (systems.<name>.modules)
+├── platforms/      # Hardware platform definitions (disko, facter, boot)
+├── features/       # Cross-cutting infra modules (state, persistence, rollback-rootfs)
+├── conventions/    # Wiring conventions (e.g. tie platforms to systems)
+├── options/        # Cake / module-system option declarations
 ├── users/          # User configurations
-└── *.nix          # Individual service/program modules
+└── *.nix           # Individual service/program modules (all of src/ is auto-imported)
 ```
+
+## Architecture
+- Not a flake: `default.nix` evaluates every `src/**/*.nix` with `lib.evalModules` (the "cake" framework); dependencies are pinned with **npins** in `npins/`.
+- `cake-module.nix` auto-imports all of `src/` recursively (`*.nix` only — editor `*.nix~` backups are ignored), so a new module is active just by existing.
+- Top-level (cake) options live in `src/options/` (`systems`, `platforms`, `nixosModules`, `overlays`, …). Reach a host's evaluated NixOS config at `config.systems.<name>.config`.
 
 ## Common Tasks
 
 ### System Configuration Updates
-- Primary systems: `apu` (router), `x1e` (laptop), `tower` (laptop), `m1` (Mac)
+- Primary systems: `apu` (router/AP), `x1e` (laptop), `tower` (headless ZFS NAS/server), `m1` (Apple Silicon Mac)
 - Configuration pattern: platforms provide hardware, systems compose features
 - After changes: `ASECRET_DRY_RUN= cake build --expr config.systems.<system>.config.system.build.toplevel`
 
 ### Code Standards
-- NixOS modules use `config`, `lib`, `pkgs` arguments
-- Maintain existing code style and indentation
-- Test changes with `ASECRET_DRY_RUN= cake build --expr config.systems.<system>.config.system.build.toplevel` first
+- Two layers: a top-level `src/*.nix` is a *cake* module (`{ config, lib, pkgs, sources, ... }`) that usually defines `nixosModules.<name> = { config, lib, pkgs, ... }: …`; these apply to every host.
+- Scope config to one host with `systems.<name>.modules = [ { /* nixos module */ } ];` (see `radicle.nix`, `dns.nix`).
+- Maintain existing code style and indentation; format with `nixfmt` (RFC style, via `treefmt`) before committing.
+- Verify changes before committing (see Quick Commands).
 
 ## Conventions
 
@@ -34,15 +41,27 @@ src/
 - Test on one system before deploying to all
 
 ### Module Organization
-- Hardware-specific → `platforms/`
-- System composition → `systems/`
-- Reusable services → feature modules
+- Hardware-specific → `platforms/<name>.nix`
+- System composition → `systems/<name>.nix`
+- Reusable service/program modules → top-level `src/<name>.nix` (define `nixosModules.<name>`)
+- Cross-cutting feature infra → `features/` (e.g. `state`, `persistence`, `rollback-rootfs`)
 - User-specific → `users/<name>.nix`
 
 ### Security
-- Secrets managed via `asecret` module
-- No plaintext passwords in configs
-- Use systemd's `LoadCredential` for runtime secrets
+- Two secret backends: `asecret` (GPG password-store under `secrets/`; `pkgs.asecret-lib.password "<path>"` yields a `LoadCredential` source) and `agenix-rekey` (age, under `secrets1/`).
+- agenix-rekey: a secret with a `generator` defaults its `rekeyFile` to `secrets1/generated/<name>.age`; per-host rekeyed copies are `secrets1/rekeyed/<host>/<hash>-<name>.age`. Define reusable generators centrally in `src/agenix-rekey.nix` (`age.generators.<name>`) and reference them via `age.secrets.<name>.generator.script = "<name>"`. A generator may write an adjacent committed `<name>.pub` for eval-time public keys (see `ssh-ed25519-pub`, used by `radicle.nix`).
+- Rotate/create secrets with `agenix generate [-f] <name>`, then `agenix rekey` (needs the master identity `~/.ssh/id_ed25519`; master pubkey in `default.nix`, host pubkeys in `src/host-keys.nix`).
+- No plaintext passwords in configs.
+- Use systemd's `LoadCredential` for runtime secrets.
+
+### Persistence
+- Hosts with a rollback rootfs (e.g. `tower`) wipe `/` on boot (`features/rollback-rootfs.nix`); declare survivable paths via `state.directories` / `state.files`, which `features/persistence.nix` collects into `/persist`.
+- Any stateful service MUST add its data dir (and `/var/lib/acme` if it terminates TLS), or it loses state every reboot.
+
+### Public services (DNS & TLS)
+- `tower` is the public-facing host; its dynamic IPv6 is published to the `nomath.org` Hetzner zone by `src/dns.nix`.
+- A service declares its own label via the `dns.dynamicAAAA` option (e.g. `dns.dynamicAAAA = [ "radicle" ];`); `src/dns.nix` collects every label through the module system and syncs the AAAA records. Don't hardcode record lists in `dns.nix`.
+- For HTTPS: `services.nginx.enable`, ACME (`security.acme.acceptTerms` + `defaults.email`), `forceSSL`/`enableACME` on the vhost, open firewall 80/443, and persist `/var/lib/acme`.
 
 ## Active Issues
 <!-- List any known issues or ongoing work here -->
@@ -50,9 +69,18 @@ src/
 
 ## Quick Commands
 
-### Test configuration
+All eval/build runs **inside the devshell** (`.envrc` = `use nix`, or `nix-shell`): its `shellHook` sets `NIX_CONFIG` (nix-plugins `plugin-files` + asecret `extra-builtins-file`) and `PASSWORD_STORE_DIR`. Outside it, eval fails with `attribute 'extraBuiltins' missing`. Always prefix with `ASECRET_DRY_RUN=` so GPG isn't invoked during eval.
+
+### Build a system
 ```bash
 ASECRET_DRY_RUN= cake build --expr config.systems.<system>.config.system.build.toplevel
+```
+
+### Fast verify (eval only, no build)
+`cake eval` runs `with (import ./. {}); <expr>` with `--read-write-mode`, so freshly added/rekeyed secret files are picked up.
+```bash
+ASECRET_DRY_RUN= cake eval --expr 'config.systems.<system>.config.system.build.toplevel.drvPath'
+ASECRET_DRY_RUN= cake eval --expr 'config.systems.<system>.config.services.<svc>.enable'
 ```
 
 ## Notes
@@ -64,4 +92,4 @@ ASECRET_DRY_RUN= cake build --expr config.systems.<system>.config.system.build.t
 - Systemd Network: https://www.freedesktop.org/software/systemd/man/systemd.network.html
 
 ---
-*Last updated: 2024-06-01*
+*Last updated: 2026-06-21*
