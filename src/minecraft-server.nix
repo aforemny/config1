@@ -44,6 +44,8 @@
         };
       };
       networking.firewall.allowedUDPPorts = [ 24454 ];
+      # Published as mc1.nomath.org by src/dns.nix.
+      dns.dynamicAAAA = [ "mc1" ];
       nixpkgs = {
         config.allowUnfreePredicate = pkg: lib.elem (lib.getName pkg) [ "minecraft-server" ];
         overlays = [ (import "${sources.nix-minecraft}/overlay.nix") ];
