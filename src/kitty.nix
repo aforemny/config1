@@ -1,4 +1,4 @@
-{ config, sources, ... }:
+{ config, ... }:
 let
   inherit (config) wrapperModules;
 in
@@ -12,29 +12,28 @@ in
     }:
     let
       cfg = config.programs.kitty;
+      kitty = wrapperModules.kitty.extend { inherit pkgs; };
     in
     {
       options.programs.kitty = {
         package = lib.mkOption {
           type = lib.types.package;
           default =
-            (wrapperModules.kitty.apply (
-              {
-                inherit pkgs;
-              }
-              // cfg.config
-            )).wrapper;
+            (kitty.config.apply {
+              inherit (cfg.config) settings extraSettings;
+            }).wrapper;
           readOnly = true;
         };
-        config =
-          (import "${sources.wrappers}/modules/kitty/module.nix" {
-            config = {
-              inherit pkgs;
-            }
-            // cfg.config;
-            inherit lib;
-            wlib = import "${sources.wrappers}/lib" { inherit lib; };
-          }).options;
+        config = {
+          settings = lib.mkOption {
+            type = kitty.options.settings.type;
+            default = { };
+          };
+          extraSettings = lib.mkOption {
+            type = kitty.options.extraSettings.type;
+            default = "";
+          };
+        };
       };
       config = lib.mkMerge [
         {
