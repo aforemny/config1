@@ -82,6 +82,12 @@
               proxyPass = "http://127.0.0.1:8080";
               recommendedProxySettings = true;
             };
+            # radicle-httpd raw blob endpoint, used by the explorer for README
+            # images, "view raw" links, etc.: https://${fqdn}/raw/<rid>/<sha>/<path>
+            locations."/raw/" = {
+              proxyPass = "http://127.0.0.1:8080";
+              recommendedProxySettings = true;
+            };
           };
         };
 
