@@ -38,21 +38,48 @@
             pkgs.writeShellApplication {
               name = "set-hetzner-dns-script";
               text = ''
-                set -x
-                records=$(
+                # Current global IPv6 addresses as a JSON array of { value: ... }.
+                addrs=$(
                   ip -6 addr show ${interface} |
                   grep -i global |
                   grep -Pv 'temporary|deprecated' |
                   awk '{print $2}' |
                   jq -R |
-                  jq -s 'map({ value: sub("/.*"; "") }) | { records : . }'
+                  jq -s 'map({ value: sub("/.*"; "") })'
                 )
+                token="$(cat "$CREDENTIALS_DIRECTORY"/api-key)"
+                base="https://api.hetzner.cloud/v1/zones/${zone}/rrsets"
+                set_body=$(jq -n --argjson records "$addrs" '{ records: $records }')
                 for name in ${lib.escapeShellArgs config.dns.dynamicAAAA}; do
-                  curl -fsS \
-                    -H 'Authorization: Bearer '"$(cat "$CREDENTIALS_DIRECTORY"/api-key)" \
-                    -H 'Content-Type: application/json' \
-                    --data "$records" \
-                    "https://api.hetzner.cloud/v1/zones/${zone}/rrsets/$name/AAAA/actions/set_records"
+                  # Replace the records if the AAAA rrset exists, otherwise create it.
+                  status=$(
+                    curl -sS -o /dev/null -w '%{http_code}' \
+                      -H "Authorization: Bearer $token" \
+                      "$base/$name/AAAA"
+                  )
+                  case "$status" in
+                    200)
+                      curl -fsS \
+                        -H "Authorization: Bearer $token" \
+                        -H 'Content-Type: application/json' \
+                        --data "$set_body" \
+                        "$base/$name/AAAA/actions/set_records"
+                      ;;
+                    404)
+                      # Low TTL because the address is dynamic.
+                      create_body=$(jq -n --arg name "$name" --argjson records "$addrs" \
+                        '{ name: $name, type: "AAAA", ttl: 60, records: $records }')
+                      curl -fsS \
+                        -H "Authorization: Bearer $token" \
+                        -H 'Content-Type: application/json' \
+                        --data "$create_body" \
+                        "$base"
+                      ;;
+                    *)
+                      echo "unexpected status $status for $name.${zone}" >&2
+                      exit 1
+                      ;;
+                  esac
                 done
               '';
               runtimeInputs = with pkgs; [
