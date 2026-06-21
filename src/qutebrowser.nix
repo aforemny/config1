@@ -55,7 +55,7 @@
           }
         )
       ];
-      config = lib.mkIf (config.tags.graphical or false) (
+      config = lib.mkIf (osConfig.tags.graphical or false) (
         lib.mkMerge [
           {
             programs.qutebrowser = {
