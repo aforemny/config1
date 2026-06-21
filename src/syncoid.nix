@@ -20,7 +20,8 @@
           commands = {
             "zroot/safe" = {
               inherit target;
-              sendOptions = "Rw";
+              recursive = true;
+              sendOptions = "w";
               recvOptions = "u";
               extraArgs = [ "--no-sync-snap" ];
             };
