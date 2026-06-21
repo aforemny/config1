@@ -15,27 +15,20 @@ in
       niri = wrapperModules.niri.extend { inherit pkgs; };
     in
     {
-      disabledModules = [
-        "${sources.nixpkgs}/nixos/modules/programs/wayland/niri.nix"
-      ];
-      options.programs.niri = {
-        enable = lib.mkEnableOption "niri";
-        package = lib.mkOption {
-          type = lib.types.package;
-          default =
-            (niri.config.apply {
-              inherit (cfg.config) settings;
-            }).wrapper;
-          readOnly = true;
-        };
-        config.settings = lib.mkOption {
-          type = niri.options.settings.type;
-          default = { };
-        };
+      options.programs.niri.config.settings = lib.mkOption {
+        type = niri.options.settings.type;
+        default = { };
       };
       config = lib.mkMerge [
         {
-          programs.niri.enable = lib.mkDefault (config.tags.graphical or false);
+          programs.niri = {
+            enable = lib.mkDefault (config.tags.graphical or false);
+            package =
+              lib.mkDefault
+                (niri.config.apply {
+                  inherit (cfg.config) settings;
+                }).wrapper;
+          };
         }
         (lib.mkIf cfg.enable (
           lib.mkMerge [
