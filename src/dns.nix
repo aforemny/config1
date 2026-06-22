@@ -26,7 +26,6 @@
       }:
       let
         zone = "nomath.org";
-        interface = "wlp5s0u1i2";
       in
       lib.mkIf (config.dns.dynamicAAAA != [ ]) {
         systemd.services.set-hetzner-dns = {
@@ -38,9 +37,22 @@
             pkgs.writeShellApplication {
               name = "set-hetzner-dns-script";
               text = ''
+                # The WAN interface is determined dynamically from the default
+                # IPv6 route rather than hardcoded: the USB WiFi adapter is
+                # renamed by the kernel (e.g. wlp5s0u1i2 -> wlp0s29u1u2i2) when
+                # it is moved to a different port, which would otherwise break
+                # this updater.
+                interface=$(
+                  ip -6 route show default |
+                  awk '{ for (i = 1; i < NF; i++) if ($i == "dev") { print $(i + 1); exit } }'
+                )
+                if [ -z "$interface" ]; then
+                  echo "no default IPv6 route; cannot determine WAN interface" >&2
+                  exit 1
+                fi
                 # Current global IPv6 addresses as a JSON array of { value: ... }.
                 addrs=$(
-                  ip -6 addr show ${interface} |
+                  ip -6 addr show "$interface" |
                   grep -i global |
                   grep -Pv 'temporary|deprecated' |
                   awk '{print $2}' |
