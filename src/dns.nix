@@ -110,4 +110,33 @@
       }
     )
   ];
+
+  systems.apu.modules = [
+    {
+      networking.nftables.tables.wan-inbound-filter = {
+        family = "ip6";
+        content = ''
+          chain forward {
+            type filter hook forward priority filter; policy accept;
+
+            # Replies to connections a client itself opened.
+            iifname "ppp0" ct state { established, related } accept
+
+            # Exception: tower is reachable from the public internet.
+            # The delegated /56 rotates daily, so match tower by its
+            # stable interface identifier (low 64 bits) only, which is
+            # independent of the current prefix. tower pins this IID
+            # (= lib.mkIPv6 _ "tower" "lan") on its side; see
+            # systems/tower.nix.
+            iifname "ppp0" ip6 daddr & ::ffff:ffff:ffff:ffff == ::5143:4fdf:f468:2801 accept
+
+            # Everything else new from the WAN: no other client behind
+            # apu is reachable from the public internet.
+            iifname "ppp0" drop
+          }
+        '';
+      };
+    }
+  ];
+
 }

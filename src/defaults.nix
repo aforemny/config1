@@ -19,13 +19,19 @@
       {
         environment.systemPackages = with pkgs; [
           btop
+          btop
           ethtool
           fio
           inetutils
           iw
+          iw
           jq
+          nixos-facter
           nm2nix
           python3
+          speedtest-cli
+          tcpdump
+          usbutils
           wev
         ];
       }
