@@ -18,16 +18,33 @@ in
           ) config.hardware.facter.report.hardware.network_interface
         )
       );
-      wiredInterfaces = lib.filter (lib.hasPrefix "en") networkInterfaces;
-      wirelessInterfaces = lib.filter (lib.hasPrefix "wl") networkInterfaces;
       ethernetDongles = [
         "enp44s0u1"
         "enp44s0u2"
       ];
       mkInterface = type: name: lib.nameValuePair name { inherit type; };
+      # A physical interface enslaved to a bridge has no L3 of its own, so babel
+      # must not run on it directly; it speaks on the bridge instead. A bridge is
+      # a multi-access shared segment (and apu's also carries the WiFi AP, added
+      # out-of-band by hostapd), so it is treated as wireless: split-horizon off
+      # so routes learned from one client are relayed to the others.
+      bridges = config.networking.bridges;
+      # WiFi BSS interfaces that hostapd attaches to a bridge (the BSS name is the
+      # interface name) are enslaved just like networkd bridge members.
+      hostapdBridged = lib.concatLists (
+        lib.mapAttrsToList (
+          _: radio: lib.filter (bss: radio.networks.${bss}.settings ? bridge) (lib.attrNames radio.networks)
+        ) config.services.hostapd.radios
+      );
+      enslaved = lib.concatMap (bridge: bridge.interfaces) (lib.attrValues bridges) ++ hostapdBridged;
+      unenslaved = lib.filter (name: !(lib.elem name enslaved));
+      wiredInterfaces = unenslaved (lib.filter (lib.hasPrefix "en") networkInterfaces);
+      wirelessInterfaces = unenslaved (lib.filter (lib.hasPrefix "wl") networkInterfaces);
+      bridgeInterfaces = lib.map (mkInterface "wireless") (lib.attrNames bridges);
       localInterfaces = lib.listToAttrs (
-        lib.map (mkInterface "wired") (wiredInterfaces ++ ethernetDongles)
+        lib.map (mkInterface "wired") (wiredInterfaces ++ unenslaved ethernetDongles)
         ++ lib.map (mkInterface "wireless") wirelessInterfaces
+        ++ bridgeInterfaces
       );
       prefix = "fd42:1234:5678:90ab";
       inherit (pkgs.lib.mkIPv6 prefix config.networking.hostName "babel0") address prefixLength;

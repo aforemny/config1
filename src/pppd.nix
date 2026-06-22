@@ -24,13 +24,6 @@
             UseDomains = false;
           };
         };
-        systemd.network.networks."40-wlp5s0" = {
-          matchConfig.Name = "wlp5s0";
-          networkConfig = {
-            DHCPPrefixDelegation = "yes";
-            IPv6SendRA = true;
-          };
-        };
         networking.nftables.tables.mss-clamp = {
           family = "inet";
           content = ''
@@ -43,7 +36,7 @@
         networking.nat = {
           enable = true;
           externalInterface = "ppp0";
-          internalInterfaces = [ "wlp5s0" ];
+          internalInterfaces = [ "lan" ];
         };
         services.pppd = {
           enable = true;

@@ -7,10 +7,10 @@
         enable = true;
         settings = {
           bind-interfaces = true;
-          interface = "wlp5s0";
+          interface = "lan";
           dhcp-range = [
             "192.168.1.2,192.168.1.254"
-            "::1,::400,constructor:wlp5s0,ra-names,12h"
+            "::1,::400,constructor:lan,ra-names,12h"
           ];
           dhcp-option = [ "option6:dns-server,[::]" ];
           enable-ra = true;
@@ -23,21 +23,15 @@
         };
       };
       systemd.services.dnsmasq = {
-        after = [ "sys-subsystem-net-devices-wlp5s0.device" ];
-        requires = [ "sys-subsystem-net-devices-wlp5s0.device" ];
+        after = [ "sys-subsystem-net-devices-lan.device" ];
+        requires = [ "sys-subsystem-net-devices-lan.device" ];
       };
-      networking.firewall.interfaces.wlp5s0.allowedUDPPorts = [
+      networking.firewall.interfaces.lan.allowedUDPPorts = [
         53 # DNS
         67 # DHCP
       ];
-      networking.firewall.interfaces.wlp5s0.allowedTCPPorts = [
+      networking.firewall.interfaces.lan.allowedTCPPorts = [
         53 # DNS
-      ];
-      networking.interfaces.wlp5s0.ipv4.addresses = [
-        {
-          address = "192.168.1.1";
-          prefixLength = 24;
-        }
       ];
     }
   ];
