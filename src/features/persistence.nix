@@ -14,8 +14,11 @@
       config = lib.mkMerge [
         {
           environment.persistence."/persist" = {
-            directories = lib.mkIf cfg.enable config.state.directories;
-            files = lib.mkIf cfg.enable config.state.files;
+            # Two independent modules may legitimately persist the same path
+            # (e.g. radicle and keycloak both need /var/lib/acme); impermanence
+            # rejects exact duplicates, so collapse them here.
+            directories = lib.mkIf cfg.enable (lib.unique config.state.directories);
+            files = lib.mkIf cfg.enable (lib.unique config.state.files);
           };
         }
         {

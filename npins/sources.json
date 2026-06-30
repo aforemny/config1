@@ -55,6 +55,19 @@
       "url": "https://github.com/aforemny/cake/archive/73f12461cb2d7f537af18612697df4855ea7542a.tar.gz",
       "hash": "sha256-cQc64eRSIqPUXUaM8IDLdHcpZgmJWCsbLHMxHobKbh4="
     },
+    "declarative-runtime": {
+      "type": "Git",
+      "repository": {
+        "type": "GitHub",
+        "owner": "applicative-systems",
+        "repo": "declarative-runtime"
+      },
+      "branch": "keycloak",
+      "submodules": false,
+      "revision": "4d998349a84b473ecc5f1b9b54bdde0f27e51ff6",
+      "url": "https://github.com/applicative-systems/declarative-runtime/archive/4d998349a84b473ecc5f1b9b54bdde0f27e51ff6.tar.gz",
+      "hash": "sha256-YJDWmOgaZwjyHRen/FCEG+84YLBlA5CfYXKSOlaAL/w="
+    },
     "disko": {
       "type": "GitRelease",
       "repository": {
