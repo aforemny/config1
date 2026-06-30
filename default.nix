@@ -26,4 +26,9 @@ let
     inherit specialArgs;
   };
 in
-eval // specialArgs
+eval
+// specialArgs
+// {
+  inherit (eval._module.args) pkgs;
+  inherit (eval._module.args.pkgs) lib;
+}
