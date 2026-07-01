@@ -18,7 +18,10 @@ in
           ) config.hardware.facter.report.hardware.network_interface
         )
       );
-      ethernetDongles = [
+      # apu's two USB Ethernet dongles are extra babel mesh links. They are in
+      # no facter report, so they must be hard-coded -- but only on apu, else
+      # they appear as phantom interfaces in every other host's babel config.
+      ethernetDongles = lib.optionals (config.networking.hostName == "apu") [
         "enp44s0u1"
         "enp44s0u2"
       ];
