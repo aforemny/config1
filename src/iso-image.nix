@@ -29,6 +29,32 @@ let
         "flakes"
       ];
     };
+  # On the auto-login console, present a live display of the machine's IP
+  # addresses so a headless install can be reached over SSH. `watch` redraws
+  # `ip address` every two seconds; press Ctrl-C to drop to a shell. Colour is
+  # used on virtual consoles but omitted on serial consoles (e.g. ap), where the
+  # ANSI escapes would otherwise render as literal text.
+  consoleIpModule =
+    { pkgs, ... }:
+    {
+      programs.bash.loginShellInit = ''
+        if [[ $- == *i* && -z ''${SSH_CONNECTION:-} ]]; then
+          case "$(tty)" in
+            # Pseudo-terminal (SSH/tmux): leave a plain shell.
+            /dev/pts/*) ;;
+            # Virtual console: renders ANSI colour.
+            /dev/tty[0-9]*)
+              ${pkgs.procps}/bin/watch --color --interval 2 ${pkgs.iproute2}/bin/ip --brief --color address
+              ;;
+            # Serial console (e.g. ap) and other ttys: colour escapes show as
+            # literal text, so display without colour.
+            *)
+              ${pkgs.procps}/bin/watch --interval 2 ${pkgs.iproute2}/bin/ip --brief address
+              ;;
+          esac
+        fi
+      '';
+    };
 in
 {
   options.isoImages = lib.mkOption {
@@ -43,6 +69,7 @@ in
       "${sources.nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
       sshModule
       toolingModule
+      consoleIpModule
       #config.platforms.m1
       (
         #  #{ lib, ... }:
@@ -64,6 +91,7 @@ in
       "${sources.nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
       sshModule
       toolingModule
+      consoleIpModule
       {
         # TODO facter does not set this
         boot.kernelParams = [
@@ -82,6 +110,7 @@ in
       "${sources.nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
       sshModule
       toolingModule
+      consoleIpModule
       #config.platforms.m1
       (
         #  #{ lib, ... }:

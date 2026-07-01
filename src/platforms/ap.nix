@@ -2,17 +2,9 @@
   platforms.ap =
     { config, lib, ... }:
     {
-      # `ap` is a second apu4d4, identical hardware to `apu`. Until it is
-      # installed, `ap.json` is a copy of apu's facter report (same board, so
-      # the same NICs -- enp1s0..enp4s0, wlp5s0 -- and drivers). Regenerate it
-      # on the target after the first boot: `nixos-facter -o /root/ap.json`,
-      # copy it over this file, then rebuild.
       imports = [
         {
-          # TODO set to this box's root disk, e.g. the `/dev/disk/by-id/wwn-...`
-          # or `/dev/disk/by-id/ata-...` link reported by `ls -l /dev/disk/by-id`
-          # on the installer. apu's is `wwn-0x50026b77849de265`.
-          disko.devices.disk.main.device = "/dev/disk/by-id/CHANGE-ME-ap-root-disk";
+          disko.devices.disk.main.device = "/dev/disk/by-id/ata-KINGSTON_SUV500MS120G_50026B77838C1490";
         }
       ];
       fileSystems."/persist".neededForBoot = true;
