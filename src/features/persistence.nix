@@ -21,6 +21,12 @@
         {
           environment.persistence."/persist" = {
             directories = lib.mkIf cfg.enable [ "/var/lib/nixos" ];
+            # The rollback root wipes /etc on every boot; unless machine-id is
+            # persisted it is regenerated each boot, which reshuffles everything
+            # derived from it -- notably systemd-networkd's `persistent` MAC (so
+            # bridge MACs churn) and the DHCP DUID -- so DHCP leases and IPs move
+            # on every reboot.
+            files = lib.mkIf cfg.enable [ "/etc/machine-id" ];
           };
         }
       ];
