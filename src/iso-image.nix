@@ -29,6 +29,23 @@
     ];
     #system = "aarch64-linux";
   };
+  # Bootable installer image for `ap` (a second apu4d4). Build with:
+  #   cake build --expr config.isoImages.ap.config.system.build.isoImage
+  # then `dd` it to a USB stick and boot the apu over its serial console.
+  config.isoImages.ap = import "${pkgs.path}/nixos/lib/eval-config.nix" {
+    modules = [
+      "${sources.nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
+      {
+        # TODO facter does not set this
+        boot.kernelParams = [
+          "console=tty0"
+          "console=ttyS0,115200n8"
+        ];
+        hardware.facter.enable = true;
+        hardware.facter.reportPath = ./platforms/ap.json;
+      }
+    ];
+  };
   config.isoImages.m1 = import "${pkgs.path}/nixos/lib/eval-config.nix" {
     modules = [
       #"${sources.disko}/module.nix"
