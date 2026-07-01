@@ -5,6 +5,16 @@
   sources,
   ...
 }:
+let
+  # The operator's SSH public key (mirrors users/aforemny.nix).
+  aforemnyKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBvRliydgYlyjKeMAEuVWWvmr82rZBXaA5ZM9U8r0pyN aforemny@x1e"; # TODO
+  # Enable the SSH daemon and authorize the operator's key for root on every
+  # installer ISO, so freshly booted media is reachable over the network.
+  sshModule = {
+    services.openssh.enable = true;
+    users.users.root.openssh.authorizedKeys.keys = [ aforemnyKey ];
+  };
+in
 {
   options.isoImages = lib.mkOption {
     type = lib.types.attrsOf lib.types.unspecified;
@@ -16,6 +26,7 @@
       #"${sources.disko}/module.nix"
       #"${sources.nixos-apple-silicon}/apple-silicon-support"
       "${sources.nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
+      sshModule
       #config.platforms.m1
       (
         #  #{ lib, ... }:
@@ -35,6 +46,7 @@
   config.isoImages.ap = import "${pkgs.path}/nixos/lib/eval-config.nix" {
     modules = [
       "${sources.nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
+      sshModule
       {
         # TODO facter does not set this
         boot.kernelParams = [
@@ -51,6 +63,7 @@
       #"${sources.disko}/module.nix"
       "${sources.nixos-apple-silicon}/apple-silicon-support"
       "${sources.nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
+      sshModule
       #config.platforms.m1
       (
         #  #{ lib, ... }:
