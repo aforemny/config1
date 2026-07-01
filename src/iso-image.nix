@@ -14,6 +14,21 @@ let
     services.openssh.enable = true;
     users.users.root.openssh.authorizedKeys.keys = [ aforemnyKey ];
   };
+  # Ship the installer with the nixos-facter hardware profiler and btop, and
+  # enable the modern Nix CLI (nix-command) plus flakes, so the operator can
+  # profile hardware and run flake-based installs from the live environment.
+  toolingModule =
+    { pkgs, ... }:
+    {
+      environment.systemPackages = with pkgs; [
+        btop
+        nixos-facter
+      ];
+      nix.settings.experimental-features = [
+        "nix-command"
+        "flakes"
+      ];
+    };
 in
 {
   options.isoImages = lib.mkOption {
@@ -27,6 +42,7 @@ in
       #"${sources.nixos-apple-silicon}/apple-silicon-support"
       "${sources.nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
       sshModule
+      toolingModule
       #config.platforms.m1
       (
         #  #{ lib, ... }:
@@ -47,6 +63,7 @@ in
     modules = [
       "${sources.nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
       sshModule
+      toolingModule
       {
         # TODO facter does not set this
         boot.kernelParams = [
@@ -64,6 +81,7 @@ in
       "${sources.nixos-apple-silicon}/apple-silicon-support"
       "${sources.nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
       sshModule
+      toolingModule
       #config.platforms.m1
       (
         #  #{ lib, ... }:
