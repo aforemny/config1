@@ -14,12 +14,12 @@
 
   homeManagerModules.radicle =
     {
-      config,
+      osConfig,
       lib,
       pkgs,
       ...
     }:
-    lib.mkIf (config.tags.graphical or false) {
+    lib.mkIf (osConfig.tags.graphical or false) {
       state.directories = [ ".radicle" ];
     };
 
