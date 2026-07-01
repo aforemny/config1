@@ -5,6 +5,8 @@
   ...
 }:
 {
+  # system x1e has not been ported yet and is only a placeholder here.
+  # its configuration and deployment is not accessible from this repository.
   systems.x1e.modules = [
     {
       boot.loader.grub.device = "nodev";
