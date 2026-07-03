@@ -140,7 +140,7 @@
             # independent of the current prefix. tower pins this IID
             # (= lib.mkIPv6 _ "tower" "lan") on its side; see
             # systems/tower.nix.
-            iifname "ppp0" ip6 daddr & ::ffff:ffff:ffff:ffff == ::5143:4fdf:f468:2801 accept
+            iifname "ppp0" ip6 daddr & ::ffff:ffff:ffff:ffff == ::be5f:f4ff:fe02:536e accept
 
             # Everything else new from the WAN: no other client behind
             # apu is reachable from the public internet.
