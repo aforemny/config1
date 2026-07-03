@@ -159,6 +159,18 @@
                     options.mountpoint = "none";
                     options."com.sun:auto-snapshot" = "false";
                   };
+                  "local" = {
+                    type = "zfs_fs";
+                    options.mountpoint = "none";
+                    options."com.sun:auto-snapshot" = "false";
+                  };
+                  # Transmission state + downloads live on the big raidz2 pool,
+                  # not zroot: bulk, replaceable data that must not sit on the
+                  # rollback rootfs. Under local/ so it inherits no-auto-snapshot.
+                  "local/transmission" = {
+                    type = "zfs_fs";
+                    mountpoint = "/var/lib/transmission";
+                  };
                 };
               };
             };
