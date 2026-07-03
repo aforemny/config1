@@ -248,6 +248,19 @@
       "revision": "7e4f77dd0afe3453cc41bdb91513784e9ff50d8a",
       "url": "https://github.com/Lassulus/wrappers/archive/7e4f77dd0afe3453cc41bdb91513784e9ff50d8a.tar.gz",
       "hash": "sha256-2tDw4bqspsxLevqOOGjK7u5igHYGQDBWqfSoQYFRT6A="
+    },
+    "vpn-confinement": {
+      "type": "Git",
+      "repository": {
+        "type": "GitHub",
+        "owner": "Maroka-chan",
+        "repo": "VPN-Confinement"
+      },
+      "branch": "master",
+      "submodules": false,
+      "revision": "cf5bfc4c3559f2e783698b1aa23c165072039a7d",
+      "url": "https://github.com/Maroka-chan/VPN-Confinement/archive/cf5bfc4c3559f2e783698b1aa23c165072039a7d.tar.gz",
+      "hash": "sha256-Bz3n2THDGf90Z9gMqhH/J492prYH8B6RFRlxv/fPBwc="
     }
   },
   "version": 7
