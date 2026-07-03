@@ -65,6 +65,16 @@
           localStorageDir = "${_agenix-rekey.secretsDir}/rekeyed/${config.networking.hostName}";
           generatedSecretsDir = "${_agenix-rekey.secretsDir}/generated";
         };
+        # On rollback-rootfs hosts the SSH host keys are bind-mounted from
+        # /persist (src/ssh.nix), but the agenix activation script runs before
+        # that mount is ready on cold boot -- so no identity is found and every
+        # secret fails to decrypt. Read the identities straight from /persist,
+        # which is mounted early (neededForBoot). Scoped to hosts that actually
+        # configure /persist; others keep agenix's /etc/ssh default.
+        age.identityPaths = lib.mkIf (config.fileSystems ? "/persist") [
+          "/persist/etc/ssh/ssh_host_ed25519_key"
+          "/persist/etc/ssh/ssh_host_rsa_key"
+        ];
         # TODO
         age.secrets.randomPassword = {
           generator.script = "passphrase";
