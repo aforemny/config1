@@ -1,4 +1,5 @@
-{ config, sources, ... }: {
+{ config, sources, ... }:
+{
   nixosModules.jujutsu =
     { pkgs, ... }:
     let

@@ -1,4 +1,5 @@
-{ config, lib, ... }: {
+{ config, lib, ... }:
+{
   nixosModules.state = {
     options.state = {
       directories = lib.mkOption { type = lib.types.listOf lib.types.str; };

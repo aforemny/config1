@@ -1,4 +1,5 @@
-{ sources, ... }: {
+{ sources, ... }:
+{
   nixosModules.omp =
     {
       config,

@@ -10,12 +10,14 @@ in
 {
   options._asecret.PASSWORD_STORE_DIR = lib.mkOption { type = lib.types.path; };
   config = {
-    nixosModules.asecret = { lib, options, ... }: {
-      imports = [
-        "${/home/aforemny/s/asecret}/modules" # TODO
-      ];
-      config = lib.mkIf (options ? "state") { state.directories = [ "/var/src/secrets" ]; };
-    };
+    nixosModules.asecret =
+      { lib, options, ... }:
+      {
+        imports = [
+          "${/home/aforemny/s/asecret}/modules" # TODO
+        ];
+        config = lib.mkIf (options ? "state") { state.directories = [ "/var/src/secrets" ]; };
+      };
     overlays = {
       asecret = lib.composeManyExtensions [
         (import "${/home/aforemny/s/asecret}/pkgs" # TODO

@@ -1,4 +1,5 @@
-{ config, lib, ... }: {
+{ config, lib, ... }:
+{
   systems = lib.mapAttrs (name: _: {
     modules = [
       #{

@@ -1,4 +1,5 @@
-{ sources, ... }: {
+{ sources, ... }:
+{
   nixosModules.kitty =
     { pkgs, ... }:
     let

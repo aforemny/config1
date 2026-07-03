@@ -12,7 +12,8 @@
           let
             inherit (config._systems) defaultModules;
           in
-          { config, ... }: {
+          { config, ... }:
+          {
             options = {
               config = lib.mkOption {
                 type = lib.mkOptionType { name = "Toplevel NixOS config"; };

@@ -1,4 +1,5 @@
-{ sources, ... }: {
+{ sources, ... }:
+{
   nixosModules.colorscheme = {
     colorscheme = import "${sources.nix-colors}/schemes/materialtheme/material.nix";
   };

@@ -1,1 +1,4 @@
-{ sources, ... }: { _systems.defaultModules = [ "${sources.disko}/module.nix" ]; }
+{ sources, ... }:
+{
+  _systems.defaultModules = [ "${sources.disko}/module.nix" ];
+}

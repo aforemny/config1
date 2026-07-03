@@ -1,4 +1,5 @@
-{ config, sources, ... }: {
+{ config, sources, ... }:
+{
   nixosModules.homeManager =
     let
       inherit (config) homeManagerModules;

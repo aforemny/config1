@@ -1,6 +1,7 @@
 {
   nixosModules.qutebrowser = (
-    { lib, ... }: {
+    { lib, ... }:
+    {
       nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [ "widevine-cdm" ];
     }
   );
@@ -23,7 +24,8 @@
             options.programs.qutebrowser.userScripts = lib.mkOption {
               type = lib.types.attrsOf (
                 lib.types.submodule (
-                  { name, ... }: {
+                  { name, ... }:
+                  {
                     options = {
                       name = lib.mkOption {
                         type = lib.types.str;

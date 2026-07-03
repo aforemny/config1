@@ -1,4 +1,5 @@
-{ config, ... }: {
+{ config, ... }:
+{
   nixosModules.defaults =
     { lib, pkgs, ... }:
     lib.mkMerge [

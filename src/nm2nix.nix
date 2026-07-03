@@ -1,4 +1,5 @@
-{ sources, ... }: {
+{ sources, ... }:
+{
   overlays.nm2nix = (
     self: super: {
 
