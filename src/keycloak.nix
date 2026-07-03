@@ -110,7 +110,12 @@
         state.directories = [
           "/var/lib/postgresql" # keycloak's database
           "/var/lib/keycloak" # OpenTofu reconciler state
-          "/var/lib/declarative-keycloak-bootstrap" # minted service-account client
+          # The bootstrap runs as DynamicUser, so systemd keeps its StateDirectory
+          # under /var/lib/private/. Persist that real path, not the public
+          # /var/lib/declarative-keycloak-bootstrap symlink: persisting the public
+          # path makes systemd try to migrate public->private (a rename of a
+          # bind-mount) on start, which fails with EBUSY.
+          "/var/lib/private/declarative-keycloak-bootstrap" # minted service-account client
           "/var/lib/acme" # TLS certificates
         ];
       }
