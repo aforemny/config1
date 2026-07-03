@@ -11,7 +11,9 @@
       let
         fqdn = "keycloak.nomath.org";
         # Keycloak's own HTTP listener: loopback only, nginx is the only client.
-        httpPort = 8080;
+        # Port 8081 (not 8080) to avoid colliding with radicle-httpd's loopback
+        # listener; nginx and the runtime layer follow baseUrl below.
+        httpPort = 8081;
         baseUrl = "http://127.0.0.1:${toString httpPort}";
         # Master-realm admin password. agenix-rekey generates a 48-char random
         # value, keeps it age-encrypted in the repo, and decrypts it at runtime
