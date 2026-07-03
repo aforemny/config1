@@ -1,7 +1,7 @@
 # CLAUDE.md - Agent Instructions
 
 ## Context
-This repository contains NixOS configurations for multiple systems (apu, x1e, tower, m1) with shared modules and platform definitions.
+This repository contains NixOS configurations for multiple systems (ap, apu, x1e, tower, m1) with shared modules and platform definitions.
 
 ## Project Structure
 ```
@@ -23,7 +23,7 @@ src/
 ## Common Tasks
 
 ### System Configuration Updates
-- Primary systems: `apu` (router/AP), `x1e` (laptop), `tower` (headless ZFS NAS/server), `m1` (Apple Silicon Mac)
+- Primary systems: `apu` (router/gateway), `ap` (L2 WiFi access point, bridged to `apu`), `x1e` (laptop), `tower` (headless ZFS NAS/server), `m1` (Apple Silicon Mac)
 - Configuration pattern: platforms provide hardware, systems compose features
 - After changes: `ASECRET_DRY_RUN= cake build --expr config.systems.<system>.config.system.build.toplevel`
 
@@ -51,12 +51,15 @@ src/
 - Two secret backends: `asecret` (GPG password-store under `secrets/`; `pkgs.asecret-lib.password "<path>"` yields a `LoadCredential` source) and `agenix-rekey` (age, under `secrets1/`).
 - agenix-rekey: a secret with a `generator` defaults its `rekeyFile` to `secrets1/generated/<name>.age`; per-host rekeyed copies are `secrets1/rekeyed/<host>/<hash>-<name>.age`. Define reusable generators centrally in `src/agenix-rekey.nix` (`age.generators.<name>`) and reference them via `age.secrets.<name>.generator.script = "<name>"`. A generator may write an adjacent committed `<name>.pub` for eval-time public keys (see `ssh-ed25519-pub`, used by `radicle.nix`).
 - Rotate/create secrets with `agenix generate [-f] <name>`, then `agenix rekey` (needs the master identity `~/.ssh/id_ed25519`; master pubkey in `default.nix`, host pubkeys in `src/host-keys.nix`).
+- On rollback-rootfs hosts, agenix decrypts with the SSH host key **from `/persist`** — `age.identityPaths = [ "/persist/etc/ssh/ssh_host_ed25519_key" … ]` (set in `agenix-rekey.nix`, scoped to `fileSystems ? "/persist"`). The agenix *activation script* runs before impermanence bind-mounts `/etc/ssh` on cold boot, so the default `/etc/ssh` path gives "no readable identities" and **every** secret fails to decrypt; `/persist` is `neededForBoot` so it is mounted in time. Don't revert to the `/etc/ssh` default.
 - No plaintext passwords in configs.
 - Use systemd's `LoadCredential` for runtime secrets.
 
 ### Persistence
 - Hosts with a rollback rootfs (e.g. `tower`) wipe `/` on boot (`features/rollback-rootfs.nix`); declare survivable paths via `state.directories` / `state.files`, which `features/persistence.nix` collects into `/persist`.
 - Any stateful service MUST add its data dir (and `/var/lib/acme` if it terminates TLS), or it loses state every reboot.
+- Verify persistence/secret/rollback changes with a **reboot, not `nixos-rebuild switch`** — `switch` hides cold-boot-only behaviour: the agenix host-key ordering (see *Security*), `state.directories` add/removes (impermanence mounts are established at boot), and secret-*content* changes for services that read the secret only at start (e.g. VPN-Confinement's `tvpn.service`, which `switch` does not restart).
+- For a `DynamicUser=yes` service, persist `/var/lib/private/<name>`, **never** the public `/var/lib/<name>`: systemd keeps dynamic-user state under `/var/lib/private/`, and persisting the public path makes systemd migrate public→private on start (a `rename()` of a bind-mount) → `EBUSY` / `238/STATE_DIRECTORY`. State ends up owned by the name-derived dynamic UID (stable across boots; re-mints if it drifts). See `keycloak.nix`'s `declarative-keycloak-bootstrap`.
 
 ### Public services (DNS & TLS)
 - `tower` is the public-facing host; its dynamic IPv6 is published to the `nomath.org` Hetzner zone by `src/dns.nix`.
@@ -92,4 +95,4 @@ ASECRET_DRY_RUN= cake eval --expr 'config.systems.<system>.config.services.<svc>
 - Systemd Network: https://www.freedesktop.org/software/systemd/man/systemd.network.html
 
 ---
-*Last updated: 2026-06-21*
+*Last updated: 2026-07-03*
