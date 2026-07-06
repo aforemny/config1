@@ -50,6 +50,7 @@
                   echo "no default IPv6 route; cannot determine WAN interface" >&2
                   exit 1
                 fi
+                echo "set-hetzner-dns: WAN interface $interface"
                 # Current global IPv6 addresses as a JSON array of { value: ... }.
                 addrs=$(
                   ip -6 addr show "$interface" |
@@ -59,6 +60,12 @@
                   jq -R |
                   jq -s 'map({ value: sub("/.*"; "") })'
                 )
+                addr_list=$(printf '%s' "$addrs" | jq -r 'map(.value) | join(", ")')
+                if [ "$(printf '%s' "$addrs" | jq 'length')" -eq 0 ]; then
+                  echo "set-hetzner-dns: no global IPv6 address on $interface; refusing to publish empty rrset" >&2
+                  exit 1
+                fi
+                echo "set-hetzner-dns: current global IPv6: $addr_list"
                 token="$(cat "$CREDENTIALS_DIRECTORY"/api-key)"
                 base="https://api.hetzner.cloud/v1/zones/${zone}/rrsets"
                 set_body=$(jq -n --argjson records "$addrs" '{ records: $records }')
@@ -71,24 +78,26 @@
                   )
                   case "$status" in
                     200)
-                      curl -fsS \
+                      curl -fsS -o /dev/null \
                         -H "Authorization: Bearer $token" \
                         -H 'Content-Type: application/json' \
                         --data "$set_body" \
                         "$base/$name/AAAA/actions/set_records"
+                      echo "set-hetzner-dns: updated $name.${zone} AAAA -> $addr_list"
                       ;;
                     404)
                       # Low TTL because the address is dynamic.
                       create_body=$(jq -n --arg name "$name" --argjson records "$addrs" \
                         '{ name: $name, type: "AAAA", ttl: 60, records: $records }')
-                      curl -fsS \
+                      curl -fsS -o /dev/null \
                         -H "Authorization: Bearer $token" \
                         -H 'Content-Type: application/json' \
                         --data "$create_body" \
                         "$base"
+                      echo "set-hetzner-dns: created $name.${zone} AAAA -> $addr_list (ttl 60)"
                       ;;
                     *)
-                      echo "unexpected status $status for $name.${zone}" >&2
+                      echo "set-hetzner-dns: unexpected status $status for $name.${zone}" >&2
                       exit 1
                       ;;
                   esac

@@ -60,6 +60,11 @@
           443
         ];
 
+        # Publish ldap.nomath.org's AAAA so ACME (HTTP-01) can issue this
+        # vhost's cert; every other public service registers its label the
+        # same way (see src/dns.nix). Without it the order fails with NXDOMAIN.
+        dns.dynamicAAAA = [ "ldap" ];
+
         services.keycloak.runtime = {
           ldap_user_federations.lldap = {
             realm = "nomath";
