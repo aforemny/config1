@@ -1,17 +1,4 @@
 {
-  # Maddy mail server on tower for nomath.org, authenticating users against the
-  # shared lldap directory (src/ldap.nix) -- the same account store Keycloak
-  # federates. maddy speaks SMTP/IMAP directly; nginx is only borrowed for the
-  # ACME HTTP-01 challenge that mints the mail TLS certificate.
-  #
-  # Identity model: users log in with their full email address. maddy binds to
-  # lldap as the shared admin, searches for the entry whose uid or mail matches,
-  # then rebinds as that entry to verify the password. The address the user
-  # supplied becomes the mailbox identity, so the IMAP mailbox and the SMTP
-  # delivery address are the same string. imapsql creates the mailbox lazily
-  # (GetOrCreateUser) on first login or first delivery, so no account list is
-  # declared here -- lldap remains the sole source of accounts.
-  #
   # External DNS still has to be provisioned at the registrar (out of scope for
   # dns.dynamicAAAA, which only manages the AAAA record): an MX for nomath.org
   # -> mail.nomath.org, an SPF TXT, the DKIM TXT that maddy prints on first
@@ -23,7 +10,6 @@
       let
         fqdn = "mail.nomath.org";
         domain = "nomath.org";
-        # Shared bind credential, declared once in src/ldap.nix.
         bindDn = "uid=admin,ou=people,dc=nomath,dc=org";
         bindPasswordFile = config.age.secrets.lldap-admin-password.path;
       in
@@ -35,8 +21,6 @@
           localDomains = [ domain ];
           openFirewall = true; # 25 (SMTP), 143 (IMAP+STARTTLS), 587 (submission)
 
-          # TLS from the ACME certificate obtained below. On renewal the acme
-          # module try-reload-or-restarts maddy, which re-reads the pair.
           tls = {
             loader = "file";
             certificates = [
@@ -47,15 +31,8 @@
             ];
           };
 
-          # The bind password reaches maddy as $LLDAP_BIND_PW through the
-          # EnvironmentFile rendered below, and is referenced in the config with
-          # maddy's {env:...} expansion.
           secrets = [ "/run/maddy-ldap/env" ];
 
-          # Upstream's default pipeline with the pass_table auth backend swapped
-          # for auth.ldap against lldap. The NixOS module prepends the
-          # $(hostname)/$(primary_domain)/$(local_domains) macros and the tls
-          # block, so this body starts at the auth module.
           config = ''
             auth.ldap local_authdb {
               urls ldap://127.0.0.1:3890
@@ -179,9 +156,6 @@
           '';
         };
 
-        # Render maddy's EnvironmentFile from the agenix secret at runtime so the
-        # bind password never lands in the world-readable store (mirrors the
-        # keycloak-bootstrap-admin-env pattern in src/keycloak.nix).
         systemd.services.maddy-ldap-env = {
           description = "Render maddy's lldap bind EnvironmentFile from the agenix secret";
           requiredBy = [ "maddy.service" ];
@@ -201,13 +175,6 @@
           '';
         };
 
-        # ACME certificate for the mail hostname, obtained via the HTTP-01
-        # webroot challenge that nginx (already on tower for keycloak/jellyfin)
-        # serves over :80. maddy is the only consumer, so nginx is deliberately
-        # kept out of the cert's reloadServices and the key is owned by the
-        # maddy group -- nginx never reads it. maddy is try-reload-or-restarted
-        # on renewal. The cert's own systemd unit is ordered after nginx so the
-        # challenge is servable on first issuance.
         services.nginx = {
           enable = true;
           virtualHosts.${fqdn}.locations."/.well-known/acme-challenge".root = "/var/lib/acme/acme-challenge";
@@ -235,8 +202,6 @@
         # provisioned manually at the registrar (see the header).
         dns.dynamicAAAA = [ "mail" ];
 
-        # tower rolls / back on boot; persist the mailboxes, IMAP index, DKIM
-        # keys and MTA-STS cache (all under /var/lib/maddy) plus the TLS material.
         state.directories = [
           "/var/lib/maddy"
           "/var/lib/acme"
