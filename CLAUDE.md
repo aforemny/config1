@@ -19,6 +19,7 @@ src/
 - Not a flake: `default.nix` evaluates every `src/**/*.nix` with `lib.evalModules` (the "cake" framework); dependencies are pinned with **npins** in `npins/`.
 - `cake-module.nix` auto-imports all of `src/` recursively (`*.nix` only — editor `*.nix~` backups are ignored), so a new module is active just by existing.
 - Top-level (cake) options live in `src/options/` (`systems`, `platforms`, `nixosModules`, `overlays`, …). Reach a host's evaluated NixOS config at `config.systems.<name>.config`.
+- **Runtime-state pairings** (declarative service config applied via OpenTofu *after* the unit starts) come from the `declarative-runtime` pin, imported as `${sources.declarative-runtime}/services/<svc>/module.nix`: Keycloak (`services.keycloak.runtime`) and Jellyfin (`services.jellyfin.runtime` — libraries/users/plugins). Each adds a `declarative-<svc>` reconciler unit whose tfstate lives under the service's (persisted) state dir. The pin tracks the `jellyfin` branch (carries the keycloak/jellyfin/forgejo/hetzner-dns pairings); re-point it in `npins/sources.json` (`npins update`) to pick up new services.
 
 ## Common Tasks
 
@@ -60,6 +61,12 @@ src/
 - Any stateful service MUST add its data dir (and `/var/lib/acme` if it terminates TLS), or it loses state every reboot.
 - Verify persistence/secret/rollback changes with a **reboot, not `nixos-rebuild switch`** — `switch` hides cold-boot-only behaviour: the agenix host-key ordering (see *Security*), `state.directories` add/removes (impermanence mounts are established at boot), and secret-*content* changes for services that read the secret only at start (e.g. VPN-Confinement's `tvpn.service`, which `switch` does not restart).
 - For a `DynamicUser=yes` service, persist `/var/lib/private/<name>`, **never** the public `/var/lib/<name>`: systemd keeps dynamic-user state under `/var/lib/private/`, and persisting the public path makes systemd migrate public→private on start (a `rename()` of a bind-mount) → `EBUSY` / `238/STATE_DIRECTORY`. State ends up owned by the name-derived dynamic UID (stable across boots; re-mints if it drifts). See `keycloak.nix`'s `declarative-keycloak-bootstrap`.
+- A bare-string `state.directories` entry becomes a **root:root** `/persist` bind-mount. Services whose module creates the dataDir via `StateDirectory=` self-heal (systemd chowns the mount at start — e.g. `sonarr`); services that create it via plain **tmpfiles** (e.g. `radarr`, `jellyfin`) then can't write and crash (`Permission denied` / `Access to '…' is denied`). Persist those with impermanence's ownership form instead — `environment.persistence."/persist".directories = [ { directory = "/var/lib/jellyfin"; user = "jellyfin"; group = …; mode = "0700"; } ];` — not a bare `state.directories` string. impermanence sets ownership only when it **creates** the `/persist` source (`create-directories.bash`); it never re-chowns an existing one, so a dir already made wrong must be `chown`ed by hand (or its `/persist` source removed so it is recreated).
+- That `EBUSY` cannot be cleared on the running host: the unit gets `RequiresMountsFor=/var/lib/<name>` and the impermanence mount is `RequiredBy=` it, so every start re-mounts the public path and re-triggers the migration — only *applying* the fixed config (a `switch` drops the obsolete mount) resolves it. Watch `/var/lib/private`'s mode too: it must be `0700`, and a `switch` (unlike a boot) can leave it `0755`, which makes a freshly-starting DynamicUser service refuse with `too permissive`. `lldap` hit both (was `/var/lib/lldap`, now `/var/lib/private/lldap`).
+
+### Systemd sandboxing & shared-group file access
+- Most hardened modules run `PrivateUsers=true` (transmission, jellyfin, sonarr, radarr, …), which maps **only the unit's own `User`+`Group`** into its namespace — every other uid/gid shows up as `nobody`. So for several services to share files (Transmission downloads → Sonarr/Radarr hardlink → Jellyfin reads, on `tower`'s `/srv/media`), the shared group must be each service's **primary `group`**, *not* a supplementary group (a supplementary group is unmapped → access denied). On `tower` that shared primary group is `transmission` (fixed `ids.gids`, stable across the rootfs rollback); see `servarr.nix` / `jellyfin.nix`. Hardlink imports also need the source file group-**writable** (`transmission` `settings.umask = "002"`), because `fs.protected_hardlinks` only lets you link a file you can write.
+- Adding a service to the VPN namespace: `systemd.services.<svc>.vpnConfinement = { enable = true; vpnNamespace = "tvpn"; }`; expose its UI with a `vpnNamespaces.tvpn.portMappings` entry and point nginx at `192.168.15.1:<port>` (the namespace address, whitelisted); in-namespace services reach Transmission's RPC at `192.168.15.1:9091`. See `transmission.nix` / `servarr.nix`.
 
 ### Public services (DNS & TLS)
 - `tower` is the public-facing host; its dynamic IPv6 is published to the `nomath.org` Hetzner zone by `src/dns.nix`.
@@ -85,6 +92,10 @@ ASECRET_DRY_RUN= cake build --expr config.systems.<system>.config.system.build.t
 ASECRET_DRY_RUN= cake eval --expr 'config.systems.<system>.config.system.build.toplevel.drvPath'
 ASECRET_DRY_RUN= cake eval --expr 'config.systems.<system>.config.services.<svc>.enable'
 ```
+- Evaluating the **whole** toplevel forces every module — it pulls unfree packages (`minecraft-server`, `replace`; a raw `cake build`/`eval` then needs `NIXPKGS_ALLOW_UNFREE=1`) and forces `dns.nix`'s asecret GPG read even under `ASECRET_DRY_RUN=`. To check a change without either, eval the specific attribute, not the toplevel: `…config.systemd.services.<svc>`, `…config.systemd.mounts`, `…config.fileSystems."/path"`.
+
+### Deploy a system
+`cake deploy <system>` = build → `nix-copy-closure` → set `/nix/var/nix/profiles/system` → `switch-to-configuration switch`; its `postCopyClosure` runs `asecret export` to the host (**needs GPG**). Reminder (see *Persistence*): `state.directories` / persistence / secret-content / DynamicUser changes only fully apply on a **reboot**. To push a change touching no asecret secret without GPG, deploy by hand: `nix-copy-closure --to root@<host> "$sys"` → `ssh … nix-env -p /nix/var/nix/profiles/system --set "$sys"` → `ssh … "$sys"/bin/switch-to-configuration switch` (or `boot` to only set the next-boot default).
 
 ## Notes
 <!-- Add project-specific notes, decisions, or context here -->
@@ -95,4 +106,4 @@ ASECRET_DRY_RUN= cake eval --expr 'config.systems.<system>.config.services.<svc>
 - Systemd Network: https://www.freedesktop.org/software/systemd/man/systemd.network.html
 
 ---
-*Last updated: 2026-07-03*
+*Last updated: 2026-07-05*
