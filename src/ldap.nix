@@ -77,7 +77,7 @@
             rdn_ldap_attribute = "uid";
             uuid_ldap_attribute = "uuid";
             user_object_classes = [ "person" ];
-            edit_mode = "READ_ONLY";
+            edit_mode = "WRITABLE";
             import_enabled = true;
             search_scope = "SUBTREE";
           };

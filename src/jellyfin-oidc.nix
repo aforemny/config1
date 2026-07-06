@@ -160,6 +160,26 @@
           realms.${realm} = {
             enabled = true;
             display_name = "nomath.org";
+            # Email-based onboarding for Keycloak-managed accounts: users are
+            # created with no password and self-serve via "Forgot password".
+            # Requires working outbound mail (SMTP below -> local maddy).
+            reset_password_allowed = true;
+            verify_email = true;
+            login_with_email_allowed = true;
+            smtp_server = {
+              host = "mail.nomath.org";
+              port = "587";
+              starttls = true;
+              from = "admin@nomath.org";
+              from_display_name = "nomath.org";
+              # maddy submission (587) authorizes the sender against the SASL
+              # identity, so we auth+send as admin@nomath.org (its lldap
+              # password); host must match the mail cert, hence mail.nomath.org.
+              auth = {
+                username = "admin@nomath.org";
+                passwordFile = config.age.secrets.lldap-admin-password.path;
+              };
+            };
           };
 
           roles = {
@@ -173,15 +193,35 @@
             };
           };
 
-          # Access is granted by group, not by touching each account: lldap is
-          # the source of truth for users (READ_ONLY federation, see
-          # src/ldap.nix), so the federated `aforemny`/`kirchner` accounts
-          # cannot be declared as managed `users` here. Instead a Keycloak-
-          # native `jellyfin-users` group carries the `jellyfin-user` realm
-          # role, and the two federated users are added to it by username --
-          # group membership and role grants live in Keycloak's own DB, which
-          # READ_ONLY federation still permits. To grant access to more people,
-          # add their lldap username to `members` below.
+          # Users are Keycloak-authoritative: declared here and written through
+          # to lldap by the WRITABLE federation (src/ldap.nix), so lldap stays
+          # the directory other services (mail) consume. Each account is created
+          # with a real email and no password; UPDATE_PASSWORD + VERIFY_EMAIL
+          # drive onboarding over the realm SMTP above. Grant a new person by
+          # adding a users.<name> entry and listing them in group_memberships.
+          users.aforemny = {
+            realm = realm;
+            email = "aforemny@posteo.de";
+            enabled = true;
+            required_actions = [
+              "UPDATE_PASSWORD"
+              "VERIFY_EMAIL"
+            ];
+          };
+          users.kirchner = {
+            realm = realm;
+            email = "kirchner@posteo.de";
+            enabled = true;
+            required_actions = [
+              "UPDATE_PASSWORD"
+              "VERIFY_EMAIL"
+            ];
+          };
+
+          # Access is granted by group: the Keycloak-native `jellyfin-users`
+          # group carries the `jellyfin-user` realm role and the accounts above
+          # join it. group_memberships resolves each managed user key to a
+          # reference, so Terraform creates the users before adding them.
           groups.jellyfin-users = {
             realm = realm;
             description = "Members may sign in to Jellyfin.";
