@@ -1,8 +1,8 @@
 {
   nixosModules.qutebrowser = (
-    { lib, ... }:
+    { pkgs, ... }:
     {
-      nixpkgs.config.allowUnfreePredicate = pkg: builtins.elem (lib.getName pkg) [ "widevine-cdm" ];
+      unfree.packages = [ "widevine-cdm" ];
     }
   );
   homeManagerModules.qutebrowser =
