@@ -71,8 +71,12 @@
             # transmission's own UPnP/NAT-PMP stays off; transmission-natpmp
             # drives the peer port explicitly (see below).
             port-forwarding-enabled = false;
+            download-dir = "/srv/media/downloads";
+            incomplete-dir = "/srv/media/downloads/.incomplete";
+            umask = "002";
           };
         };
+        systemd.services.transmission.unitConfig.RequiresMountsFor = [ "/srv/media" ];
 
         # Proton NAT-PMP dynamic port forwarding. Proton assigns an ephemeral
         # inbound port (its choice, ~60s lease) via NAT-PMP on the tunnel

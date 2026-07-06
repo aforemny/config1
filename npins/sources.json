@@ -62,11 +62,11 @@
         "owner": "applicative-systems",
         "repo": "declarative-runtime"
       },
-      "branch": "keycloak",
+      "branch": "jellyfin",
       "submodules": false,
-      "revision": "4d998349a84b473ecc5f1b9b54bdde0f27e51ff6",
-      "url": "https://github.com/applicative-systems/declarative-runtime/archive/4d998349a84b473ecc5f1b9b54bdde0f27e51ff6.tar.gz",
-      "hash": "sha256-YJDWmOgaZwjyHRen/FCEG+84YLBlA5CfYXKSOlaAL/w="
+      "revision": "8d2ea5dc8d7716f72e86e5cb079e95bd0b32d559",
+      "url": "https://github.com/applicative-systems/declarative-runtime/archive/8d2ea5dc8d7716f72e86e5cb079e95bd0b32d559.tar.gz",
+      "hash": "sha256-84moyOieyWoWVRdpMEr55Sfhs3PhC9peDLdRx9VdGjk="
     },
     "disko": {
       "type": "GitRelease",

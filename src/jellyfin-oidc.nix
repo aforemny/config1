@@ -51,7 +51,7 @@
         clientId = "jellyfin";
         # SSO-plugin provider key; appears in the OIDC Start/Callback paths.
         provider = "keycloak";
-        jellyfinUrl = "https://jellyfin.nomath.org";
+        jellyfinUrl = "https://j.nomath.org";
         keycloakRealmUrl = "https://keycloak.nomath.org/realms/${realm}";
         dataDir = config.services.jellyfin.dataDir;
         configDir = config.services.jellyfin.configDir;
@@ -171,6 +171,35 @@
               realm = realm;
               description = "Jellyfin administrator.";
             };
+          };
+
+          # Access is granted by group, not by touching each account: lldap is
+          # the source of truth for users (READ_ONLY federation, see
+          # src/ldap.nix), so the federated `aforemny`/`kirchner` accounts
+          # cannot be declared as managed `users` here. Instead a Keycloak-
+          # native `jellyfin-users` group carries the `jellyfin-user` realm
+          # role, and the two federated users are added to it by username --
+          # group membership and role grants live in Keycloak's own DB, which
+          # READ_ONLY federation still permits. To grant access to more people,
+          # add their lldap username to `members` below.
+          groups.jellyfin-users = {
+            realm = realm;
+            description = "Members may sign in to Jellyfin.";
+          };
+
+          group_roles.jellyfin-users = {
+            realm = realm;
+            group = "jellyfin-users";
+            role_ids = [ "jellyfin-user" ];
+          };
+
+          group_memberships.jellyfin-users = {
+            realm = realm;
+            group = "jellyfin-users";
+            members = [
+              "aforemny"
+              "kirchner"
+            ];
           };
 
           openid_clients.${clientId} = {
