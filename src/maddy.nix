@@ -1,9 +1,12 @@
 {
-  # External DNS still has to be provisioned at the registrar (out of scope for
-  # dns.dynamicAAAA, which only manages the AAAA record): an MX for nomath.org
-  # -> mail.nomath.org, an SPF TXT, the DKIM TXT that maddy prints on first
-  # start, a DMARC TXT, and a PTR for the host's IPv6 address. Without these,
-  # remote servers will reject mail from this host.
+  # Outbound-mail DNS: the MX / SPF / DMARC records are provisioned declaratively
+  # via the declarative-runtime hetzner-dns pairing (records block below;
+  # src/dns.nix enables the reconciler). The AAAA for mail.nomath.org is kept
+  # current by set-hetzner-dns through dns.dynamicAAAA. Two records still cannot
+  # be set from here: the DKIM TXT (maddy generates the key at runtime -- publish
+  # the value it prints under /var/lib/maddy/dkim_keys/nomath.org_default.dns)
+  # and the reverse PTR for the host's IPv6 (owned by the ISP's reverse zone, not
+  # Hetzner). Without those two, strict receivers may still reject this mail.
   systems.tower.modules = [
     (
       { config, ... }:
@@ -198,9 +201,42 @@
           443
         ];
 
-        # Published as mail.nomath.org by src/dns.nix; the MX record itself is
-        # provisioned manually at the registrar (see the header).
+        # AAAA for mail.nomath.org, kept in sync by set-hetzner-dns.
         dns.dynamicAAAA = [ "mail" ];
+
+        # Static mail records, provisioned via the hetzner-dns reconciler that
+        # src/dns.nix enables. DKIM and PTR are excluded on purpose (see header).
+        services.hetzner-dns.runtime = {
+          # MX -> mail.nomath.org. Trailing dot = absolute; Hetzner appends the
+          # zone to a dotless name. `zone` is the literal domain (managed in the
+          # Hetzner console, not by this reconciler), so no hcloud_zone is
+          # declared for it -- declaring it would make tofu try to re-create the
+          # existing zone and fail.
+          zone_rrsets.mx = {
+            zone = domain;
+            name = "@";
+            type = "MX";
+            records = [ { value = "10 ${fqdn}."; } ];
+          };
+          # DMARC monitor-only (p=none): publishes a policy and collects reports
+          # without risking rejection of legitimate mail during rollout.
+          zone_rrsets.dmarc = {
+            zone = domain;
+            name = "_dmarc";
+            type = "TXT";
+            records = [ { value = ''"v=DMARC1; p=none; rua=mailto:postmaster@${domain}"''; } ];
+          };
+          # SPF authorises the MX host's address (this box's published AAAA).
+          # Declared as a single record, not an RRSet: the apex TXT set already
+          # holds an unrelated google-site-verification value we do not manage,
+          # and add_records leaves it in place.
+          zone_records.spf = {
+            zone = domain;
+            name = "@";
+            type = "TXT";
+            value = ''"v=spf1 mx ~all"'';
+          };
+        };
 
         state.directories = [
           "/var/lib/maddy"

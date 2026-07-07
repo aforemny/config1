@@ -1,3 +1,4 @@
+{ sources, ... }:
 {
   # Declared on every host; a service that needs a public hostname adds its
   # label here, and the updater below (on tower) collects them via the module
@@ -17,6 +18,26 @@
     };
 
   systems.tower.modules = [
+    # Static DNS records provisioned declaratively via the declarative-runtime
+    # hetzner-dns pairing (run-once OpenTofu against the Hetzner Cloud DNS API).
+    # This COMPLEMENTS -- it does not replace -- the set-hetzner-dns updater
+    # below: that updater keeps the *dynamic* per-host AAAA records in sync with
+    # this box's rotating SLAAC address on a minutely timer, which a
+    # build-time-rendered, run-once reconciler fundamentally cannot express.
+    # Services declare their own static records under
+    # services.hetzner-dns.runtime.{zone_rrsets,zone_records} (see src/maddy.nix).
+    "${sources.declarative-runtime}/services/hetzner-dns/module.nix"
+    (
+      { pkgs, ... }:
+      {
+        services.hetzner-dns.runtime = {
+          enable = true;
+          # The same Hetzner Cloud API token the AAAA updater uses (DNS scope),
+          # read via systemd LoadCredential -- never copied into the store.
+          tokenFile = pkgs.asecret-lib.password "nomath.org/hetzner-api-key";
+        };
+      }
+    )
     (
       {
         config,
