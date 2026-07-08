@@ -78,6 +78,12 @@
             uuid_ldap_attribute = "uuid";
             user_object_classes = [ "person" ];
             edit_mode = "WRITABLE";
+            # New Keycloak-side users (declared in src/jellyfin-oidc.nix) are
+            # written back into lldap, so lldap stays the single directory that
+            # mail (maddy) and other LDAP consumers authenticate against. Without
+            # this, WRITABLE only propagates edits to already-linked users, and
+            # tofu-created accounts stay local to Keycloak (invisible to lldap).
+            sync_registrations = true;
             import_enabled = true;
             search_scope = "SUBTREE";
           };
