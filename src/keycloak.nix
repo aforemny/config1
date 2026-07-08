@@ -109,7 +109,14 @@
         # tower rolls / back on boot; everything stateful must be persisted.
         state.directories = [
           "/var/lib/postgresql" # keycloak's database
-          "/var/lib/keycloak" # OpenTofu reconciler state
+          # declarative-keycloak runs as DynamicUser (StateDirectory=keycloak/
+          # declarative-terraform), so systemd keeps the OpenTofu reconciler's
+          # tfstate under /var/lib/private/keycloak; /var/lib/keycloak holds only
+          # a symlink into it. Persist the real private path (same reason as the
+          # bootstrap below) — persisting /var/lib/keycloak saves nothing but the
+          # symlink, so the tfstate is lost on every rollback and the reconciler
+          # then 409s trying to recreate the already-existing realm.
+          "/var/lib/private/keycloak" # OpenTofu reconciler state (tfstate)
           # The bootstrap runs as DynamicUser, so systemd keeps its StateDirectory
           # under /var/lib/private/. Persist that real path, not the public
           # /var/lib/declarative-keycloak-bootstrap symlink: persisting the public
