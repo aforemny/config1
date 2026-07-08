@@ -10,5 +10,7 @@
         enable = true;
         package = (wrapperModules.starship.apply { inherit pkgs; }).wrapper;
       };
+      unfree.packages = [ "replace" ];
+
     };
 }
