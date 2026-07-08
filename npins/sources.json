@@ -161,9 +161,9 @@
       },
       "branch": "master",
       "submodules": false,
-      "revision": "82585753a96d9e2161850541750127febb761497",
-      "url": "https://github.com/Infinidoge/nix-minecraft/archive/82585753a96d9e2161850541750127febb761497.tar.gz",
-      "hash": "sha256-ATcnQv0i/B54pZkGnORRIJO8N+Z+bC13ED4jGK43B5k="
+      "revision": "c0e5c94056ff42c1671aac5398c5d71df39c4e74",
+      "url": "https://github.com/Infinidoge/nix-minecraft/archive/c0e5c94056ff42c1671aac5398c5d71df39c4e74.tar.gz",
+      "hash": "sha256-nUhKyzWO6YiyeTA+M/dNDGT2eLp8t5KIij8oIPlIUnw="
     },
     "nixos-apple-silicon": {
       "type": "Git",
