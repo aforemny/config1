@@ -10,10 +10,11 @@
           interface = "lan";
           dhcp-range = [
             "192.168.1.2,192.168.1.254"
-            "::1,::400,constructor:lan,ra-names,12h"
+            "::1,::400,constructor:lan,ra-names,1h"
           ];
           dhcp-option = [ "option6:dns-server,[::]" ];
           enable-ra = true;
+          ra-param = "lan,200,1800";
           server = [
             "8.8.8.8"
             "8.8.4.4"
@@ -33,6 +34,7 @@
       networking.firewall.interfaces.lan.allowedTCPPorts = [
         53 # DNS
       ];
+      state.directories = [ "/var/lib/dnsmasq" ];
     }
   ];
 }

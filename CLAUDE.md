@@ -75,7 +75,7 @@ src/
 
 ## Active Issues
 <!-- List any known issues or ongoing work here -->
-- IPv6 NAT on apu router (should use proper routing)
+- 1&1 delegates a *dynamic* IPv6 prefix (new on every PPPoE reconnect), so LAN addresses renumber. To eliminate renumbering churn entirely, a stable ULA + NPTv6 (or a static PD, if 1&1 offers one) would be needed.
 
 ## Quick Commands
 
