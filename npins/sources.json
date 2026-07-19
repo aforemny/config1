@@ -224,6 +224,19 @@
       "url": "https://github.com/Janik-Haag/nm2nix/archive/6d018aaad4093097fd647f867425a15f294e483e.tar.gz",
       "hash": "sha256-etI2VY39TIKl+W/MzraxTYE3eaqH9VYThe3YJzydV0E="
     },
+    "opencode-nix": {
+      "type": "Git",
+      "repository": {
+        "type": "GitHub",
+        "owner": "albertov",
+        "repo": "opencode-nix"
+      },
+      "branch": "master",
+      "submodules": false,
+      "revision": "57517849bb2cfdff854bfbb2b61cb9694ef906f8",
+      "url": "https://github.com/albertov/opencode-nix/archive/57517849bb2cfdff854bfbb2b61cb9694ef906f8.tar.gz",
+      "hash": "sha256-IVcbOErLwI4vQ3berLgQNhAOVax+KKRhuOj50QY2k3E="
+    },
     "sbox": {
       "type": "Git",
       "repository": {
