@@ -32,10 +32,16 @@
       {
         services.hetzner-dns.runtime = {
           enable = true;
-          # The same Hetzner Cloud API token the AAAA updater uses (DNS scope),
-          # read via systemd LoadCredential -- never copied into the store.
           tokenFile = pkgs.asecret-lib.password "nomath.org/hetzner-api-key";
         };
+        environment.persistence."/persist".directories = [
+          {
+            directory = "/var/lib/declarative-hetzner-dns";
+            user = "declarative-hetzner-dns";
+            group = "declarative-hetzner-dns";
+            mode = "0700";
+          }
+        ];
       }
     )
     (
