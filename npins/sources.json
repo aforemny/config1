@@ -84,6 +84,19 @@
       "url": "https://api.github.com/repos/nix-community/disko/tarball/refs/tags/v1.13.0",
       "hash": "sha256-CNzzBsRhq7gg4BMBuTDObiWDH/rFYHEuDRVOwCcwXw4="
     },
+    "glados-tts": {
+      "type": "Git",
+      "repository": {
+        "type": "GitHub",
+        "owner": "aforemny",
+        "repo": "glados-tts"
+      },
+      "branch": "main",
+      "submodules": false,
+      "revision": "617e057c82c59b8392c627039ca482c87db016e7",
+      "url": "https://github.com/aforemny/glados-tts/archive/617e057c82c59b8392c627039ca482c87db016e7.tar.gz",
+      "hash": "sha256-iXL2TAWTjvV1JgJD3McNnZEJQSiZ7mJWrI/v6TUEgXk="
+    },
     "home-manager": {
       "type": "Git",
       "repository": {
