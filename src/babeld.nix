@@ -72,6 +72,8 @@ in
             local-port 33123
             redistribute local ip ${address}/${toString prefixLength} allow
             redistribute local deny
+            # The kernel may otherwise prefer a GUA from the outgoing interface.
+            install pref-src ${address}
           '';
         };
         networking.interfaces.lo.ipv6.addresses = [
