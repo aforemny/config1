@@ -18,6 +18,7 @@
               "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBvRliydgYlyjKeMAEuVWWvmr82rZBXaA5ZM9U8r0pyN aforemny@x1e" # TODO
             ];
             extraGroups = [
+              "audio"
               "networkmanager"
               "video"
               "wheel"

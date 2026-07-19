@@ -19,6 +19,7 @@
       }
       {
         environment.systemPackages = with pkgs; [
+          alsa-utils
           btop
           btop
           ethtool
