@@ -622,7 +622,7 @@
         "module_alias": "pci:v00001022d00001439sv00001022sd00001234bc06sc04i00"
       },
       {
-        "index": 28,
+        "index": 29,
         "attached_to": 0,
         "class_list": [
           "pci",
@@ -669,7 +669,7 @@
         "module_alias": "pci:v00001022d00001580sv00000000sd00000000bc06sc00i00"
       },
       {
-        "index": 29,
+        "index": 30,
         "attached_to": 0,
         "class_list": [
           "pci",
@@ -738,7 +738,7 @@
         "module_alias": "pci:v00001022d00001439sv00001022sd00001234bc06sc04i00"
       },
       {
-        "index": 32,
+        "index": 33,
         "attached_to": 0,
         "class_list": [
           "pci",
@@ -785,7 +785,7 @@
         "module_alias": "pci:v00001022d0000156Bsv00000000sd00000000bc06sc00i00"
       },
       {
-        "index": 34,
+        "index": 35,
         "attached_to": 0,
         "class_list": [
           "pci",
@@ -970,8 +970,8 @@
     ],
     "disk": [
       {
-        "index": 39,
-        "attached_to": 30,
+        "index": 40,
+        "attached_to": 31,
         "class_list": [
           "disk",
           "ide",
@@ -1055,7 +1055,7 @@
     "hub": [
       {
         "index": 41,
-        "attached_to": 50,
+        "attached_to": 46,
         "class_list": [
           "usb",
           "hub"
@@ -1089,7 +1089,7 @@
           "value": 0
         },
         "model": "Advanced Micro Devices Hub",
-        "sysfs_id": "/devices/pci0000:00/0000:00:12.0/usb2/2-1/2-1:1.0",
+        "sysfs_id": "/devices/pci0000:00/0000:00:13.0/usb2/2-1/2-1:1.0",
         "sysfs_bus_id": "2-1:1.0",
         "resources": [
           {
@@ -1161,7 +1161,7 @@
         },
         "vendor": {
           "hex": "1d6b",
-          "name": "Linux 6.18.29 xhci-hcd",
+          "name": "Linux 6.18.35 xhci-hcd",
           "value": 7531
         },
         "device": {
@@ -1175,7 +1175,7 @@
           "value": 0
         },
         "serial": "0000:00:10.0",
-        "model": "Linux 6.18.29 xhci-hcd xHCI Host Controller",
+        "model": "Linux 6.18.35 xhci-hcd xHCI Host Controller",
         "sysfs_id": "/devices/pci0000:00/0000:00:10.0/usb3/3-0:1.0",
         "sysfs_bus_id": "3-0:1.0",
         "resources": [
@@ -1226,7 +1226,7 @@
         "module_alias": "usb:v1D6Bp0002d0618dc09dsc00dp01ic09isc00ip00in00"
       },
       {
-        "index": 45,
+        "index": 43,
         "attached_to": 13,
         "class_list": [
           "usb",
@@ -1248,7 +1248,7 @@
         },
         "vendor": {
           "hex": "1d6b",
-          "name": "Linux 6.18.29 xhci-hcd",
+          "name": "Linux 6.18.35 xhci-hcd",
           "value": 7531
         },
         "device": {
@@ -1262,7 +1262,7 @@
           "value": 0
         },
         "serial": "0000:00:10.0",
-        "model": "Linux 6.18.29 xhci-hcd xHCI Host Controller",
+        "model": "Linux 6.18.35 xhci-hcd xHCI Host Controller",
         "sysfs_id": "/devices/pci0000:00/0000:00:10.0/usb4/4-0:1.0",
         "sysfs_bus_id": "4-0:1.0",
         "detail": {
@@ -1303,8 +1303,8 @@
         "module_alias": "usb:v1D6Bp0003d0618dc09dsc00dp03ic09isc00ip00in00"
       },
       {
-        "index": 46,
-        "attached_to": 17,
+        "index": 44,
+        "attached_to": 24,
         "class_list": [
           "usb",
           "hub"
@@ -1325,7 +1325,7 @@
         },
         "vendor": {
           "hex": "1d6b",
-          "name": "Linux 6.18.29 ehci_hcd",
+          "name": "Linux 6.18.35 ehci_hcd",
           "value": 7531
         },
         "device": {
@@ -1338,9 +1338,9 @@
           "name": "6.18",
           "value": 0
         },
-        "serial": "0000:00:13.0",
-        "model": "Linux 6.18.29 ehci_hcd EHCI Host Controller",
-        "sysfs_id": "/devices/pci0000:00/0000:00:13.0/usb1/1-0:1.0",
+        "serial": "0000:00:12.0",
+        "model": "Linux 6.18.35 ehci_hcd EHCI Host Controller",
+        "sysfs_id": "/devices/pci0000:00/0000:00:12.0/usb1/1-0:1.0",
         "sysfs_bus_id": "1-0:1.0",
         "resources": [
           {
@@ -1390,8 +1390,8 @@
         "module_alias": "usb:v1D6Bp0002d0618dc09dsc00dp00ic09isc00ip00in00"
       },
       {
-        "index": 49,
-        "attached_to": 46,
+        "index": 45,
+        "attached_to": 44,
         "class_list": [
           "usb",
           "hub"
@@ -1425,7 +1425,7 @@
           "value": 0
         },
         "model": "Advanced Micro Devices Hub",
-        "sysfs_id": "/devices/pci0000:00/0000:00:13.0/usb1/1-1/1-1:1.0",
+        "sysfs_id": "/devices/pci0000:00/0000:00:12.0/usb1/1-1/1-1:1.0",
         "sysfs_bus_id": "1-1:1.0",
         "resources": [
           {
@@ -1475,8 +1475,8 @@
         "module_alias": "usb:v0438p7900d0018dc09dsc00dp01ic09isc00ip00in00"
       },
       {
-        "index": 50,
-        "attached_to": 24,
+        "index": 46,
+        "attached_to": 17,
         "class_list": [
           "usb",
           "hub"
@@ -1497,7 +1497,7 @@
         },
         "vendor": {
           "hex": "1d6b",
-          "name": "Linux 6.18.29 ehci_hcd",
+          "name": "Linux 6.18.35 ehci_hcd",
           "value": 7531
         },
         "device": {
@@ -1510,9 +1510,9 @@
           "name": "6.18",
           "value": 0
         },
-        "serial": "0000:00:12.0",
-        "model": "Linux 6.18.29 ehci_hcd EHCI Host Controller",
-        "sysfs_id": "/devices/pci0000:00/0000:00:12.0/usb2/2-0:1.0",
+        "serial": "0000:00:13.0",
+        "model": "Linux 6.18.35 ehci_hcd EHCI Host Controller",
+        "sysfs_id": "/devices/pci0000:00/0000:00:13.0/usb2/2-0:1.0",
         "sysfs_bus_id": "2-0:1.0",
         "resources": [
           {
@@ -1679,7 +1679,7 @@
       },
       {
         "index": 15,
-        "attached_to": 29,
+        "attached_to": 30,
         "class_list": [
           "network_controller",
           "pci"
@@ -1880,19 +1880,184 @@
           "name": "WLAN controller",
           "value": 130
         },
+        "pci_interface": {
+          "hex": "0080",
+          "value": 128
+        },
         "vendor": {
-          "hex": "168c",
-          "value": 5772
+          "hex": "14c3",
+          "value": 5315
+        },
+        "sub_vendor": {
+          "hex": "14c3",
+          "value": 5315
         },
         "device": {
-          "hex": "003c",
-          "value": 60
+          "hex": "7915",
+          "value": 30997
+        },
+        "sub_device": {
+          "hex": "7915",
+          "value": 30997
         },
         "model": "WLAN controller",
         "sysfs_id": "/devices/pci0000:00/0000:00:02.5/0000:05:00.0",
         "sysfs_bus_id": "0000:05:00.0",
         "unix_device_names": [
-          "wlp5s0"
+          "wlan5"
+        ],
+        "resources": [
+          {
+            "type": "hwaddr",
+            "address": 48
+          },
+          {
+            "type": "phwaddr",
+            "address": 48
+          },
+          {
+            "type": "wlan",
+            "channels": [
+              "36",
+              "40",
+              "44",
+              "48",
+              "52",
+              "56",
+              "60",
+              "64",
+              "100",
+              "104",
+              "108",
+              "112",
+              "116",
+              "120",
+              "124",
+              "128",
+              "132",
+              "136",
+              "140",
+              "144",
+              "149",
+              "153",
+              "157",
+              "161",
+              "165",
+              "169",
+              "173"
+            ],
+            "frequencies": [
+              "5.18",
+              "5.2",
+              "5.22",
+              "5.24",
+              "5.26",
+              "5.28",
+              "5.3",
+              "5.32",
+              "5.5",
+              "5.52",
+              "5.54",
+              "5.56",
+              "5.58",
+              "5.6",
+              "5.62",
+              "5.64",
+              "5.66",
+              "5.68",
+              "5.7",
+              "5.72",
+              "5.745",
+              "5.765",
+              "5.785",
+              "5.805",
+              "5.825",
+              "5.845",
+              "5.865"
+            ],
+            "auth_modes": [
+              "open",
+              "sharedkey",
+              "wpa-psk",
+              "wpa-eap"
+            ],
+            "enc_modes": [
+              "WEP40",
+              "WEP104",
+              "TKIP",
+              "CCMP"
+            ]
+          }
+        ],
+        "detail": {
+          "function": 0,
+          "command": 1030,
+          "header_type": 0,
+          "secondary_bus": 0,
+          "prog_if": 128
+        },
+        "driver": "mt7915e",
+        "driver_module": "mt7915e",
+        "drivers": [
+          "mt7915e"
+        ],
+        "driver_modules": [
+          "mt7915e"
+        ],
+        "module_alias": "pci:v000014C3d00007915sv000014C3sd00007915bc00sc02i80"
+      },
+      {
+        "index": 28,
+        "attached_to": 12,
+        "class_list": [
+          "network_controller",
+          "pci",
+          "wlan_card"
+        ],
+        "bus_type": {
+          "hex": "0004",
+          "name": "PCI",
+          "value": 4
+        },
+        "slot": {
+          "bus": 5,
+          "number": 0
+        },
+        "base_class": {
+          "hex": "0002",
+          "name": "Network controller",
+          "value": 2
+        },
+        "sub_class": {
+          "hex": "0082",
+          "name": "WLAN controller",
+          "value": 130
+        },
+        "pci_interface": {
+          "hex": "0080",
+          "value": 128
+        },
+        "vendor": {
+          "hex": "14c3",
+          "value": 5315
+        },
+        "sub_vendor": {
+          "hex": "14c3",
+          "value": 5315
+        },
+        "device": {
+          "hex": "7915",
+          "value": 30997
+        },
+        "sub_device": {
+          "hex": "7915",
+          "value": 30997
+        },
+        "model": "WLAN controller",
+        "sysfs_id": "/devices/pci0000:00/0000:00:02.5/0000:05:00.0",
+        "sysfs_bus_id": "0000:05:00.0",
+        "unix_device_names": [
+          "wlan24"
         ],
         "resources": [
           {
@@ -1917,27 +2082,8 @@
               "9",
               "10",
               "11",
-              "36",
-              "40",
-              "44",
-              "48",
-              "52",
-              "56",
-              "60",
-              "64",
-              "100",
-              "104",
-              "108",
-              "112",
-              "116",
-              "120",
-              "124",
-              "128",
-              "132",
-              "136",
-              "140",
-              "144",
-              "149"
+              "12",
+              "13"
             ],
             "frequencies": [
               "2.412",
@@ -1951,27 +2097,8 @@
               "2.452",
               "2.457",
               "2.462",
-              "5.18",
-              "5.2",
-              "5.22",
-              "5.24",
-              "5.26",
-              "5.28",
-              "5.3",
-              "5.32",
-              "5.5",
-              "5.52",
-              "5.54",
-              "5.56",
-              "5.58",
-              "5.6",
-              "5.62",
-              "5.64",
-              "5.66",
-              "5.68",
-              "5.7",
-              "5.72",
-              "5.745"
+              "2.467",
+              "2.472"
             ],
             "auth_modes": [
               "open",
@@ -1987,25 +2114,17 @@
             ]
           }
         ],
-        "detail": {
-          "function": 0,
-          "command": 1030,
-          "header_type": 0,
-          "secondary_bus": 0,
-          "prog_if": 0
-        },
-        "driver": "ath10k_pci",
-        "driver_module": "ath10k_pci",
+        "driver": "mt7915e",
+        "driver_module": "mt7915e",
         "drivers": [
-          "ath10k_pci"
+          "mt7915e"
         ],
         "driver_modules": [
-          "ath10k_pci"
-        ],
-        "module_alias": "pci:v0000168Cd0000003Csv00000000sd00000000bc02sc80i00"
+          "mt7915e"
+        ]
       },
       {
-        "index": 31,
+        "index": 32,
         "attached_to": 26,
         "class_list": [
           "network_controller",
@@ -2091,126 +2210,161 @@
           "igb"
         ],
         "module_alias": "pci:v00008086d00001539sv00008086sd00000000bc02sc00i00"
-      },
-      {
-        "index": 40,
-        "attached_to": 49,
-        "class_list": [
-          "network_controller",
-          "usb"
-        ],
-        "bus_type": {
-          "hex": "0086",
-          "name": "USB",
-          "value": 134
-        },
-        "slot": {
-          "bus": 0,
-          "number": 0
-        },
-        "base_class": {
-          "hex": "0002",
-          "name": "Network controller",
-          "value": 2
-        },
-        "sub_class": {
-          "hex": "0000",
-          "name": "Ethernet controller",
-          "value": 0
-        },
-        "vendor": {
-          "hex": "1199",
-          "name": "Sierra Wireless, Incorporated",
-          "value": 4505
-        },
-        "device": {
-          "hex": "9071",
-          "name": "Sierra Wireless MC7455 Qualcomm® Snapdragon™ X7 LTE-A",
-          "value": 36977
-        },
-        "revision": {
-          "hex": "0000",
-          "name": "0.06",
-          "value": 0
-        },
-        "serial": "LQ91639055041028",
-        "model": "Sierra Wireless MC7455 Qualcomm® Snapdragon™ X7 LTE-A",
-        "sysfs_id": "/devices/pci0000:00/0000:00:13.0/usb1/1-1/1-1.3/1-1.3:1.12",
-        "sysfs_bus_id": "1-1.3:1.12",
-        "unix_device_names": [
-          "wwp0s19u1u3i12"
-        ],
-        "resources": [
-          {
-            "type": "baud",
-            "speed": 480000000,
-            "bits": 0,
-            "stop_bits": 0,
-            "parity": 0,
-            "handshake": 0
-          },
-          {
-            "type": "hwaddr",
-            "address": 50
-          }
-        ],
-        "detail": {
-          "device_class": {
-            "hex": "0000",
-            "name": "per_interface",
-            "value": 0
-          },
-          "device_subclass": {
-            "hex": "0000",
-            "name": "per_interface",
-            "value": 0
-          },
-          "device_protocol": 0,
-          "interface_class": {
-            "hex": "0002",
-            "name": "comm",
-            "value": 2
-          },
-          "interface_subclass": {
-            "hex": "000e",
-            "name": "video",
-            "value": 14
-          },
-          "interface_protocol": 0,
-          "interface_number": 12,
-          "interface_alternate_setting": 0,
-          "interface_association": {
-            "function_class": {
-              "hex": "0002",
-              "name": "comm",
-              "value": 2
-            },
-            "function_subclass": {
-              "hex": "000e",
-              "name": "video",
-              "value": 14
-            },
-            "function_protocol": 0,
-            "interface_count": 2,
-            "first_interface": 12
-          }
-        },
-        "hotplug": "usb",
-        "driver": "cdc_mbim",
-        "driver_module": "cdc_mbim",
-        "drivers": [
-          "cdc_mbim"
-        ],
-        "driver_modules": [
-          "cdc_mbim"
-        ],
-        "module_alias": "usb:v1199p9071d0006dc00dsc00dp00ic02isc0Eip00in0C"
       }
     ],
     "network_interface": [
       {
+        "index": 47,
+        "attached_to": 0,
+        "class_list": [
+          "network_interface"
+        ],
+        "base_class": {
+          "hex": "0107",
+          "name": "Network Interface",
+          "value": 263
+        },
+        "sub_class": {
+          "hex": "0080",
+          "name": "Network Interface",
+          "value": 128
+        },
+        "model": "Network Interface",
+        "sysfs_id": "/class/net/ppp0",
+        "unix_device_names": [
+          "ppp0"
+        ],
+        "driver": "ppp",
+        "drivers": [
+          "ppp"
+        ]
+      },
+      {
+        "index": 49,
+        "attached_to": 27,
+        "class_list": [
+          "network_interface"
+        ],
+        "base_class": {
+          "hex": "0107",
+          "name": "Network Interface",
+          "value": 263
+        },
+        "sub_class": {
+          "hex": "000a",
+          "name": "WLAN",
+          "value": 10
+        },
+        "model": "WLAN network interface",
+        "sysfs_id": "/class/net/wlan5",
+        "sysfs_device_link": "/devices/pci0000:00/0000:00:02.5/0000:05:00.0",
+        "unix_device_names": [
+          "wlan5"
+        ],
+        "resources": [
+          {
+            "type": "hwaddr",
+            "address": 48
+          },
+          {
+            "type": "phwaddr",
+            "address": 48
+          }
+        ],
+        "driver": "mt7915e",
+        "driver_module": "mt7915e",
+        "drivers": [
+          "mt7915e"
+        ],
+        "driver_modules": [
+          "mt7915e"
+        ]
+      },
+      {
+        "index": 50,
+        "attached_to": 28,
+        "class_list": [
+          "network_interface"
+        ],
+        "base_class": {
+          "hex": "0107",
+          "name": "Network Interface",
+          "value": 263
+        },
+        "sub_class": {
+          "hex": "000a",
+          "name": "WLAN",
+          "value": 10
+        },
+        "model": "WLAN network interface",
+        "sysfs_id": "/class/net/wlan24",
+        "sysfs_device_link": "/devices/pci0000:00/0000:00:02.5/0000:05:00.0",
+        "unix_device_names": [
+          "wlan24"
+        ],
+        "resources": [
+          {
+            "type": "hwaddr",
+            "address": 48
+          },
+          {
+            "type": "phwaddr",
+            "address": 48
+          }
+        ],
+        "driver": "mt7915e",
+        "driver_module": "mt7915e",
+        "drivers": [
+          "mt7915e"
+        ],
+        "driver_modules": [
+          "mt7915e"
+        ]
+      },
+      {
         "index": 51,
-        "attached_to": 31,
+        "attached_to": 19,
+        "class_list": [
+          "network_interface"
+        ],
+        "base_class": {
+          "hex": "0107",
+          "name": "Network Interface",
+          "value": 263
+        },
+        "sub_class": {
+          "hex": "0001",
+          "name": "Ethernet",
+          "value": 1
+        },
+        "model": "Ethernet network interface",
+        "sysfs_id": "/class/net/enp1s0",
+        "sysfs_device_link": "/devices/pci0000:00/0000:00:02.1/0000:01:00.0",
+        "unix_device_names": [
+          "enp1s0"
+        ],
+        "resources": [
+          {
+            "type": "hwaddr",
+            "address": 48
+          },
+          {
+            "type": "phwaddr",
+            "address": 48
+          }
+        ],
+        "driver": "igb",
+        "driver_module": "igb",
+        "drivers": [
+          "igb"
+        ],
+        "driver_modules": [
+          "igb"
+        ]
+      },
+      {
+        "index": 52,
+        "attached_to": 32,
         "class_list": [
           "network_interface"
         ],
@@ -2250,8 +2404,8 @@
         ]
       },
       {
-        "index": 52,
-        "attached_to": 31,
+        "index": 53,
+        "attached_to": 32,
         "class_list": [
           "network_interface"
         ],
@@ -2282,55 +2436,7 @@
         ]
       },
       {
-        "index": 53,
-        "attached_to": 0,
-        "class_list": [
-          "network_interface"
-        ],
-        "base_class": {
-          "hex": "0107",
-          "name": "Network Interface",
-          "value": 263
-        },
-        "sub_class": {
-          "hex": "0080",
-          "name": "Network Interface",
-          "value": 128
-        },
-        "model": "Network Interface",
-        "sysfs_id": "/class/net/ppp0",
-        "unix_device_names": [
-          "ppp0"
-        ],
-        "driver": "ppp",
-        "drivers": [
-          "ppp"
-        ]
-      },
-      {
         "index": 54,
-        "attached_to": 0,
-        "class_list": [
-          "network_interface"
-        ],
-        "base_class": {
-          "hex": "0107",
-          "name": "Network Interface",
-          "value": 263
-        },
-        "sub_class": {
-          "hex": "0000",
-          "name": "Loopback",
-          "value": 0
-        },
-        "model": "Loopback network interface",
-        "sysfs_id": "/class/net/lo",
-        "unix_device_names": [
-          "lo"
-        ]
-      },
-      {
-        "index": 55,
         "attached_to": 8,
         "class_list": [
           "network_interface"
@@ -2371,85 +2477,29 @@
         ]
       },
       {
+        "index": 55,
+        "attached_to": 0,
+        "class_list": [
+          "network_interface"
+        ],
+        "base_class": {
+          "hex": "0107",
+          "name": "Network Interface",
+          "value": 263
+        },
+        "sub_class": {
+          "hex": "0000",
+          "name": "Loopback",
+          "value": 0
+        },
+        "model": "Loopback network interface",
+        "sysfs_id": "/class/net/lo",
+        "unix_device_names": [
+          "lo"
+        ]
+      },
+      {
         "index": 56,
-        "attached_to": 40,
-        "class_list": [
-          "network_interface"
-        ],
-        "base_class": {
-          "hex": "0107",
-          "name": "Network Interface",
-          "value": 263
-        },
-        "sub_class": {
-          "hex": "0001",
-          "name": "Ethernet",
-          "value": 1
-        },
-        "model": "Ethernet network interface",
-        "sysfs_id": "/class/net/wwp0s19u1u3i12",
-        "sysfs_device_link": "/devices/pci0000:00/0000:00:13.0/usb1/1-1/1-1.3/1-1.3:1.12",
-        "unix_device_names": [
-          "wwp0s19u1u3i12"
-        ],
-        "resources": [
-          {
-            "type": "hwaddr",
-            "address": 50
-          }
-        ],
-        "driver": "cdc_mbim",
-        "driver_module": "cdc_mbim",
-        "drivers": [
-          "cdc_mbim"
-        ],
-        "driver_modules": [
-          "cdc_mbim"
-        ]
-      },
-      {
-        "index": 57,
-        "attached_to": 27,
-        "class_list": [
-          "network_interface"
-        ],
-        "base_class": {
-          "hex": "0107",
-          "name": "Network Interface",
-          "value": 263
-        },
-        "sub_class": {
-          "hex": "0001",
-          "name": "Ethernet",
-          "value": 1
-        },
-        "model": "Ethernet network interface",
-        "sysfs_id": "/class/net/wlp5s0",
-        "sysfs_device_link": "/devices/pci0000:00/0000:00:02.5/0000:05:00.0",
-        "unix_device_names": [
-          "wlp5s0"
-        ],
-        "resources": [
-          {
-            "type": "hwaddr",
-            "address": 48
-          },
-          {
-            "type": "phwaddr",
-            "address": 48
-          }
-        ],
-        "driver": "ath10k_pci",
-        "driver_module": "ath10k_pci",
-        "drivers": [
-          "ath10k_pci"
-        ],
-        "driver_modules": [
-          "ath10k_pci"
-        ]
-      },
-      {
-        "index": 58,
         "attached_to": 15,
         "class_list": [
           "network_interface"
@@ -2469,47 +2519,6 @@
         "sysfs_device_link": "/devices/pci0000:00/0000:00:02.2/0000:02:00.0",
         "unix_device_names": [
           "enp2s0"
-        ],
-        "resources": [
-          {
-            "type": "hwaddr",
-            "address": 48
-          },
-          {
-            "type": "phwaddr",
-            "address": 48
-          }
-        ],
-        "driver": "igb",
-        "driver_module": "igb",
-        "drivers": [
-          "igb"
-        ],
-        "driver_modules": [
-          "igb"
-        ]
-      },
-      {
-        "index": 59,
-        "attached_to": 19,
-        "class_list": [
-          "network_interface"
-        ],
-        "base_class": {
-          "hex": "0107",
-          "name": "Network Interface",
-          "value": 263
-        },
-        "sub_class": {
-          "hex": "0001",
-          "name": "Ethernet",
-          "value": 1
-        },
-        "model": "Ethernet network interface",
-        "sysfs_id": "/class/net/enp1s0",
-        "sysfs_device_link": "/devices/pci0000:00/0000:00:02.1/0000:01:00.0",
-        "unix_device_names": [
-          "enp1s0"
         ],
         "resources": [
           {
@@ -2723,7 +2732,7 @@
         "module_alias": "pci:v00001022d00001567sv00001022sd00001567bc08sc06i00"
       },
       {
-        "index": 33,
+        "index": 34,
         "attached_to": 0,
         "class_list": [
           "pci",
@@ -2793,7 +2802,7 @@
     ],
     "storage_controller": [
       {
-        "index": 30,
+        "index": 31,
         "attached_to": 0,
         "class_list": [
           "storage_controller",
@@ -2907,7 +2916,7 @@
     },
     "unknown": [
       {
-        "index": 35,
+        "index": 36,
         "attached_to": 0,
         "class_list": [
           "unknown"
@@ -2947,7 +2956,7 @@
         ]
       },
       {
-        "index": 36,
+        "index": 37,
         "attached_to": 0,
         "class_list": [
           "unknown"
@@ -2987,7 +2996,7 @@
         ]
       },
       {
-        "index": 37,
+        "index": 38,
         "attached_to": 0,
         "class_list": [
           "unknown"
@@ -3027,7 +3036,7 @@
         ]
       },
       {
-        "index": 38,
+        "index": 39,
         "attached_to": 0,
         "class_list": [
           "unknown"
@@ -3065,424 +3074,6 @@
             "access": "read_write"
           }
         ]
-      }
-    ],
-    "usb": [
-      {
-        "index": 43,
-        "attached_to": 49,
-        "class_list": [
-          "usb",
-          "unknown"
-        ],
-        "bus_type": {
-          "hex": "0086",
-          "name": "USB",
-          "value": 134
-        },
-        "slot": {
-          "bus": 0,
-          "number": 0
-        },
-        "base_class": {
-          "hex": "0007",
-          "name": "Communication controller",
-          "value": 7
-        },
-        "sub_class": {
-          "hex": "0000",
-          "name": "Serial controller",
-          "value": 0
-        },
-        "pci_interface": {
-          "hex": "0080",
-          "value": 128
-        },
-        "vendor": {
-          "hex": "1199",
-          "name": "Sierra Wireless, Incorporated",
-          "value": 4505
-        },
-        "device": {
-          "hex": "9071",
-          "name": "Sierra Wireless MC7455 Qualcomm® Snapdragon™ X7 LTE-A",
-          "value": 36977
-        },
-        "revision": {
-          "hex": "0000",
-          "name": "0.06",
-          "value": 0
-        },
-        "serial": "LQ91639055041028",
-        "model": "Sierra Wireless MC7455 Qualcomm® Snapdragon™ X7 LTE-A",
-        "sysfs_id": "/devices/pci0000:00/0000:00:13.0/usb1/1-1/1-1.3/1-1.3:1.3",
-        "sysfs_bus_id": "1-1.3:1.3",
-        "unix_device_names": [
-          "/dev/serial/by-id/usb-Sierra_Wireless__Incorporated_Sierra_Wireless_MC7455_Qualcomm®_Snapdragon™_X7_LTE-A_LQ91639055041028-if03-port0",
-          "/dev/serial/by-path/pci-0000:00:13.0-usb-0:1.3:1.3-port0",
-          "/dev/serial/by-path/pci-0000:00:13.0-usbv2-0:1.3:1.3-port0",
-          "/dev/ttyUSB2"
-        ],
-        "resources": [
-          {
-            "type": "baud",
-            "speed": 480000000,
-            "bits": 0,
-            "stop_bits": 0,
-            "parity": 0,
-            "handshake": 0
-          }
-        ],
-        "detail": {
-          "device_class": {
-            "hex": "0000",
-            "name": "per_interface",
-            "value": 0
-          },
-          "device_subclass": {
-            "hex": "0000",
-            "name": "per_interface",
-            "value": 0
-          },
-          "device_protocol": 0,
-          "interface_class": {
-            "hex": "00ff",
-            "name": "vendor_spec",
-            "value": 255
-          },
-          "interface_subclass": {
-            "hex": "0000",
-            "name": "per_interface",
-            "value": 0
-          },
-          "interface_protocol": 0,
-          "interface_number": 3,
-          "interface_alternate_setting": 0
-        },
-        "hotplug": "usb",
-        "driver": "qcserial",
-        "driver_module": "qcserial",
-        "drivers": [
-          "qcserial"
-        ],
-        "driver_modules": [
-          "qcserial",
-          "usbserial"
-        ],
-        "module_alias": "usb:v1199p9071d0006dc00dsc00dp00icFFisc00ip00in03"
-      },
-      {
-        "index": 44,
-        "attached_to": 49,
-        "class_list": [
-          "usb",
-          "unknown"
-        ],
-        "bus_type": {
-          "hex": "0086",
-          "name": "USB",
-          "value": 134
-        },
-        "slot": {
-          "bus": 0,
-          "number": 0
-        },
-        "base_class": {
-          "hex": "0000",
-          "name": "Unclassified device",
-          "value": 0
-        },
-        "sub_class": {
-          "hex": "0000",
-          "name": "Unclassified device",
-          "value": 0
-        },
-        "vendor": {
-          "hex": "1199",
-          "name": "Sierra Wireless, Incorporated",
-          "value": 4505
-        },
-        "device": {
-          "hex": "9071",
-          "name": "Sierra Wireless MC7455 Qualcomm® Snapdragon™ X7 LTE-A",
-          "value": 36977
-        },
-        "revision": {
-          "hex": "0000",
-          "name": "0.06",
-          "value": 0
-        },
-        "serial": "LQ91639055041028",
-        "model": "Sierra Wireless MC7455 Qualcomm® Snapdragon™ X7 LTE-A",
-        "sysfs_id": "/devices/pci0000:00/0000:00:13.0/usb1/1-1/1-1.3/1-1.3:1.13",
-        "sysfs_bus_id": "1-1.3:1.13",
-        "resources": [
-          {
-            "type": "baud",
-            "speed": 480000000,
-            "bits": 0,
-            "stop_bits": 0,
-            "parity": 0,
-            "handshake": 0
-          }
-        ],
-        "detail": {
-          "device_class": {
-            "hex": "0000",
-            "name": "per_interface",
-            "value": 0
-          },
-          "device_subclass": {
-            "hex": "0000",
-            "name": "per_interface",
-            "value": 0
-          },
-          "device_protocol": 0,
-          "interface_class": {
-            "hex": "000a",
-            "name": "data",
-            "value": 10
-          },
-          "interface_subclass": {
-            "hex": "0000",
-            "name": "per_interface",
-            "value": 0
-          },
-          "interface_protocol": 2,
-          "interface_number": 13,
-          "interface_alternate_setting": 1,
-          "interface_association": {
-            "function_class": {
-              "hex": "0002",
-              "name": "comm",
-              "value": 2
-            },
-            "function_subclass": {
-              "hex": "000e",
-              "name": "video",
-              "value": 14
-            },
-            "function_protocol": 0,
-            "interface_count": 2,
-            "first_interface": 12
-          }
-        },
-        "hotplug": "usb",
-        "driver": "cdc_mbim",
-        "driver_module": "cdc_mbim",
-        "drivers": [
-          "cdc_mbim"
-        ],
-        "driver_modules": [
-          "cdc_mbim"
-        ],
-        "module_alias": "usb:v1199p9071d0006dc00dsc00dp00ic0Aisc00ip02in0D"
-      },
-      {
-        "index": 47,
-        "attached_to": 49,
-        "class_list": [
-          "usb",
-          "unknown"
-        ],
-        "bus_type": {
-          "hex": "0086",
-          "name": "USB",
-          "value": 134
-        },
-        "slot": {
-          "bus": 0,
-          "number": 0
-        },
-        "base_class": {
-          "hex": "0007",
-          "name": "Communication controller",
-          "value": 7
-        },
-        "sub_class": {
-          "hex": "0000",
-          "name": "Serial controller",
-          "value": 0
-        },
-        "pci_interface": {
-          "hex": "0080",
-          "value": 128
-        },
-        "vendor": {
-          "hex": "1199",
-          "name": "Sierra Wireless, Incorporated",
-          "value": 4505
-        },
-        "device": {
-          "hex": "9071",
-          "name": "Sierra Wireless MC7455 Qualcomm® Snapdragon™ X7 LTE-A",
-          "value": 36977
-        },
-        "revision": {
-          "hex": "0000",
-          "name": "0.06",
-          "value": 0
-        },
-        "serial": "LQ91639055041028",
-        "model": "Sierra Wireless MC7455 Qualcomm® Snapdragon™ X7 LTE-A",
-        "sysfs_id": "/devices/pci0000:00/0000:00:13.0/usb1/1-1/1-1.3/1-1.3:1.2",
-        "sysfs_bus_id": "1-1.3:1.2",
-        "unix_device_names": [
-          "/dev/serial/by-id/usb-Sierra_Wireless__Incorporated_Sierra_Wireless_MC7455_Qualcomm®_Snapdragon™_X7_LTE-A_LQ91639055041028-if02-port0",
-          "/dev/serial/by-path/pci-0000:00:13.0-usb-0:1.3:1.2-port0",
-          "/dev/serial/by-path/pci-0000:00:13.0-usbv2-0:1.3:1.2-port0",
-          "/dev/ttyUSB1"
-        ],
-        "resources": [
-          {
-            "type": "baud",
-            "speed": 480000000,
-            "bits": 0,
-            "stop_bits": 0,
-            "parity": 0,
-            "handshake": 0
-          }
-        ],
-        "detail": {
-          "device_class": {
-            "hex": "0000",
-            "name": "per_interface",
-            "value": 0
-          },
-          "device_subclass": {
-            "hex": "0000",
-            "name": "per_interface",
-            "value": 0
-          },
-          "device_protocol": 0,
-          "interface_class": {
-            "hex": "00ff",
-            "name": "vendor_spec",
-            "value": 255
-          },
-          "interface_subclass": {
-            "hex": "0000",
-            "name": "per_interface",
-            "value": 0
-          },
-          "interface_protocol": 0,
-          "interface_number": 2,
-          "interface_alternate_setting": 0
-        },
-        "hotplug": "usb",
-        "driver": "qcserial",
-        "driver_module": "qcserial",
-        "drivers": [
-          "qcserial"
-        ],
-        "driver_modules": [
-          "qcserial",
-          "usbserial"
-        ],
-        "module_alias": "usb:v1199p9071d0006dc00dsc00dp00icFFisc00ip00in02"
-      },
-      {
-        "index": 48,
-        "attached_to": 49,
-        "class_list": [
-          "usb",
-          "unknown"
-        ],
-        "bus_type": {
-          "hex": "0086",
-          "name": "USB",
-          "value": 134
-        },
-        "slot": {
-          "bus": 0,
-          "number": 0
-        },
-        "base_class": {
-          "hex": "0007",
-          "name": "Communication controller",
-          "value": 7
-        },
-        "sub_class": {
-          "hex": "0000",
-          "name": "Serial controller",
-          "value": 0
-        },
-        "pci_interface": {
-          "hex": "0080",
-          "value": 128
-        },
-        "vendor": {
-          "hex": "1199",
-          "name": "Sierra Wireless, Incorporated",
-          "value": 4505
-        },
-        "device": {
-          "hex": "9071",
-          "name": "Sierra Wireless MC7455 Qualcomm® Snapdragon™ X7 LTE-A",
-          "value": 36977
-        },
-        "revision": {
-          "hex": "0000",
-          "name": "0.06",
-          "value": 0
-        },
-        "serial": "LQ91639055041028",
-        "model": "Sierra Wireless MC7455 Qualcomm® Snapdragon™ X7 LTE-A",
-        "sysfs_id": "/devices/pci0000:00/0000:00:13.0/usb1/1-1/1-1.3/1-1.3:1.0",
-        "sysfs_bus_id": "1-1.3:1.0",
-        "unix_device_names": [
-          "/dev/serial/by-id/usb-Sierra_Wireless__Incorporated_Sierra_Wireless_MC7455_Qualcomm®_Snapdragon™_X7_LTE-A_LQ91639055041028-if00-port0",
-          "/dev/serial/by-path/pci-0000:00:13.0-usb-0:1.3:1.0-port0",
-          "/dev/serial/by-path/pci-0000:00:13.0-usbv2-0:1.3:1.0-port0",
-          "/dev/ttyUSB0"
-        ],
-        "resources": [
-          {
-            "type": "baud",
-            "speed": 480000000,
-            "bits": 0,
-            "stop_bits": 0,
-            "parity": 0,
-            "handshake": 0
-          }
-        ],
-        "detail": {
-          "device_class": {
-            "hex": "0000",
-            "name": "per_interface",
-            "value": 0
-          },
-          "device_subclass": {
-            "hex": "0000",
-            "name": "per_interface",
-            "value": 0
-          },
-          "device_protocol": 0,
-          "interface_class": {
-            "hex": "00ff",
-            "name": "vendor_spec",
-            "value": 255
-          },
-          "interface_subclass": {
-            "hex": "00ff",
-            "name": "vendor_spec",
-            "value": 255
-          },
-          "interface_protocol": 255,
-          "interface_number": 0,
-          "interface_alternate_setting": 0
-        },
-        "hotplug": "usb",
-        "driver": "qcserial",
-        "driver_module": "qcserial",
-        "drivers": [
-          "qcserial"
-        ],
-        "driver_modules": [
-          "qcserial",
-          "usbserial"
-        ],
-        "module_alias": "usb:v1199p9071d0006dc00dsc00dp00icFFiscFFipFFin00"
       }
     ],
     "usb_controller": [
