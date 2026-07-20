@@ -62,11 +62,11 @@
         "owner": "applicative-systems",
         "repo": "declarative-runtime"
       },
-      "branch": "jellyfin",
+      "branch": "import",
       "submodules": false,
-      "revision": "8d2ea5dc8d7716f72e86e5cb079e95bd0b32d559",
-      "url": "https://github.com/applicative-systems/declarative-runtime/archive/8d2ea5dc8d7716f72e86e5cb079e95bd0b32d559.tar.gz",
-      "hash": "sha256-84moyOieyWoWVRdpMEr55Sfhs3PhC9peDLdRx9VdGjk="
+      "revision": "629bf19bb8185cfc99be48a50aed78add19a7bfe",
+      "url": "https://github.com/applicative-systems/declarative-runtime/archive/629bf19bb8185cfc99be48a50aed78add19a7bfe.tar.gz",
+      "hash": "sha256-K3NcCWgftoN7hLpjO2UYcwsX/uX3boFU6ojRtQklvTI="
     },
     "disko": {
       "type": "GitRelease",

@@ -227,14 +227,24 @@
             records = [ { value = ''"v=DMARC1; p=none; rua=mailto:postmaster@${domain}"''; } ];
           };
           # SPF authorises the MX host's address (this box's published AAAA).
-          # Declared as a single record, not an RRSet: the apex TXT set already
-          # holds an unrelated google-site-verification value we do not manage,
-          # and add_records leaves it in place.
-          zone_records.spf = {
+          # Managed as a full apex-TXT RRSet rather than a single
+          # hcloud_zone_record: hcloud_zone_record can only be adopted via
+          # Terraform resource identity, which the reconciler's CLI `tofu import`
+          # cannot supply, so on a lost/rebuilt tfstate (this box rolls / back on
+          # boot) it fails re-adding the already-present SPF value with
+          # "duplicate value" (HTTP 422) and never reconciles. An RRSet imports
+          # by "<zone>/<name>/<type>" and adopts cleanly. The catch: an RRSet
+          # owns *every* value at @/TXT, so the unrelated, externally-set
+          # google-site-verification token must be listed here too or the apply
+          # would delete it. Update it if Search Console ever re-issues one.
+          zone_rrsets.apex_txt = {
             zone = domain;
             name = "@";
             type = "TXT";
-            value = ''"v=spf1 mx ~all"'';
+            records = [
+              { value = ''"v=spf1 mx ~all"''; }
+              { value = ''"google-site-verification=krouLLrAV68-Bw5gN7qr8oN-u_tq5g5bqA9bn1U7z3o"''; }
+            ];
           };
         };
 
