@@ -43,14 +43,9 @@ in
                 xwayland-satellite
               ];
               programs.dms-shell.enable = true;
-              services = {
-                displayManager.dms-greeter = {
-                  enable = true;
-                  compositor.name = "niri";
-                };
-                iio-niri = {
-                  enable = true;
-                };
+              services.displayManager.dms-greeter = {
+                enable = true;
+                compositor.name = "niri";
               };
             }
             {
