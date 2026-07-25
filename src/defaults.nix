@@ -35,6 +35,7 @@
           tcpdump
           usbutils
           wev
+          zbar
         ];
       }
       {
