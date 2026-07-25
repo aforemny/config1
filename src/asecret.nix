@@ -26,7 +26,7 @@ in
           self: super:
           let
             major = "2";
-            minor = "30";
+            minor = "31";
           in
           {
             nix = super.nixVersions."nix_${major}_${minor}"; # TODO
