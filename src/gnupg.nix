@@ -1,14 +1,16 @@
 {
+  nixosModules.gnupg = { pkgs, ... }: {
+    environment.systemPackages = with pkgs; [ gnupg ];
+    programs.gnupg.agent = {
+      enable = true;
+      enableSSHSupport = true;
+      pinentryPackage = pkgs.pinentry-qt;
+    };
+  };
   homeManagerModules.gnupg =
     { pkgs, lib, ... }:
     lib.mkMerge [
       {
-        home.packages = with pkgs; [ gnupg ];
-        services.gpg-agent = {
-          enable = true;
-          #pinentry.package = pkgs.pinentry-rofi;
-          pinentry.package = pkgs.pinentry-tty;
-        };
         state.directories = [ ".gnupg" ];
       }
       {
