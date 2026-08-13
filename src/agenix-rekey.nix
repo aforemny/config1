@@ -97,6 +97,29 @@
             ${pkgs.coreutils}/bin/cat "$tmp/key"
             ${pkgs.coreutils}/bin/rm -rf "$tmp"
           '';
+        # Generates a nix binary-cache signing key (`nix key generate-secret`)
+        # and writes the adjacent public key -- `<name>:<base64>` from
+        # `nix key convert-secret-to-public` -- next to the .age file, so the
+        # public half can be committed and referenced at eval time (argunix's
+        # `binary_caches.*.public_key` and users' `trusted-public-keys`). The
+        # key name is the cache host so the signature id reads `cache.nomath.org`.
+        age.generators.nix-cache-key =
+          {
+            pkgs,
+            lib,
+            file,
+            ...
+          }:
+          ''
+            tmp=$(${pkgs.coreutils}/bin/mktemp -d)
+            ${pkgs.nix}/bin/nix --extra-experimental-features nix-command \
+              key generate-secret --key-name cache.nomath.org > "$tmp/secret"
+            ${pkgs.nix}/bin/nix --extra-experimental-features nix-command \
+              key convert-secret-to-public < "$tmp/secret" \
+              > ${lib.escapeShellArg (lib.removeSuffix ".age" file + ".pub")}
+            ${pkgs.coreutils}/bin/cat "$tmp/secret"
+            ${pkgs.coreutils}/bin/rm -rf "$tmp"
+          '';
       };
     _agenix-rekey.nixosConfigurations = config.systems;
     _systems.defaultModules = [

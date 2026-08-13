@@ -29,6 +29,20 @@
       "url": "https://github.com/aforemny/agenix-rekey/archive/fcef59bc700323f69f0894b8f298384f9ca57ab1.tar.gz",
       "hash": "sha256-cCIOzNfGqP2nzMOXgNVEl/oj4ZliQb/eRHCQJ8Y3b+w="
     },
+    "argunix": {
+      "type": "Git",
+      "repository": {
+        "type": "Forgejo",
+        "server": "https://codeberg.org/",
+        "owner": "tfc",
+        "repo": "argunix"
+      },
+      "branch": "main",
+      "submodules": false,
+      "revision": "092d88c39d9ffed7cbccedbbd73786d3ece258dd",
+      "url": "https://codeberg.org/tfc/argunix/archive/092d88c39d9ffed7cbccedbbd73786d3ece258dd.tar.gz",
+      "hash": "sha256-VWV1kHLfuASvdFcVbykoPDX7wtipfvhfPZg24zk+QJI="
+    },
     "asecret": {
       "type": "Git",
       "repository": {
@@ -151,6 +165,19 @@
       "revision": "96a22c50ce320ff3d0cf19d74347aa1511b8e88a",
       "url": "https://github.com/numtide/llm-agents.nix/archive/96a22c50ce320ff3d0cf19d74347aa1511b8e88a.tar.gz",
       "hash": "sha256-U/wf+lyBMiK9Cn38WzYHwI399TdluQ1lxnQ6B4m2x80="
+    },
+    "naersk": {
+      "type": "Git",
+      "repository": {
+        "type": "GitHub",
+        "owner": "nix-community",
+        "repo": "naersk"
+      },
+      "branch": "master",
+      "submodules": false,
+      "revision": "9aa07bb0256d300219b30622d2454e85f7f3667e",
+      "url": "https://github.com/nix-community/naersk/archive/9aa07bb0256d300219b30622d2454e85f7f3667e.tar.gz",
+      "hash": "sha256-thLTFbp9D5Qknmh8q/v4FRpLGphUSijT3E86cbLYTXo="
     },
     "nix-colors": {
       "type": "Git",
