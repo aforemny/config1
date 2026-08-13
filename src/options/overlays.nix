@@ -2,6 +2,7 @@
   config,
   lib,
   sources,
+  system,
   ...
 }:
 {
@@ -10,6 +11,9 @@
     nixosModules.overlays = {
       nixpkgs.overlays = lib.attrValues config.overlays;
     };
-    _module.args.pkgs = import "${sources.nixpkgs}" { overlays = lib.attrValues config.overlays; };
+    _module.args.pkgs = import "${sources.nixpkgs}" {
+      inherit system;
+      overlays = lib.attrValues config.overlays;
+    };
   };
 }

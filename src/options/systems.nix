@@ -19,7 +19,10 @@
                 type = lib.mkOptionType { name = "Toplevel NixOS config"; };
                 readOnly = true;
                 default =
-                  (import "${config.nixpkgs}/nixos/lib/eval-config.nix" { inherit (config) modules; }).config;
+                  (import "${config.nixpkgs}/nixos/lib/eval-config.nix" {
+                    inherit (config) modules;
+                    system = "x86_64-linux";
+                  }).config;
               };
               options = lib.mkOption {
                 type = lib.mkOptionType { name = "Toplevel NixOS config"; };

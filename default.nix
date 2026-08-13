@@ -1,10 +1,11 @@
 {
   lib ? import "${sources.nixpkgs}/lib",
   sources ? import ./npins,
+  system ? builtins.currentSystem,
 }:
 let
   specialArgs = {
-    inherit sources;
+    inherit sources system;
   };
   eval = lib.evalModules {
     modules = [

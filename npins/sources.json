@@ -25,9 +25,9 @@
       },
       "branch": "main",
       "submodules": false,
-      "revision": "fcef59bc700323f69f0894b8f298384f9ca57ab1",
-      "url": "https://github.com/aforemny/agenix-rekey/archive/fcef59bc700323f69f0894b8f298384f9ca57ab1.tar.gz",
-      "hash": "sha256-cCIOzNfGqP2nzMOXgNVEl/oj4ZliQb/eRHCQJ8Y3b+w="
+      "revision": "7294362d5a6911af9e35ae782449f7ef7c72977b",
+      "url": "https://github.com/aforemny/agenix-rekey/archive/7294362d5a6911af9e35ae782449f7ef7c72977b.tar.gz",
+      "hash": "sha256-3RWvEhc81lKMC3SjP0dEVJHQcsNTQX2ix6DqmjdoJX8="
     },
     "argunix": {
       "type": "Git",
@@ -237,6 +237,13 @@
       "artifact": "nixexprs.tar.xz",
       "url": "https://releases.nixos.org/nixpkgs/nixpkgs-26.11pre1040892.335f0738cb2f/nixexprs.tar.xz",
       "hash": "sha256-+GlACcQGqWOKfXKmy+KXCvbl7lKTmM5mZM16zmwTCic="
+    },
+    "nixpkgs-22_05": {
+      "type": "Channel",
+      "name": "nixos-22.05",
+      "artifact": "nixexprs.tar.xz",
+      "url": "https://releases.nixos.org/nixos/22.05/nixos-22.05.4694.380be19fbd2d/nixexprs.tar.xz",
+      "hash": "sha256-gosYWvsTx3bR91jmpAZ7MT9RywQmPHujSMKh8fIXXts="
     },
     "nm2nix": {
       "type": "Git",

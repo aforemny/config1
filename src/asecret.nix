@@ -2,6 +2,7 @@
   config,
   lib,
   pkgs,
+  sources,
   ...
 }:
 let
@@ -14,13 +15,13 @@ in
       { lib, options, ... }:
       {
         imports = [
-          "${/home/aforemny/s/asecret}/modules" # TODO
+          "${sources.asecret}/modules"
         ];
         config = lib.mkIf (options ? "state") { state.directories = [ "/var/src/secrets" ]; };
       };
     overlays = {
       asecret = lib.composeManyExtensions [
-        (import "${/home/aforemny/s/asecret}/pkgs" # TODO
+        (import "${sources.asecret}/pkgs" # TODO
         )
         (
           self: super:
@@ -47,7 +48,7 @@ in
         export PASSWORD_STORE_DIR=${cfg.PASSWORD_STORE_DIR}
         export NIX_CONFIG='
           plugin-files = ${pkgs.nix-plugins}/lib/nix/plugins
-          extra-builtins-file = ${/home/aforemny/s/asecret}/extra-builtins.nix
+          extra-builtins-file = ${sources.asecret}/extra-builtins.nix
         '
       '';
     };

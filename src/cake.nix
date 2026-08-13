@@ -6,16 +6,16 @@
 }:
 {
   imports = [
-    "${/home/aforemny/s/cake}/cake-modules/cake-build/" # TODO
-    "${/home/aforemny/s/cake}/cake-modules/cake-cli/" # TODO
-    "${/home/aforemny/s/cake}/cake-modules/cake-deploy-ssh/" # TODO
-    "${/home/aforemny/s/cake}/cake-modules/cake-deploy/" # TODO
-    "${/home/aforemny/s/cake}/cake-modules/cake-eval/" # TODO
-    "${/home/aforemny/s/cake}/cake-modules/cake-install/" # TODO
-    "${/home/aforemny/s/cake}/cake-modules/cake-install/" # TODO
-    "${/home/aforemny/s/cake}/cake-modules/cake-repl/" # TODO
-    "${/home/aforemny/s/cake}/cake-modules/cake-run-vm/" # TODO
-    "${/home/aforemny/s/cake}/cake-modules/cake-show/" # TODO
+    "${sources.cake}/cake-modules/cake-build/"
+    "${sources.cake}/cake-modules/cake-cli/"
+    "${sources.cake}/cake-modules/cake-deploy-ssh/"
+    "${sources.cake}/cake-modules/cake-deploy/"
+    "${sources.cake}/cake-modules/cake-eval/"
+    "${sources.cake}/cake-modules/cake-install/"
+    "${sources.cake}/cake-modules/cake-install/"
+    "${sources.cake}/cake-modules/cake-repl/"
+    "${sources.cake}/cake-modules/cake-run-vm/"
+    "${sources.cake}/cake-modules/cake-show/"
   ];
   config = {
     overlays.cake-commands = self: super: {

@@ -1,4 +1,4 @@
-{ sources, ... }:
+{ sources, system, ... }:
 {
   overlays.glados-tts = self: super: {
     # nixpkgs-22.05's pytorch (1.11) is built without FBGEMM, so on this
@@ -10,23 +10,22 @@
     # The packaged `glados` (glados.py) also plays audio itself via `aplay`
     # (not in glados-announce's PATH) and writes nothing to stdout; rewrite it
     # to emit a WAV stream on stdout instead, so `glados | mpv` can play it.
-    glados-tts = (import sources.glados-tts { }).glados.overrideAttrs (old: {
-      postPatch = (old.postPatch or "") + ''
-        substituteInPlace glados.py \
-          --replace 'import torch' \
-            'import torch; torch.backends.quantized.engine = next((e for e in torch.backends.quantized.supported_engines if e != "none"), "none")' \
-          --replace 'p = Popen(["aplay", "-f", "S16_LE", "-r", "22050", "-"], stdin=PIPE, stdout=DEVNULL, stderr=DEVNULL)' \
-            'write(sys.stdout.buffer, 22050, audio)' \
-          --replace 'p.communicate(input=audio.tobytes())' \
-            'pass'
-      '';
-    });
+    glados-tts =
+      (import sources.glados-tts {
+        pkgs = import sources.nixpkgs-22_05 { inherit system; };
+      }).glados.overrideAttrs
+        (old: {
+          postPatch = (old.postPatch or "") + ''
+            substituteInPlace glados.py \
+              --replace 'import torch' \
+                'import torch; torch.backends.quantized.engine = next((e for e in torch.backends.quantized.supported_engines if e != "none"), "none")' \
+              --replace 'p = Popen(["aplay", "-f", "S16_LE", "-r", "22050", "-"], stdin=PIPE, stdout=DEVNULL, stderr=DEVNULL)' \
+                'write(sys.stdout.buffer, 22050, audio)' \
+              --replace 'p.communicate(input=audio.tobytes())' \
+                'pass'
+          '';
+        });
   };
-  nixosModules.glados-tts =
-    { pkgs, ... }:
-    {
-      environment.systemPackages = with pkgs; [ glados-tts ];
-    };
   systems.tower.modules = [
     (
       # NixOS module: hourly time/date/weather announcement in the voice of GLaDOS.
@@ -68,6 +67,10 @@
         };
       in
       {
+        # glados-tts is desktop-only (needs audio + the tower CPU build of the
+        # 22.05 pytorch, which is marked broken on aarch64); keep it off other
+        # hosts so m1 etc. don't drag it in.
+        environment.systemPackages = [ pkgs.glados-tts ];
         systemd.user.services.glados-hourly = {
           description = "Announce the hour, date and weather in the voice of GLaDOS";
           serviceConfig = {
