@@ -1,0 +1,2 @@
+shell: |
+  nix-shell --run 'ASECRET_DRY_RUN=1 nix flake check'

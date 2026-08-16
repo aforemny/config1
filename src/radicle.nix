@@ -115,6 +115,76 @@
             ];
           }
         )
+        (
+          let
+            fqdn = "radicle-ci.nomath.org";
+          in
+          {
+            services.radicle.ci = {
+              broker = {
+                enable = true;
+                settings.triggers = [
+                  {
+                    adapter = "native";
+                    filters = [
+                      {
+                        And = [
+                          { HasFile = ".radicle/native.yaml"; }
+                          "AnyDelegate"
+                          {
+                            Or = [
+                              "DefaultBranch"
+                              "PatchCreated"
+                              "PatchUpdated"
+                            ];
+                          }
+                        ];
+                      }
+                    ];
+                  }
+                ];
+              };
+              adapters.native.instances.native = {
+                runtimePackages = [ pkgs.nix ];
+                settings = {
+                  base_url = "https://${fqdn}/native";
+                  log = "/var/log/radicle-ci/native.log";
+                };
+              };
+            };
+
+            boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
+
+            systemd.services.radicle-ci-broker.serviceConfig.UMask = lib.mkForce "0022";
+
+            nix.settings.post-build-hook =
+              let
+                cacheDir = "/var/lib/argunix-cache"; # keep in sync with argunix.nix
+              in
+              pkgs.writeShellScript "radicle-ci-cache-push" ''
+                set -efu
+                exec ${pkgs.nix}/bin/nix --extra-experimental-features nix-command \
+                  copy --to "file://${cacheDir}?secret-key=${config.age.secrets.argunix-cache-key.path}" $OUT_PATHS
+              '';
+
+            services.nginx = {
+              enable = true;
+              virtualHosts.${fqdn} = {
+                forceSSL = true;
+                enableACME = true;
+                root = "/var/lib/radicle-ci/reports";
+                locations."/native/".alias = "/var/lib/radicle-ci/adapters/native/native/";
+              };
+            };
+
+            dns.dynamicAAAA = [ "radicle-ci" ];
+
+            state.directories = [
+              "/var/lib/radicle-ci"
+              "/var/log/radicle-ci"
+            ];
+          }
+        )
       ]
     )
   ];
