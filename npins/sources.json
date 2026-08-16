@@ -78,9 +78,9 @@
       },
       "branch": "import",
       "submodules": false,
-      "revision": "629bf19bb8185cfc99be48a50aed78add19a7bfe",
-      "url": "https://github.com/applicative-systems/declarative-runtime/archive/629bf19bb8185cfc99be48a50aed78add19a7bfe.tar.gz",
-      "hash": "sha256-K3NcCWgftoN7hLpjO2UYcwsX/uX3boFU6ojRtQklvTI="
+      "revision": "bdd197046c127d7169a33cd60708489161612a42",
+      "url": "https://github.com/applicative-systems/declarative-runtime/archive/bdd197046c127d7169a33cd60708489161612a42.tar.gz",
+      "hash": "sha256-0Eghd/WJGmyUwk48vMrZbwdK+DX8Bo//RCTPUhUJSdM="
     },
     "disko": {
       "type": "GitRelease",
