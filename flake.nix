@@ -29,6 +29,12 @@
           )
         )
       );
+      formatter = lib.genAttrs platforms (
+        platform:
+        (import cakes.${platform}.sources.treefmt-nix).mkWrapper cakes.${platform}.pkgs (
+          import ./treefmt.nix
+        )
+      );
       devShells = lib.genAttrs platforms (platform: {
         default = cakes.${platform}.config.devShell.package;
       });
