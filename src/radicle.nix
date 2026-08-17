@@ -9,7 +9,7 @@
       ...
     }:
     lib.mkIf (config.tags.graphical or false) {
-      environment.systemPackages = [ pkgs.radicle-node ];
+      environment.systemPackages = with pkgs; [ radicle-node radicle-desktop ];
     };
 
   homeManagerModules.radicle =
