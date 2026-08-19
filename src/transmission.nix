@@ -20,10 +20,6 @@
       in
       {
         age.secrets.transmission-wg.rekeyFile = toString ../secrets1/transmission-wg.age;
-        age.secrets.transmission-htpasswd = {
-          rekeyFile = toString ../secrets1/transmission-htpasswd.age;
-          owner = config.services.nginx.user;
-        };
 
         vpnNamespaces.${ns} = {
           enable = true;
@@ -62,11 +58,11 @@
             # bridgeAddr: nginx / tremc reach it from the host.
             rpc-whitelist = "127.0.0.1,${nsAddr},${bridgeAddr}";
             # Terminated behind nginx (Host: ${fqdn}); the IP whitelist above and
-            # nginx basic-auth are the access controls, so the host-header guard
-            # would only get in the way.
+            # the oauth2-proxy SSO layer are the access controls, so the
+            # host-header guard would only get in the way.
             rpc-host-whitelist-enabled = false;
-            # Public auth is enforced by nginx (basicAuthFile); the RPC itself is
-            # not exposed outside the host.
+            # Public auth is enforced by nginx via oauth2-proxy (Keycloak SSO);
+            # the RPC itself is not exposed outside the host.
             rpc-authentication-required = false;
             # transmission's own UPnP/NAT-PMP stays off; transmission-natpmp
             # drives the peer port explicitly (see below).
@@ -166,7 +162,6 @@
           virtualHosts.${fqdn} = {
             forceSSL = true;
             enableACME = true;
-            basicAuthFile = config.age.secrets.transmission-htpasswd.path;
             locations."/" = {
               proxyPass = "http://${nsAddr}:${toString rpcPort}";
               recommendedProxySettings = true;

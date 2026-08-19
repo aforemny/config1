@@ -103,7 +103,6 @@
             lib.nameValuePair "${name}.nomath.org" {
               forceSSL = true;
               enableACME = true;
-              basicAuthFile = config.age.secrets.transmission-htpasswd.path;
               locations."/" = {
                 proxyPass = "http://${nsAddr}:${toString port}";
                 proxyWebsockets = true;

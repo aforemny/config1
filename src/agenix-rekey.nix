@@ -79,6 +79,26 @@
         age.secrets.randomPassword = {
           generator.script = "passphrase";
         };
+        # A 32-byte AES key rendered as unpadded URL-safe base64 (43 chars, no
+        # trailing newline). oauth2-proxy's cookie-secret loader reads the file
+        # verbatim and only accepts a raw 16/24/32-byte value or one that
+        # decodes via base64.RawURLEncoding to that length -- the stock `base64`
+        # generator (standard alphabet, padding, trailing newline) fails both.
+        age.generators.aes-cookie-secret =
+          { pkgs, ... }:
+          "${pkgs.openssl}/bin/openssl rand -base64 32 "
+          + "| ${pkgs.coreutils}/bin/tr '+/' '-_' "
+          + "| ${pkgs.coreutils}/bin/tr -d '=\\n'";
+        # 48-char alphanumeric secret with no trailing newline. Consumers that
+        # read the file verbatim and send it over the wire need this: e.g.
+        # oauth2-proxy authenticates the OIDC code exchange via HTTP Basic
+        # (base64 of `client_id:secret`), and a stray newline in the secret
+        # makes Keycloak's Basic parser reject it as invalid_client_credentials.
+        # The stock `alnum` (bare `pwgen`) appends a newline, so use this
+        # instead wherever the raw file value is compared byte-for-byte.
+        age.generators.alnum-nonl =
+          { pkgs, ... }:
+          "${pkgs.pwgen}/bin/pwgen -s 48 1 | ${pkgs.coreutils}/bin/tr -d '\\n'";
         # Generates an ed25519 SSH key (radicle uses these) and writes the
         # adjacent, comment-stripped public key next to the .age file, so the
         # pubkey can be committed and referenced at eval time.
