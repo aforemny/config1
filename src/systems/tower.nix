@@ -4,7 +4,7 @@
       networking = {
         hostId = "c32250b5";
         hostName = "tower";
-        useTempAddresses = false;
+        tempAddresses = "disabled";
       };
       tags.graphical = false;
     }
