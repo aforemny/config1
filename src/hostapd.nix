@@ -112,7 +112,14 @@
           {
             interface = "wlan5";
             band = "5g";
+            # ACS on the MT7915 (it can provide survey data), but restricted to
+            # the upper non-DFS block: dodges DFS radar-eviction entirely and
+            # can't collide with ap on ch 36.
             channel = 0;
+            radioSettings = {
+              acs_exclude_dfs = 1;
+              chanlist = "149 153 157 161 165";
+            };
             wifi4Capabilities = mt7915Wifi4;
             wifi5Capabilities = mt7915Wifi5;
           }
