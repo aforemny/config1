@@ -22,15 +22,17 @@
         wpaPassword = password;
       };
 
-      # 802.11r Fast BSS Transition. apu (wlan24 + wlan5) and ap
-      # (wlp0s16u1i2) share one SSID and this one mobility domain, so a client
-      # fast-roams between any of the three BSSes with a 4-message FT exchange
-      # instead of a full (re)association + SAE/4-way handshake -- that full
-      # handshake is the "not fully connected to either" gap. Inter-AP key
-      # distribution (RRB) rides the shared `lan` bridge that already joins apu
-      # and ap at L2. Wildcard R0KH/R1KH entries let the three BSSes discover
-      # each other dynamically with one shared key, so no per-BSS BSSID has to
-      # be hard-coded here.
+      # 802.11r Fast BSS Transition. DISABLED (fastRoaming = false): when a
+      # mobility domain is advertised, Apple clients include the MDIE in their
+      # (re)association request yet select a non-FT AKM, and hostapd rejects
+      # that ("non-FT AKM suite, but MDIE included") -- so iPhones authenticate
+      # via SAE but can never associate. 802.11k/v below still assist roaming;
+      # only the fast key handoff is lost. Flip to true only if no Apple client
+      # needs to join. When on, apu (wlan24 + wlan5) and ap fast-roam via a
+      # 4-message FT exchange; inter-AP key distribution (RRB) rides the shared
+      # `lan` bridge and the wildcard R0KH/R1KH entries let the BSSes discover
+      # each other with one shared key, so no per-BSS BSSID is hard-coded.
+      fastRoaming = false;
       mobilityDomain = "adc0"; # 2-octet MDID (hex); identical on every BSS
       ftKey = "7f1d6789d423984d1c4a249eabee0150e830a6cf3eb19337bf557c97ab66802f"; # 256-bit RRB key; TODO: move to a secret
 
@@ -62,24 +64,23 @@
                   inherit ssid authentication;
                   settings = {
                     bridge = "lan";
-                    # Advertise the FT AKMs alongside the transition-mode set the
-                    # module computes; without these the client never attempts an
-                    # FT roam. mkForce because the module hard-codes wpa_key_mgmt.
+                    # 802.11k/v: help the client discover and switch to the
+                    # stronger AP promptly instead of clinging to a weak signal.
+                    bss_transition = 1;
+                    rrm_neighbor_report = 1;
+                  }
+                  // lib.optionalAttrs fastRoaming {
+                    # FT AKMs alongside the transition-mode set the module
+                    # computes; mkForce because the module hard-codes wpa_key_mgmt.
                     wpa_key_mgmt = lib.mkForce "WPA-PSK WPA-PSK-SHA256 SAE FT-PSK FT-SAE";
                     mobility_domain = mobilityDomain;
-                    # R0KH-ID: unique per BSS. Interface names are unique across
-                    # apu and ap, so they serve directly.
-                    nas_identifier = r.interface;
+                    nas_identifier = r.interface; # R0KH-ID, unique per BSS
                     ft_over_ds = 0; # over-the-air FT: widest client support
                     ft_psk_generate_local = 1; # PSK roams need no RRB round-trip
                     pmk_r1_push = 1;
                     # Wildcards: learn peer key holders over the bridge on demand.
                     r0kh = "ff:ff:ff:ff:ff:ff * ${ftKey}";
                     r1kh = "00:00:00:00:00:00 00:00:00:00:00:00 ${ftKey}";
-                    # 802.11k/v: help the client discover and switch to the
-                    # stronger AP promptly instead of clinging to a weak signal.
-                    bss_transition = 1;
-                    rrm_neighbor_report = 1;
                   };
                 };
               }
