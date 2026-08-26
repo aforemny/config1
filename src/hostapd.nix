@@ -144,13 +144,16 @@
           {
             interface = "wlan5";
             band = "5g";
-            # ACS on the MT7915 (it can provide survey data), but restricted to
-            # the upper non-DFS block: dodges DFS radar-eviction entirely and
-            # can't collide with ap on ch 36.
-            channel = 0;
+            # Co-channel with ap on ch36. DE caps the non-DFS 5.8 GHz band
+            # (149-165) at 13 dBm, which left ACS-picked wlan5 ~10 dB weaker
+            # than ap and invisible in scans. UNII-1 ch36 allows 23 dBm; sharing
+            # ap's exact 80 MHz block (same primary channel + centre) keeps the
+            # two cleanly co-channel instead of adjacent-channel interfering.
+            channel = 36;
             radioSettings = {
-              acs_exclude_dfs = 1;
-              chanlist = "149 153 157 161 165";
+              # Fixed-channel VHT80 needs the 80 MHz segment centre; the module
+              # emits vht_oper_chwidth but not this, so hostapd would abort.
+              vht_oper_centr_freq_seg0_idx = 42;
             };
             wifi4Capabilities = mt7915Wifi4;
             wifi5Capabilities = mt7915Wifi5;
