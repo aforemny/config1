@@ -37,6 +37,7 @@
       # Radio spec:
       #   { interface; band; channel; wifi4Capabilities;
       #     wifi5Capabilities ? null;   # null => no VHT (e.g. a 2.4 GHz radio)
+      #     wifi5Width ? "80";          # VHT operating width ("20or40" | "80" | ...)
       #     radioSettings ? { }; }
       hostapd = radios: {
         services.hostapd = {
@@ -53,7 +54,7 @@
                     { enable = false; }
                   else
                     {
-                      operatingChannelWidth = "80";
+                      operatingChannelWidth = r.wifi5Width or "80";
                       capabilities = r.wifi5Capabilities;
                     };
                 settings = r.radioSettings or { };
@@ -144,17 +145,13 @@
           {
             interface = "wlan5";
             band = "5g";
-            # Co-channel with ap on ch36. DE caps the non-DFS 5.8 GHz band
-            # (149-165) at 13 dBm, which left ACS-picked wlan5 ~10 dB weaker
-            # than ap and invisible in scans. UNII-1 ch36 allows 23 dBm; sharing
-            # ap's exact 80 MHz block (same primary channel + centre) keeps the
-            # two cleanly co-channel instead of adjacent-channel interfering.
-            channel = 36;
-            radioSettings = {
-              # Fixed-channel VHT80 needs the 80 MHz segment centre; the module
-              # emits vht_oper_chwidth but not this, so hostapd would abort.
-              vht_oper_centr_freq_seg0_idx = 42;
-            };
+            # Different channel from ap (required: iOS rejects a same-SSID ESS
+            # whose APs share a channel, and DE's single UNII-1 80 MHz block
+            # can't hold two APs). ap keeps ch36 (HT40+ = 36+40); wlan5 takes
+            # ch44 (HT40+ = 44+48). Two non-overlapping UNII-1 40 MHz channels,
+            # both at the full 23 dBm, no DFS.
+            channel = 44;
+            wifi5Width = "20or40";
             wifi4Capabilities = mt7915Wifi4;
             wifi5Capabilities = mt7915Wifi5;
           }
@@ -179,13 +176,10 @@
             interface = "wlp0s16u1i2";
             band = "5g";
             channel = 36;
-            # VHT 80 MHz on a fixed channel needs the 80 MHz segment centre; the
-            # NixOS module emits vht_oper_chwidth but not this, so hostapd can't
-            # locate the segment and aborts. 42 = centre channel of the 36-48
-            # block.
-            radioSettings = {
-              vht_oper_centr_freq_seg0_idx = 42;
-            };
+            # 40 MHz (HT40+ = 36+40) so apu's wlan5 can take the adjacent ch44
+            # (44+48) block: two non-overlapping UNII-1 channels rather than one
+            # shared 80 MHz block, which iOS rejects for a same-SSID ESS.
+            wifi5Width = "20or40";
             wifi4Capabilities = [
               "HT40+"
               "SHORT-GI-20"
