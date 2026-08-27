@@ -33,6 +33,36 @@
             }
           '';
         };
+        # Software flow offload: after conntrack sees a flow established, its
+        # packets take the flowtable fast path (neigh_xmit) instead of the full
+        # routing+conntrack+PPPoE slow path, which is single-core-bound on this
+        # 1 GHz GX-412TC. Kernel >=5.13 auto-discovers the real netdevs behind
+        # the `lan` bridge and the `ppp0` PPPoE interface, so we list those two
+        # (NOT the `wan` VLAN under ppp0 — encap would be skipped). No `flags
+        # offload`: that is hardware offload, unsupported by the igb NIC.
+        # Only established flows are offloaded, so new inbound still traverses
+        # the ip6 wan-inbound-filter (dns.nix); MSS clamp above runs on SYNs at
+        # mangle priority and is never offloaded.
+        networking.nftables.tables.flow-offload = {
+          family = "inet";
+          content = ''
+            flowtable f {
+              hook ingress priority filter
+              devices = { lan, ppp0 }
+            }
+            chain forward {
+              type filter hook forward priority filter; policy accept;
+              meta l4proto { tcp, udp } flow add @f
+            }
+          '';
+        };
+        # The build-time `nft --check` runs under LKL, where `lan`/`ppp0` do not
+        # exist, so flowtable device resolution fails. Rewrite them to `lo` (the
+        # one interface LKL always has) for the check only; the real ruleset the
+        # service loads is unaffected.
+        networking.nftables.preCheckRuleset = ''
+          sed 's/devices = { lan, ppp0 }/devices = { lo }/' -i ruleset.conf
+        '';
         networking.nat = {
           enable = true;
           externalInterface = "ppp0";
@@ -67,6 +97,21 @@
           };
         };
         systemd.services.pppd-1und1.unitConfig.StartLimitIntervalSec = 0;
+        # WAN NIC (enp4s0) tuning for gigabit PPPoE. A single PPPoE session is
+        # one outer flow, so the i211's hardware RSS cannot spread it — all WAN
+        # RX lands on one core (~90% busy at 1 Gbit download). RPSCPUMask steers
+        # in software, hashing the inner TCP flows across all 4 cores. Rx/Tx
+        # BufferSize raise the ring from the 256 default toward the 4096 max to
+        # absorb bursts on the slow CPU (fewer softirq time-squeezes). Matched by
+        # OriginalName so the `wan` VLAN (same MAC) is not also caught.
+        systemd.network.links."10-enp4s0" = {
+          matchConfig.OriginalName = "enp4s0";
+          linkConfig = {
+            ReceivePacketSteeringCPUMask = "0-3";
+            RxBufferSize = 1024;
+            TxBufferSize = 1024;
+          };
+        };
         networking = {
           vlans.wan = {
             id = 7;
