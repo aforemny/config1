@@ -36,10 +36,19 @@
         # Software flow offload: after conntrack sees a flow established, its
         # packets take the flowtable fast path (neigh_xmit) instead of the full
         # routing+conntrack+PPPoE slow path, which is single-core-bound on this
-        # 1 GHz GX-412TC. Kernel >=5.13 auto-discovers the real netdevs behind
-        # the `lan` bridge and the `ppp0` PPPoE interface, so we list those two
-        # (NOT the `wan` VLAN under ppp0 — encap would be skipped). No `flags
-        # offload`: that is hardware offload, unsupported by the igb NIC.
+        # 1 GHz GX-412TC. No `flags offload`: that is hardware offload,
+        # unsupported by the igb NIC.
+        #
+        # The flowtable MUST list the real L2 ingress devices on both sides:
+        # the `lan` bridge and the `wan` VLAN (802.1Q id 7 on enp4s0) that
+        # carries the PPPoE session — NOT the `ppp0` pseudo-device. The offload
+        # engine walks the netdev stack (`dev_fill_forward_path`) from the ppp0
+        # egress route down through the pppoe layer to `wan`, recording the
+        # PPPoE session id + VLAN tag + dest MAC, then transmits the fully
+        # encapsulated frame directly on `wan`. Listing `ppp0` instead attaches
+        # the fast path to an L3 point-to-point device that carries no L2/PPPoE
+        # framing, so offloaded forwarded flows are mangled and collapse to
+        # ~10 kB/s (kernel 6.18; see history of this file).
         # Only established flows are offloaded, so new inbound still traverses
         # the ip6 wan-inbound-filter (dns.nix); MSS clamp above runs on SYNs at
         # mangle priority and is never offloaded.
@@ -48,7 +57,7 @@
           content = ''
             flowtable f {
               hook ingress priority filter
-              devices = { lan, ppp0 }
+              devices = { lan, wan }
             }
             chain forward {
               type filter hook forward priority filter; policy accept;
@@ -56,12 +65,12 @@
             }
           '';
         };
-        # The build-time `nft --check` runs under LKL, where `lan`/`ppp0` do not
+        # The build-time `nft --check` runs under LKL, where `lan`/`wan` do not
         # exist, so flowtable device resolution fails. Rewrite them to `lo` (the
         # one interface LKL always has) for the check only; the real ruleset the
         # service loads is unaffected.
         networking.nftables.preCheckRuleset = ''
-          sed 's/devices = { lan, ppp0 }/devices = { lo }/' -i ruleset.conf
+          sed 's/devices = { lan, wan }/devices = { lo }/' -i ruleset.conf
         '';
         networking.nat = {
           enable = true;
