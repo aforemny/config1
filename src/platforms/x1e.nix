@@ -49,14 +49,33 @@
         };
       }
       {
-        # Discrete NVIDIA GPU driven in PRIME render-offload mode; the Intel iGPU
-        # stays primary. `nvidia-offload <cmd>` runs a program on the dGPU.
+        # Every external display connector on this machine hangs off the discrete
+        # NVIDIA GPU (card0: DP-1, DP-2, HDMI-A-1); the iGPU drives only the
+        # internal eDP-1 panel. So a compositor always has to feed a CRTC that
+        # lives on the other GPU than the one it renders on.
+        #
+        # Left alone, niri picks the boot_vga device (the iGPU, renderD128) as its
+        # render node, which turns every external frame into a dGPU read of host
+        # memory across PCIe -- 3840x2400x4B = 36.9 MB per frame, 2.2 GB/s at
+        # 60 Hz. That does not fit, so the external monitor gets one frame every
+        # two vblanks: a hard 30 Hz. Rendering on the dGPU instead makes the
+        # external outputs local and leaves only eDP-1 crossing the bus, in the
+        # dGPU->host write direction, which has ample headroom (measured: 60 Hz
+        # on both outputs).
+        programs.niri.config.settings.debug.render-drm-device = "/dev/dri/by-path/pci-0000:01:00.0-render";
+
         hardware.nvidia = {
           open = false;
           powerManagement = {
             enable = true;
-            finegrained = true;
+            # No RTD3. The dGPU composites the session, so it never idles, and
+            # NVreg_DynamicPowerManagement=0x02 actively hurts: compositor blits
+            # do not register as GPU load, so it parks the GPU at P5 (memory 810
+            # of 5001 MHz) and downtrains the link to PCIe Gen1/Gen2.
+            finegrained = false;
           };
+          # Only still here for X11 clients and the `nvidia-offload <cmd>`
+          # wrapper; niri's render device is selected above.
           prime = {
             offload = {
               enable = true;
