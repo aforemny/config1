@@ -22,11 +22,15 @@
           alsa-utils
           btop
           btop
+          chromium
           ethtool
+          feh
           fio
+          firefox
           inetutils
           iw
           jq
+          libreoffice
           nixos-facter
           nm2nix
           python3
