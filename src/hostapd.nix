@@ -36,78 +36,114 @@
       mobilityDomain = "adc0"; # 2-octet MDID (hex); identical on every BSS
       ftKey = "7f1d6789d423984d1c4a249eabee0150e830a6cf3eb19337bf557c97ab66802f"; # 256-bit RRB key; TODO: move to a secret
 
+      # WPS push-button (PBC) provisioning, for enrollees that cannot be
+      # configured by hand -- e.g. the HP Laser MFP, which is 2.4 GHz-only, so
+      # only apu's wlan24 needs this. Nothing is armed at boot: PBC opens a
+      # 120 s window only when `hostapd_cli -i <bss> wps_pbc` is run, and
+      # ap_setup_locked plus no AP PIN means there is no standing PIN attack
+      # surface. Credential handed out is WPA2-PSK/CCMP with `wpa_passphrase`
+      # (hostapd maps the transition-mode SAE+PSK key mgmt to WPS_AUTH_WPA2PSK).
+      wpsSettings = {
+        wps_state = 2; # 2 = enabled, configured (hand out the existing PSK)
+        eap_server = 1; # WPS registration runs on hostapd's internal EAP server
+        config_methods = "virtual_push_button"; # apu has no physical button
+        ap_setup_locked = 1; # no registrar may rewrite hostapd's configuration
+        wps_independent = 1; # `wps_pbc` here must not arm the other BSSes
+        device_name = "apu";
+        manufacturer = "aforemny";
+        model_name = "apu";
+        model_number = "1";
+        serial_number = "1";
+        device_type = "6-0050F204-1"; # Network Infrastructure / Access Point
+      };
+
       # Radio spec:
       #   { interface; band; channel; wifi4Capabilities;
       #     wifi5Capabilities ? null;   # null => no VHT (e.g. a 2.4 GHz radio)
       #     wifi5Width ? "80";          # VHT operating width ("20or40" | "80" | ...)
+      #     wps ? false;                # offer WPS-PBC on this radio's BSS
       #     radioSettings ? { }; }
-      hostapd = radios: {
-        services.hostapd = {
-          enable = true;
-          radios = lib.listToAttrs (
+      hostapd =
+        radios:
+        { pkgs, ... }:
+        {
+          services.hostapd = {
+            enable = true;
+            # nixpkgs builds hostapd from upstream's defconfig, which leaves
+            # CONFIG_WPS out entirely (no wps_state parsing, no hostapd_cli
+            # wps_pbc), so a WPS-enabled radio needs its own build.
+            package = lib.mkIf (lib.any (r: r.wps or false) radios) (
+              pkgs.hostapd.overrideAttrs (old: {
+                extraConfig = old.extraConfig + ''
+                  CONFIG_WPS=y
+                '';
+              })
+            );
+            radios = lib.listToAttrs (
+              map (
+                r:
+                lib.nameValuePair r.interface {
+                  inherit (r) channel band;
+                  countryCode = "DE";
+                  wifi4.capabilities = r.wifi4Capabilities;
+                  wifi5 =
+                    if (r.wifi5Capabilities or null) == null then
+                      { enable = false; }
+                    else
+                      {
+                        operatingChannelWidth = r.wifi5Width or "80";
+                        capabilities = r.wifi5Capabilities;
+                      };
+                  settings = r.radioSettings or { };
+                  networks.${r.interface} = {
+                    inherit ssid authentication;
+                    settings = {
+                      bridge = "lan";
+                      # 802.11k/v: help the client discover and switch to the
+                      # stronger AP promptly instead of clinging to a weak signal.
+                      bss_transition = 1;
+                      rrm_neighbor_report = 1;
+                    }
+                    // lib.optionalAttrs (r.wps or false) wpsSettings
+                    // lib.optionalAttrs fastRoaming {
+                      # FT AKMs alongside the transition-mode set the module
+                      # computes; mkForce because the module hard-codes wpa_key_mgmt.
+                      wpa_key_mgmt = lib.mkForce "WPA-PSK WPA-PSK-SHA256 SAE FT-PSK FT-SAE";
+                      mobility_domain = mobilityDomain;
+                      nas_identifier = r.interface; # R0KH-ID, unique per BSS
+                      ft_over_ds = 0; # over-the-air FT: widest client support
+                      ft_psk_generate_local = 1; # PSK roams need no RRB round-trip
+                      pmk_r1_push = 1;
+                      # Wildcards: learn peer key holders over the bridge on demand.
+                      r0kh = "ff:ff:ff:ff:ff:ff * ${ftKey}";
+                      r1kh = "00:00:00:00:00:00 00:00:00:00:00:00 ${ftKey}";
+                    };
+                  };
+                }
+              ) radios
+            );
+          };
+          systemd.services.hostapd = {
+            after = [ "sys-subsystem-net-devices-lan.device" ];
+            bindsTo = [ "sys-subsystem-net-devices-lan.device" ];
+          };
+          # hostapd adds each radio to the `lan` bridge once it enters master mode.
+          # facter declares every NIC with `useDHCP = true`, so turn that off here.
+          # Also tell networkd to not detach the bridge membership.
+          networking.interfaces = lib.listToAttrs (
+            map (r: lib.nameValuePair r.interface { useDHCP = false; }) radios
+          );
+          systemd.network.networks = lib.listToAttrs (
             map (
               r:
-              lib.nameValuePair r.interface {
-                inherit (r) channel band;
-                countryCode = "DE";
-                wifi4.capabilities = r.wifi4Capabilities;
-                wifi5 =
-                  if (r.wifi5Capabilities or null) == null then
-                    { enable = false; }
-                  else
-                    {
-                      operatingChannelWidth = r.wifi5Width or "80";
-                      capabilities = r.wifi5Capabilities;
-                    };
-                settings = r.radioSettings or { };
-                networks.${r.interface} = {
-                  inherit ssid authentication;
-                  settings = {
-                    bridge = "lan";
-                    # 802.11k/v: help the client discover and switch to the
-                    # stronger AP promptly instead of clinging to a weak signal.
-                    bss_transition = 1;
-                    rrm_neighbor_report = 1;
-                  }
-                  // lib.optionalAttrs fastRoaming {
-                    # FT AKMs alongside the transition-mode set the module
-                    # computes; mkForce because the module hard-codes wpa_key_mgmt.
-                    wpa_key_mgmt = lib.mkForce "WPA-PSK WPA-PSK-SHA256 SAE FT-PSK FT-SAE";
-                    mobility_domain = mobilityDomain;
-                    nas_identifier = r.interface; # R0KH-ID, unique per BSS
-                    ft_over_ds = 0; # over-the-air FT: widest client support
-                    ft_psk_generate_local = 1; # PSK roams need no RRB round-trip
-                    pmk_r1_push = 1;
-                    # Wildcards: learn peer key holders over the bridge on demand.
-                    r0kh = "ff:ff:ff:ff:ff:ff * ${ftKey}";
-                    r1kh = "00:00:00:00:00:00 00:00:00:00:00:00 ${ftKey}";
-                  };
-                };
+              lib.nameValuePair "40-${r.interface}" {
+                matchConfig.Name = r.interface;
+                networkConfig.KeepMaster = true;
+                linkConfig.RequiredForOnline = "no";
               }
             ) radios
           );
         };
-        systemd.services.hostapd = {
-          after = [ "sys-subsystem-net-devices-lan.device" ];
-          bindsTo = [ "sys-subsystem-net-devices-lan.device" ];
-        };
-        # hostapd adds each radio to the `lan` bridge once it enters master mode.
-        # facter declares every NIC with `useDHCP = true`, so turn that off here.
-        # Also tell networkd to not detach the bridge membership.
-        networking.interfaces = lib.listToAttrs (
-          map (r: lib.nameValuePair r.interface { useDHCP = false; }) radios
-        );
-        systemd.network.networks = lib.listToAttrs (
-          map (
-            r:
-            lib.nameValuePair "40-${r.interface}" {
-              matchConfig.Name = r.interface;
-              networkConfig.KeepMaster = true;
-              linkConfig.RequiredForOnline = "no";
-            }
-          ) radios
-        );
-      };
 
       # MT7915 HT (WiFi 4) capabilities
       mt7915Wifi4 = [
@@ -142,6 +178,10 @@
             band = "2g";
             channel = 0;
             wifi4Capabilities = mt7915Wifi4;
+            # Only the 2.4 GHz BSS offers WPS: the enrollees that need it (the
+            # HP Laser MFP) are 802.11b/g/n, i.e. 2.4 GHz-only. ap is 5 GHz-only
+            # and therefore cannot serve them at all.
+            wps = true;
           }
           {
             interface = "wlan5";
