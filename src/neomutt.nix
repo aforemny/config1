@@ -123,6 +123,48 @@
                 '';
               };
             };
+            "applicative.systems" = {
+              address = "alexander.foremny@applicative.systems";
+              realName = "Alexander Foremny";
+              primary = false;
+              neomutt = {
+                enable = true;
+                mailboxType = "imap";
+                # Gmail's special folders live under the `[Gmail]/` namespace and
+                # are named per the mailbox language, so they cannot be spelled
+                # like the other accounts'. Verified against this account's IMAP
+                # LIST: it is en-GB, hence `Bin` rather than `Trash`. Re-check
+                # with an IMAP LIST if the mailbox language ever changes.
+                extraMailboxes = [
+                  "[Gmail]/Drafts"
+                  "[Gmail]/Sent Mail"
+                  "[Gmail]/All Mail"
+                  "[Gmail]/Bin"
+                ];
+              };
+              userName = "alexander.foremny@applicative.systems";
+              # Google dropped password-only IMAP/SMTP for Workspace accounts in
+              # 2025, so this must hold a 16-character app password (needs 2FA on
+              # the account), not the login password.
+              passwordCommand = "cat ~/.secrets/alexander.foremny@applicative.systems";
+              imap = {
+                host = "imap.gmail.com";
+                port = 993;
+              };
+              smtp = {
+                host = "smtp.gmail.com";
+                port = 465;
+              };
+              folders = {
+                inbox = "INBOX";
+                drafts = "[Gmail]/Drafts";
+                trash = "[Gmail]/Bin";
+                # Gmail files every message sent through its SMTP into Sent Mail
+                # on its own; letting neomutt upload a copy too (`record`) would
+                # duplicate every sent message. null emits `unset record`.
+                sent = null;
+              };
+            };
           };
         }
       ]
