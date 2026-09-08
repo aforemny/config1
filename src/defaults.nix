@@ -31,6 +31,7 @@
           nixos-facter
           nm2nix
           python3
+          silver-searcher-ng
           speedtest-cli
           tcpdump
           usbutils
