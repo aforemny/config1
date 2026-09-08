@@ -39,9 +39,9 @@
       },
       "branch": "main",
       "submodules": false,
-      "revision": "092d88c39d9ffed7cbccedbbd73786d3ece258dd",
-      "url": "https://codeberg.org/tfc/argunix/archive/092d88c39d9ffed7cbccedbbd73786d3ece258dd.tar.gz",
-      "hash": "sha256-VWV1kHLfuASvdFcVbykoPDX7wtipfvhfPZg24zk+QJI="
+      "revision": "2a5d45eea8030be4650243f8b56025e479a2ede9",
+      "url": "https://codeberg.org/tfc/argunix/archive/2a5d45eea8030be4650243f8b56025e479a2ede9.tar.gz",
+      "hash": "sha256-oxm/1xBxK8p/8nhRsuyd5Ih/IlenA1qbRrx/5SZXWiY="
     },
     "asecret": {
       "type": "Git",
@@ -120,9 +120,9 @@
       },
       "branch": "master",
       "submodules": false,
-      "revision": "079a3b5d1aa6a719920a51316253b7d6dd22738d",
-      "url": "https://github.com/nix-community/home-manager/archive/079a3b5d1aa6a719920a51316253b7d6dd22738d.tar.gz",
-      "hash": "sha256-JWq0BfjO4ktpH5USfQNQzdvHpIDT8fSKD5K7LvdMRFs="
+      "revision": "2c0350c759688177331b8f5242311fae8877bdb3",
+      "url": "https://github.com/nix-community/home-manager/archive/2c0350c759688177331b8f5242311fae8877bdb3.tar.gz",
+      "hash": "sha256-v9wJd32eZ2bvhBzVOd7TIjLQd011P7nwOhjKtWlci5I="
     },
     "hyprspace": {
       "type": "GitRelease",
@@ -162,9 +162,9 @@
       },
       "branch": "main",
       "submodules": false,
-      "revision": "96a22c50ce320ff3d0cf19d74347aa1511b8e88a",
-      "url": "https://github.com/numtide/llm-agents.nix/archive/96a22c50ce320ff3d0cf19d74347aa1511b8e88a.tar.gz",
-      "hash": "sha256-U/wf+lyBMiK9Cn38WzYHwI399TdluQ1lxnQ6B4m2x80="
+      "revision": "30e001e67438ab6ba024fa8d4f2e9be0ba7548af",
+      "url": "https://github.com/numtide/llm-agents.nix/archive/30e001e67438ab6ba024fa8d4f2e9be0ba7548af.tar.gz",
+      "hash": "sha256-lNh6z7qJ35S8msz4kH3xNxXTN7PLENpesL5LatpNBGA="
     },
     "naersk": {
       "type": "Git",
@@ -201,9 +201,9 @@
       },
       "branch": "master",
       "submodules": false,
-      "revision": "6c9def7f2e1c61ff39120e442384f0e26340676f",
-      "url": "https://github.com/Infinidoge/nix-minecraft/archive/6c9def7f2e1c61ff39120e442384f0e26340676f.tar.gz",
-      "hash": "sha256-Q8pzHNF6lLWfkuGJw46gK3jDVvkUTHDzF0ToMjyqn9Q="
+      "revision": "1e6052f5ecebddbbb2d372e0fe6f1b7bc4b95a9e",
+      "url": "https://github.com/Infinidoge/nix-minecraft/archive/1e6052f5ecebddbbb2d372e0fe6f1b7bc4b95a9e.tar.gz",
+      "hash": "sha256-nZ6Yt+8u5NhPSP46VcYXEcu4cJpeOiR/K+lfyk3COVA="
     },
     "nixos-apple-silicon": {
       "type": "Git",
@@ -214,9 +214,9 @@
       },
       "branch": "main",
       "submodules": false,
-      "revision": "3902c801519264191a7c3dfec8dd1f9faeb38fd5",
-      "url": "https://github.com/nix-community/nixos-apple-silicon/archive/3902c801519264191a7c3dfec8dd1f9faeb38fd5.tar.gz",
-      "hash": "sha256-wmEC6UPwmBCILILU8iCdzdd74P1eA8P5gFGYnptA4qU="
+      "revision": "fb602d1f8c6d83dd652fecc3f468328f8864f0c1",
+      "url": "https://github.com/nix-community/nixos-apple-silicon/archive/fb602d1f8c6d83dd652fecc3f468328f8864f0c1.tar.gz",
+      "hash": "sha256-8P1xFFUhCHQT8+MI4x9DW7jIaDgBPEdTCwCiR+m1ohM="
     },
     "nixos-images": {
       "type": "Git",
@@ -227,16 +227,16 @@
       },
       "branch": "main",
       "submodules": false,
-      "revision": "6ece16b0c97986fe085122e796044add4cc3ff64",
-      "url": "https://github.com/nix-community/nixos-images/archive/6ece16b0c97986fe085122e796044add4cc3ff64.tar.gz",
-      "hash": "sha256-4PcD0Ibzdkh85G+70w5dLlR9YgQ2bmNIjiPPMSzO57w="
+      "revision": "82517d9a537aad897a6bc872f511c19bbe8bdf03",
+      "url": "https://github.com/nix-community/nixos-images/archive/82517d9a537aad897a6bc872f511c19bbe8bdf03.tar.gz",
+      "hash": "sha256-njqRK/q34pSB9ueddXANIRDx0btXPSsAUFFf8mSO840="
     },
     "nixpkgs": {
       "type": "Channel",
       "name": "nixpkgs-unstable",
       "artifact": "nixexprs.tar.xz",
-      "url": "https://releases.nixos.org/nixpkgs/nixpkgs-26.11pre1059707.c8f90650c152/nixexprs.tar.xz",
-      "hash": "sha256-wS+SNrj0wobAXQONggzrpetnZ9E0FL7l0WVWDRQ77Sc="
+      "url": "https://releases.nixos.org/nixpkgs/nixpkgs-26.11pre1069601.e9b9cbecbf6c/nixexprs.tar.xz",
+      "hash": "sha256-kkWAS4mE+fmi+u3mxwD9/bfX6DGJ49Tv8O9kzN5r0HQ="
     },
     "nixpkgs-22_05": {
       "type": "Channel",
@@ -280,9 +280,9 @@
       },
       "branch": "main",
       "submodules": false,
-      "revision": "160f4ae7975e6a667e8bb4b294642f57307d44c0",
-      "url": "https://github.com/DavHau/sbox/archive/160f4ae7975e6a667e8bb4b294642f57307d44c0.tar.gz",
-      "hash": "sha256-jOd9K66WnrxePEJOX3ngRPIaDoy1cq61IZ4UX8jNY08="
+      "revision": "17ac0e089b4abdbd97fd336453bb3d300470e59e",
+      "url": "https://github.com/DavHau/sbox/archive/17ac0e089b4abdbd97fd336453bb3d300470e59e.tar.gz",
+      "hash": "sha256-qSFF2jHuPerg9f4c9AiTDWUiHkiywu0GVbC85QaRD9g="
     },
     "treefmt-nix": {
       "type": "Git",
@@ -293,9 +293,9 @@
       },
       "branch": "main",
       "submodules": false,
-      "revision": "df3c0640565d04a0261253cdd89fce78ec50168a",
-      "url": "https://github.com/numtide/treefmt-nix/archive/df3c0640565d04a0261253cdd89fce78ec50168a.tar.gz",
-      "hash": "sha256-47cxbcZODibHv3rELFQ9vZly0vUNkND/atn/U7HLeb0="
+      "revision": "27b3b12a8e6375f28ebe122f07d230ca5459bbfa",
+      "url": "https://github.com/numtide/treefmt-nix/archive/27b3b12a8e6375f28ebe122f07d230ca5459bbfa.tar.gz",
+      "hash": "sha256-WSFCsDSE5ffgD2MqzkM2CYjeFiKhRF/dJUN8uedb6YE="
     },
     "vpn-confinement": {
       "type": "Git",
@@ -306,9 +306,9 @@
       },
       "branch": "master",
       "submodules": false,
-      "revision": "bd17046da0262f3a93524845982825fa2ed23f40",
-      "url": "https://github.com/Maroka-chan/VPN-Confinement/archive/bd17046da0262f3a93524845982825fa2ed23f40.tar.gz",
-      "hash": "sha256-a3V/LkUvwbN30QlCwPjNQq88TGOXiqXAzcYTSWgYIp4="
+      "revision": "ce8949125b698406810ea71a8bd7b567d9a0b09f",
+      "url": "https://github.com/Maroka-chan/VPN-Confinement/archive/ce8949125b698406810ea71a8bd7b567d9a0b09f.tar.gz",
+      "hash": "sha256-3Xs9lCMwjvFURU7/fPEGDR5kCKvcdX2l5Fah1nZoaGQ="
     },
     "wrappers": {
       "type": "Git",
@@ -319,9 +319,9 @@
       },
       "branch": "main",
       "submodules": false,
-      "revision": "090771334cbc7bb5fee07045328e49054151ea80",
-      "url": "https://github.com/Lassulus/wrappers/archive/090771334cbc7bb5fee07045328e49054151ea80.tar.gz",
-      "hash": "sha256-zIZ8BIL+azvCabKak9GeZ1SZmjTq0f10bXmOY3GG/JI="
+      "revision": "b870d84b4fbe38a5a1e38cd2dae8503805bec900",
+      "url": "https://github.com/Lassulus/wrappers/archive/b870d84b4fbe38a5a1e38cd2dae8503805bec900.tar.gz",
+      "hash": "sha256-98KFRidLeJ+EIWYs++LJgB7VT+/hxyKGaYP85BCEFJ0="
     }
   },
   "version": 8
