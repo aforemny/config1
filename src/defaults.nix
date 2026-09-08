@@ -26,7 +26,6 @@
           fio
           inetutils
           iw
-          iw
           jq
           nixos-facter
           nm2nix
@@ -36,6 +35,7 @@
           tcpdump
           usbutils
           wev
+          zathura
           zbar
         ];
       }
