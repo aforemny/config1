@@ -27,6 +27,8 @@
             };
           };
         };
+      }
+      (lib.mkIf config.services.syncoid.enable {
         systemd.services."syncoid-zroot-safe".serviceConfig.BindReadOnlyPaths = [ sshKey.privateKeyFile ];
         programs.ssh.knownHosts."tower".publicKey =
           "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIE3kGQEQx8+drQ1D9VrmZXVfcit0fGV+4oTlHk54DtTl"; # TODO
@@ -35,6 +37,6 @@
           lzop
           mbuffer
         ];
-      }
+      })
     ];
 }
