@@ -182,14 +182,10 @@
           enable = true;
           virtualHosts.${fqdn}.locations."/.well-known/acme-challenge".root = "/var/lib/acme/acme-challenge";
         };
-        security.acme = {
-          acceptTerms = true;
-          defaults.email = "aforemny@posteo.de";
-          certs.${fqdn} = {
-            webroot = "/var/lib/acme/acme-challenge";
-            group = "maddy";
-            reloadServices = [ "maddy.service" ];
-          };
+        security.acme.certs.${fqdn} = {
+          webroot = "/var/lib/acme/acme-challenge";
+          group = "maddy";
+          reloadServices = [ "maddy.service" ];
         };
         systemd.services."acme-${fqdn}" = {
           after = [ "nginx.service" ];

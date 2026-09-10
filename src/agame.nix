@@ -46,11 +46,6 @@
           };
         };
 
-        security.acme = {
-          acceptTerms = true;
-          defaults.email = "aforemny@posteo.de";
-        };
-
         networking.firewall = {
           allowedTCPPorts = [
             80

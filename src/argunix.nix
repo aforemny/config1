@@ -114,11 +114,6 @@
         # that dir too. Merges with the module's own ReadWritePaths list.
         systemd.services.argunix.serviceConfig.ReadWritePaths = [ cacheDir ];
 
-        security.acme = {
-          acceptTerms = true;
-          defaults.email = "aforemny@posteo.de";
-        };
-
         networking.firewall.allowedTCPPorts = [
           80
           443
