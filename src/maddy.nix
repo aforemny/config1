@@ -1,22 +1,55 @@
+{ lib, ... }:
+let
+  fqdn = "mail.nomath.org";
+  domain = "nomath.org";
+  selector = "default";
+  publicIPv4 = "91.99.63.134";
+  dkimRecord = lib.fileContents ../secrets1/generated/maddy-dkim-key.pub;
+  # TXT allows at most 255 bytes, RSA-20248 is ~410
+  dkimTxt =
+    let
+      size = 200;
+      count = (builtins.stringLength dkimRecord + size - 1) / size;
+    in
+    lib.concatMapStringsSep " " (i: ''"${builtins.substring (i * size) size dkimRecord}"'') (
+      lib.range 0 (count - 1)
+    );
+in
 {
-  # Outbound-mail DNS: the MX / SPF / DMARC records are provisioned declaratively
-  # via the declarative-runtime hetzner-dns pairing (records block below;
-  # src/dns.nix enables the reconciler). The AAAA for mail.nomath.org is kept
-  # current by set-hetzner-dns through dns.dynamicAAAA. Two records still cannot
-  # be set from here: the DKIM TXT (maddy generates the key at runtime -- publish
-  # the value it prints under /var/lib/maddy/dkim_keys/nomath.org_default.dns)
-  # and the reverse PTR for the host's IPv6 (owned by the ISP's reverse zone, not
-  # Hetzner). Without those two, strict receivers may still reject this mail.
-  systems.tower.modules = [
+  # Two things still have to be done by hand, once, at cutover:
+  #
+  #   1. Point the PTR of 91.99.63.134 at mail.nomath.org (Hetzner Cloud
+  #      console, project holding server "homelab", or
+  #      POST /v1/servers/62440927/actions/change_dns_ptr). It is not a unit
+  #      like set-hetzner-dns because that project's API token is not in the
+  #      asecret store -- only the token for the project holding the DNS zone
+  #      is. Until then the address keeps Hetzner's default
+  #      static.134.63.99.91.clients.your-server.de, which is forward-confirmed
+  #      and therefore already passes the check tower failed; matching the HELO
+  #      name is the remaining improvement.
+  #   2. Delete the stale `mail` AAAA RRSet (it still points at tower). The
+  #      reconciler below only creates and updates what it declares, so it
+  #      cannot express a deletion:
+  #      DELETE /v1/zones/nomath.org/rrsets/mail/AAAA
+  #      Do it right after the A record exists, otherwise receivers keep
+  #      connecting to tower, which no longer answers on 25.
+  systems.family.modules = [
     (
       { config, ... }:
-      let
-        fqdn = "mail.nomath.org";
-        domain = "nomath.org";
-        bindDn = "uid=admin,ou=people,dc=nomath,dc=org";
-        bindPasswordFile = config.age.secrets.lldap-admin-password.path;
-      in
       {
+        age.secrets.maddy-dkim-key = {
+          generator.script = "dkim-rsa";
+          owner = "maddy";
+        };
+        age.secrets.maddy-admin-password = {
+          generator.script = "alnum";
+          owner = "maddy";
+        };
+        age.secrets.maddy-postmaster-password = {
+          generator.script = "alnum";
+          owner = "maddy";
+        };
+
         services.maddy = {
           enable = true;
           hostname = fqdn;
@@ -34,15 +67,22 @@
             ];
           };
 
-          secrets = [ "/run/maddy-ldap/env" ];
+          ensureAccounts = [
+            "admin@${domain}"
+            "postmaster@${domain}"
+          ];
+          ensureCredentials = {
+            "admin@${domain}".passwordFile = config.age.secrets.maddy-admin-password.path;
+            "postmaster@${domain}".passwordFile = config.age.secrets.maddy-postmaster-password.path;
+          };
 
           config = ''
-            auth.ldap local_authdb {
-              urls ldap://127.0.0.1:3890
-              bind plain "${bindDn}" "{env:LLDAP_BIND_PW}"
-              base_dn "ou=people,dc=nomath,dc=org"
-              filter "(&(objectClass=person)(|(uid={username})(mail={username})))"
-              starttls off
+            auth.pass_table local_authdb {
+              table sql_table {
+                driver sqlite3
+                dsn credentials.db
+                table_name passwords
+              }
             }
 
             storage.imapsql local_mailboxes {
@@ -111,7 +151,14 @@
                 }
                 default_destination {
                   modify {
-                    dkim $(primary_domain) $(local_domains) default
+                    # Signs with the committed key instead of one maddy mints on
+                    # first start, which is what makes the TXT record below
+                    # publishable from the repo.
+                    dkim {
+                      domains $(primary_domain)
+                      selector ${selector}
+                      key_path ${config.age.secrets.maddy-dkim-key.path}
+                    }
                   }
                   deliver_to &remote_queue
                 }
@@ -159,25 +206,8 @@
           '';
         };
 
-        systemd.services.maddy-ldap-env = {
-          description = "Render maddy's lldap bind EnvironmentFile from the agenix secret";
-          requiredBy = [ "maddy.service" ];
-          before = [ "maddy.service" ];
-          serviceConfig = {
-            Type = "oneshot";
-            RemainAfterExit = true;
-            LoadCredential = [ "bind:${bindPasswordFile}" ];
-            RuntimeDirectory = "maddy-ldap";
-            RuntimeDirectoryMode = "0700";
-          };
-          script = ''
-            set -euo pipefail
-            umask 077
-            printf 'LLDAP_BIND_PW=%s\n' "$(cat "$CREDENTIALS_DIRECTORY/bind")" \
-              > "$RUNTIME_DIRECTORY/env"
-          '';
-        };
-
+        # family already terminates TLS for its own vhosts; mail only needs the
+        # challenge location, and maddy reads the cert straight off disk.
         services.nginx = {
           enable = true;
           virtualHosts.${fqdn}.locations."/.well-known/acme-challenge".root = "/var/lib/acme/acme-challenge";
@@ -197,58 +227,56 @@
           443
         ];
 
-        # AAAA for mail.nomath.org, kept in sync by set-hetzner-dns.
-        dns.dynamicAAAA = [ "mail" ];
-
-        # Static mail records, provisioned via the hetzner-dns reconciler that
-        # src/dns.nix enables. DKIM and PTR are excluded on purpose (see header).
-        services.hetzner-dns.runtime = {
-          # MX -> mail.nomath.org. Trailing dot = absolute; Hetzner appends the
-          # zone to a dotless name. `zone` is the literal domain (managed in the
-          # Hetzner console, not by this reconciler), so no hcloud_zone is
-          # declared for it -- declaring it would make tofu try to re-create the
-          # existing zone and fail.
-          zone_rrsets.mx = {
-            zone = domain;
-            name = "@";
-            type = "MX";
-            records = [ { value = "10 ${fqdn}."; } ];
-          };
-          # DMARC monitor-only (p=none): publishes a policy and collects reports
-          # without risking rejection of legitimate mail during rollout.
-          zone_rrsets.dmarc = {
-            zone = domain;
-            name = "_dmarc";
-            type = "TXT";
-            records = [ { value = ''"v=DMARC1; p=none; rua=mailto:postmaster@${domain}"''; } ];
-          };
-          # SPF authorises the MX host's address (this box's published AAAA).
-          # Managed as a full apex-TXT RRSet rather than a single
-          # hcloud_zone_record: hcloud_zone_record can only be adopted via
-          # Terraform resource identity, which the reconciler's CLI `tofu import`
-          # cannot supply, so on a lost/rebuilt tfstate (this box rolls / back on
-          # boot) it fails re-adding the already-present SPF value with
-          # "duplicate value" (HTTP 422) and never reconciles. An RRSet imports
-          # by "<zone>/<name>/<type>" and adopts cleanly. The catch: an RRSet
-          # owns *every* value at @/TXT, so the unrelated, externally-set
-          # google-site-verification token must be listed here too or the apply
-          # would delete it. Update it if Search Console ever re-issues one.
-          zone_rrsets.apex_txt = {
-            zone = domain;
-            name = "@";
-            type = "TXT";
-            records = [
-              { value = ''"v=spf1 mx ~all"''; }
-              { value = ''"google-site-verification=krouLLrAV68-Bw5gN7qr8oN-u_tq5g5bqA9bn1U7z3o"''; }
-            ];
-          };
-        };
-
         state.directories = [
           "/var/lib/maddy"
           "/var/lib/acme"
         ];
       }
     )
+  ];
+
+  # The mail records live in the nomath.org zone, whose tofu state belongs to
+  # the reconciler on tower (src/dns.nix) -- so they are declared from tower
+  # even though the service runs on family. Enabling a second reconciler on
+  # family instead would hand these RRSets to a fresh state file while tower's
+  # state still lists them, and tower's next apply would delete them.
+  systems.tower.modules = [
+    {
+      services.hetzner-dns.runtime = {
+        zone_rrsets.mail_a = {
+          zone = domain;
+          name = "mail";
+          type = "A";
+          records = [ { value = publicIPv4; } ];
+        };
+        zone_rrsets.mx = {
+          zone = domain;
+          name = "@";
+          type = "MX";
+          records = [ { value = "10 ${fqdn}."; } ];
+        };
+        zone_rrsets.dkim = {
+          zone = domain;
+          name = "${selector}._domainkey";
+          type = "TXT";
+          records = [ { value = dkimTxt; } ];
+        };
+        zone_rrsets.dmarc = {
+          zone = domain;
+          name = "_dmarc";
+          type = "TXT";
+          records = [ { value = ''"v=DMARC1; p=none; rua=mailto:postmaster@${domain}"''; } ];
+        };
+        zone_rrsets.apex_txt = {
+          zone = domain;
+          name = "@";
+          type = "TXT";
+          records = [
+            { value = ''"v=spf1 mx ~all"''; }
+            { value = ''"google-site-verification=krouLLrAV68-Bw5gN7qr8oN-u_tq5g5bqA9bn1U7z3o"''; }
+          ];
+        };
+      };
+    }
   ];
 }

@@ -10,8 +10,8 @@
   #     `nomath` realm and the managed user accounts. Keycloak remains the single
   #     source of truth for who exists and what their password is; the WRITABLE
   #     lldap federation (src/ldap.nix, sync_registrations = true) writes each
-  #     account -- and the password the user sets during onboarding -- through to
-  #     lldap, so lldap is the directory every consumer (mail, and now Jellyfin)
+  #     account -- and the password the user sets during onboarding -- through
+  #     to lldap, so lldap is the directory every consumer (Jellyfin)
   #     authenticates against. No Jellyfin OIDC client or role/group scaffolding
   #     is defined anymore; Jellyfin authorization is handled on the Jellyfin
   #     side (see EnableAllFolders below), not via Keycloak realm roles.
@@ -147,6 +147,8 @@
         '';
       in
       {
+        age.secrets.maddy-admin-password.generator.script = "alnum";
+
         # --- Keycloak side -------------------------------------------------
         # Keycloak-authoritative accounts, written through to lldap by the
         # WRITABLE federation (src/ldap.nix). Grant a new person by adding a
@@ -157,7 +159,7 @@
             display_name = "nomath.org";
             # Email-based onboarding for Keycloak-managed accounts: users are
             # created with no password and self-serve via "Forgot password".
-            # Requires working outbound mail (SMTP below -> local maddy).
+            # Requires working outbound mail (SMTP below -> maddy on family).
             reset_password_allowed = true;
             verify_email = true;
             login_with_email_allowed = true;
@@ -167,12 +169,9 @@
               starttls = true;
               from = "admin@nomath.org";
               from_display_name = "nomath.org";
-              # maddy submission (587) authorizes the sender against the SASL
-              # identity, so we auth+send as admin@nomath.org (its lldap
-              # password); host must match the mail cert, hence mail.nomath.org.
               auth = {
                 username = "admin@nomath.org";
-                passwordFile = config.age.secrets.lldap-admin-password.path;
+                passwordFile = config.age.secrets.maddy-admin-password.path;
               };
             };
           };
