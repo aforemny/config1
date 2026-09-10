@@ -140,6 +140,24 @@
             ${pkgs.coreutils}/bin/cat "$tmp/secret"
             ${pkgs.coreutils}/bin/rm -rf "$tmp"
           '';
+        age.generators.dkim-rsa =
+          {
+            pkgs,
+            lib,
+            file,
+            ...
+          }:
+          ''
+            tmp=$(${pkgs.coreutils}/bin/mktemp -d)
+            ${pkgs.openssl}/bin/openssl genpkey -algorithm RSA \
+              -pkeyopt rsa_keygen_bits:2048 -out "$tmp/key.pem" 2>/dev/null
+            ${pkgs.coreutils}/bin/printf 'v=DKIM1; k=rsa; p=%s\n' \
+              "$(${pkgs.openssl}/bin/openssl pkey -in "$tmp/key.pem" -pubout -outform DER \
+                 | ${pkgs.coreutils}/bin/base64 -w0)" \
+              > ${lib.escapeShellArg (lib.removeSuffix ".age" file + ".pub")}
+            ${pkgs.coreutils}/bin/cat "$tmp/key.pem"
+            ${pkgs.coreutils}/bin/rm -rf "$tmp"
+          '';
       };
     _agenix-rekey.nixosConfigurations = config.systems;
     _systems.defaultModules = [
