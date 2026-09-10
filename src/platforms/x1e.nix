@@ -65,7 +65,7 @@
         programs.niri.config.settings.debug.render-drm-device = "/dev/dri/by-path/pci-0000:01:00.0-render";
 
         hardware.nvidia = {
-          open = true;
+          open = false;
           powerManagement = {
             enable = true;
             # No RTD3. The dGPU composites the session, so it never idles, and
