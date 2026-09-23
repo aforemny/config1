@@ -19,7 +19,7 @@
             "cgroups"
           ];
           extra-system-features = [ "uid-range" ];
-          sandbox-paths = [ "/dev/net" ];
+          extra-sandbox-paths = [ "/dev/net" ];
         };
       }
     ];
