@@ -23,7 +23,14 @@
         }
         {
           environment.persistence."/persist" = {
-            directories = lib.mkIf cfg.enable [ "/var/lib/nixos" ];
+            directories = lib.mkIf cfg.enable [
+              "/var/lib/nixos"
+              # Without this the journal dies with the rootfs on every boot, so
+              # nothing that made a machine fail to come up can be read after
+              # rebooting into a generation that does -- exactly when the log is
+              # needed.  journald caps it at 10% of the pool either way.
+              "/var/log"
+            ];
             # The rollback root wipes /etc on every boot; unless machine-id is
             # persisted it is regenerated each boot, which reshuffles everything
             # derived from it -- notably systemd-networkd's `persistent` MAC (so
