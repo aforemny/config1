@@ -151,8 +151,6 @@
               };
             };
 
-            boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
-
             systemd.services.radicle-ci-broker.serviceConfig.UMask = lib.mkForce "0022";
 
             nix.settings.post-build-hook =
