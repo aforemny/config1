@@ -27,10 +27,12 @@
           feh
           fio
           firefox
+          ghc
           inetutils
           iw
           jq
           libreoffice
+          mpv
           nixos-facter
           nm2nix
           python3
@@ -39,6 +41,7 @@
           tcpdump
           usbutils
           wev
+          wf-recorder
           zathura
           zbar
         ];
