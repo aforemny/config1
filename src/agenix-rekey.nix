@@ -75,10 +75,6 @@
           "/persist/etc/ssh/ssh_host_ed25519_key"
           "/persist/etc/ssh/ssh_host_rsa_key"
         ];
-        # TODO
-        age.secrets.randomPassword = {
-          generator.script = "passphrase";
-        };
         # A 32-byte AES key rendered as unpadded URL-safe base64 (43 chars, no
         # trailing newline). oauth2-proxy's cookie-secret loader reads the file
         # verbatim and only accepts a raw 16/24/32-byte value or one that
