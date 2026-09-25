@@ -31,7 +31,7 @@
           inetutils
           iw
           jq
-          libreoffice
+          #libreoffice
           mpv
           nixos-facter
           nm2nix
