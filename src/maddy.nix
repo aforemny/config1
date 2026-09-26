@@ -4,6 +4,7 @@ let
   domain = "nomath.org";
   selector = "default";
   publicIPv4 = "91.99.63.134";
+  publicIPv6 = "2a01:4f8:1c1b:e9e6::1";
   dkimRecord = lib.fileContents ../secrets1/generated/maddy-dkim-key.pub;
   # TXT allows at most 255 bytes, RSA-20248 is ~410
   dkimTxt =
@@ -16,23 +17,20 @@ let
     );
 in
 {
-  # Two things still have to be done by hand, once, at cutover:
+  # TODO: PTR records configured manually, declarative-runtime needs
+  # hcloud_rdns support. 91.99.63.134 and 2a01:4f8:1c1b:e9e6::1 both point at
+  # mail.nomath.org, set in the Hetzner Cloud console (project holding server
+  # "homelab", id 62440927). The hetzner-dns pairing cannot express this: it
+  # renders hcloud_zone{,_rrset,_record} into zones you host, while the reverse
+  # zones 63.99.91.in-addr.arpa and 8.f.4.0.1.0.a.2.ip6.arpa are delegated to
+  # Hetzner's own nameservers and the PTR is a field on the server object
+  # (hcloud_rdns / POST /v1/servers/<id>/actions/change_dns_ptr). The token in
+  # the asecret store belongs to the project holding nomath.org, which has no
+  # servers, so it could not set it either.
   #
-  #   1. Point the PTR of 91.99.63.134 at mail.nomath.org (Hetzner Cloud
-  #      console, project holding server "homelab", or
-  #      POST /v1/servers/62440927/actions/change_dns_ptr). It is not a unit
-  #      like set-hetzner-dns because that project's API token is not in the
-  #      asecret store -- only the token for the project holding the DNS zone
-  #      is. Until then the address keeps Hetzner's default
-  #      static.134.63.99.91.clients.your-server.de, which is forward-confirmed
-  #      and therefore already passes the check tower failed; matching the HELO
-  #      name is the remaining improvement.
-  #   2. Delete the stale `mail` AAAA RRSet (it still points at tower). The
-  #      reconciler below only creates and updates what it declares, so it
-  #      cannot express a deletion:
-  #      DELETE /v1/zones/nomath.org/rrsets/mail/AAAA
-  #      Do it right after the A record exists, otherwise receivers keep
-  #      connecting to tower, which no longer answers on 25.
+  # Both PTRs matter: the AAAA is published and receivers prefer v6, so mail
+  # leaves from the v6 address. verifier.port25.com now reports SPF pass,
+  # iprev pass, DKIM pass.
   systems.family.modules = [
     (
       { config, ... }:
@@ -206,8 +204,6 @@ in
           '';
         };
 
-        # family already terminates TLS for its own vhosts; mail only needs the
-        # challenge location, and maddy reads the cert straight off disk.
         services.nginx = {
           enable = true;
           virtualHosts.${fqdn}.locations."/.well-known/acme-challenge".root = "/var/lib/acme/acme-challenge";
@@ -235,11 +231,7 @@ in
     )
   ];
 
-  # The mail records live in the nomath.org zone, whose tofu state belongs to
-  # the reconciler on tower (src/dns.nix) -- so they are declared from tower
-  # even though the service runs on family. Enabling a second reconciler on
-  # family instead would hand these RRSets to a fresh state file while tower's
-  # state still lists them, and tower's next apply would delete them.
+  # TODO
   systems.tower.modules = [
     {
       services.hetzner-dns.runtime = {
@@ -248,6 +240,12 @@ in
           name = "mail";
           type = "A";
           records = [ { value = publicIPv4; } ];
+        };
+        zone_rrsets.mail_aaaa = {
+          zone = domain;
+          name = "mail";
+          type = "AAAA";
+          records = [ { value = publicIPv6; } ];
         };
         zone_rrsets.mx = {
           zone = domain;
@@ -267,6 +265,7 @@ in
           type = "TXT";
           records = [ { value = ''"v=DMARC1; p=none; rua=mailto:postmaster@${domain}"''; } ];
         };
+        # TODO
         zone_rrsets.apex_txt = {
           zone = domain;
           name = "@";

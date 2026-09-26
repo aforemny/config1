@@ -15,6 +15,17 @@
             systemd-boot.enable = false;
             grub.enable = true;
           };
+          systemd.network.networks."40-enp1s0" = {
+            matchConfig.Name = "enp1s0";
+            address = [ "2a01:4f8:1c1b:e9e6::1/64" ];
+            routes = [ { Gateway = "fe80::1"; } ];
+            networkConfig = {
+              DHCP = "ipv4";
+              IPv6AcceptRA = false;
+              IPv6PrivacyExtensions = "kernel";
+            };
+            linkConfig.RequiredForOnline = "routable";
+          };
         }
         {
           disko.devices = {
