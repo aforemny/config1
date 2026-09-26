@@ -258,9 +258,9 @@ in
                   settings = {
                     hotkey-overlay.skip-at-startup = true;
                     binds = {
-                      "Mod+P" = {
+                      "Mod+Shift+M" = {
                         _attrs.repeat = false;
-                        spawn-sh = "wl-mirror $(niri msg --json focused-output | jq -r .name)";
+                        spawn-sh = "${lib.getExe pkgs.wl-mirror} $(niri msg --json focused-output | ${lib.getExe pkgs.jq} -r .name)";
                       };
                       "Mod+F11" = {
                         toggle-windowed-fullscreen = null;
