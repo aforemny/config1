@@ -42,6 +42,7 @@
           python3
           silver-searcher-ng
           speedtest-cli
+          stress-ng
           tcpdump
           texliveFull
           usbutils
