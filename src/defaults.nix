@@ -23,8 +23,10 @@
           btop
           btop
           chromium
+          csvkit
           ethtool
           feh
+          file
           fio
           firefox
           ghc
@@ -32,16 +34,20 @@
           iw
           jq
           #libreoffice
+          libreoffice
           mpv
           nixos-facter
           nm2nix
+          pavucontrol
           python3
           silver-searcher-ng
           speedtest-cli
           tcpdump
+          texliveFull
           usbutils
           wev
           wf-recorder
+          wl-mirror
           zathura
           zbar
         ];
