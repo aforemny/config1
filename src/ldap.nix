@@ -1,64 +1,126 @@
 {
   systems.tower.modules = [
     (
-      { config, ... }:
+      { config, pkgs, ... }:
       let
-        fqdn = "ldap.nomath.org";
         baseDn = "dc=nomath,dc=org";
         usersDn = "ou=people,${baseDn}";
         groupsDn = "ou=groups,${baseDn}";
+        # uid=admin is the directory superuser (OpenLDAP rootDN). It needs no
+        # real entry: Keycloak's federation and Jellyfin's plugin both bind as it
+        # with adminPasswordFile and get unrestricted read/write, which the
+        # WRITABLE federation requires.
         adminDn = "uid=admin,${usersDn}";
         ldapPort = 3890;
-        httpPort = 17170;
+        dbDir = "/var/lib/openldap/data";
+        # Shared directory-admin bind password. It is used verbatim as OpenLDAP's
+        # olcRootPW (compared byte-for-byte against the value Keycloak/Jellyfin
+        # bind with), so it MUST carry no trailing newline -- hence alnum-nonl,
+        # not alnum. Historically named `lldap-*`; kept for continuity with its
+        # existing consumers (src/jellyfin-ldap.nix).
         adminPasswordFile = config.age.secrets.lldap-admin-password.path;
-        jwtSecretFile = config.age.secrets.lldap-jwt-secret.path;
+        bootstrapLdif = pkgs.writeText "nomath-base.ldif" ''
+          dn: ${baseDn}
+          objectClass: top
+          objectClass: dcObject
+          objectClass: organization
+          o: nomath
+          dc: nomath
+
+          dn: ${usersDn}
+          objectClass: organizationalUnit
+          ou: people
+
+          dn: ${groupsDn}
+          objectClass: organizationalUnit
+          ou: groups
+        '';
       in
       {
-        age.secrets.lldap-admin-password.generator.script = "alnum";
-        age.secrets.lldap-jwt-secret.generator.script = "alnum";
-
-        services.lldap = {
-          enable = true;
-          settings = {
-            ldap_base_dn = baseDn;
-            ldap_host = "127.0.0.1";
-            ldap_port = ldapPort;
-            http_host = "127.0.0.1";
-            http_port = httpPort;
-            http_url = "https://${fqdn}";
-            ldap_user_email = "admin@nomath.org";
-            ldap_user_pass_file = "/run/credentials/lldap.service/admin-pass";
-            jwt_secret_file = "/run/credentials/lldap.service/jwt-secret";
-            force_ldap_user_pass_reset = "always";
-          };
+        # OpenLDAP replaces lldap. lldap only implemented LDAP password-modify,
+        # so Keycloak's WRITABLE federation write-through (user add + mail/sn
+        # Replace) failed with LDAP error 53 and Keycloak-managed accounts never
+        # reached the directory. OpenLDAP accepts those writes, so lldap stays
+        # the directory every consumer (Jellyfin, maddy) authenticates against.
+        age.secrets.lldap-admin-password = {
+          generator.script = "alnum-nonl";
+          # slapd's ExecStartPre loads olcRootPW from this file via `file://`
+          # running as the openldap user, so it must own it. Every other consumer
+          # reads it through root-side LoadCredential, where ownership is moot.
+          owner = config.services.openldap.user;
         };
 
-        systemd.services.lldap.serviceConfig.LoadCredential = [
-          "admin-pass:${adminPasswordFile}"
-          "jwt-secret:${jwtSecretFile}"
-        ];
-
-        services.nginx = {
+        services.openldap = {
           enable = true;
-          virtualHosts.${fqdn} = {
-            forceSSL = true;
-            enableACME = true;
-            locations."/" = {
-              proxyPass = "http://127.0.0.1:${toString httpPort}";
-              recommendedProxySettings = true;
+          # Loopback only; the Keycloak federation, the Jellyfin plugin and the
+          # bootstrap below all talk to 127.0.0.1:3890 (the port lldap used).
+          urlList = [ "ldap://127.0.0.1:${toString ldapPort}/" ];
+          settings = {
+            attrs.olcLogLevel = [ "stats" ];
+            children = {
+              "cn=schema".includes = [
+                "${pkgs.openldap}/etc/schema/core.ldif"
+                "${pkgs.openldap}/etc/schema/cosine.ldif"
+                "${pkgs.openldap}/etc/schema/inetorgperson.ldif"
+              ];
+              "olcDatabase={1}mdb" = {
+                attrs = {
+                  objectClass = [
+                    "olcDatabaseConfig"
+                    "olcMdbConfig"
+                  ];
+                  olcDatabase = "{1}mdb";
+                  olcDbDirectory = dbDir;
+                  olcSuffix = baseDn;
+                  olcRootDN = adminDn;
+                  # `{ path = …; }` loads the value from the runtime secret via
+                  # `olcRootPW:< file://…`, never into the nix store.
+                  olcRootPW = {
+                    path = adminPasswordFile;
+                  };
+                  olcDbIndex = [
+                    "objectClass eq"
+                    "uid pres,eq"
+                    "cn pres,eq"
+                    "mail pres,eq"
+                    "entryUUID eq"
+                  ];
+                  olcAccess = [
+                    # Simple-bind authentication reads the user's own hash
+                    # (anonymous -> auth); nobody may read password hashes.
+                    "{0}to attrs=userPassword by self write by anonymous auth by * none"
+                    # Everything else is authenticated-read; rootDN (uid=admin)
+                    # bypasses ACLs entirely, so Keycloak keeps full write access.
+                    "{1}to * by self read by users read by * none"
+                  ];
+                };
+              };
             };
           };
         };
 
-        networking.firewall.allowedTCPPorts = [
-          80
-          443
-        ];
-
-        # Publish ldap.nomath.org's AAAA so ACME (HTTP-01) can issue this
-        # vhost's cert; every other public service registers its label the
-        # same way (see src/dns.nix). Without it the order fails with NXDOMAIN.
-        dns.dynamicAAAA = [ "ldap" ];
+        # Seed the suffix + OUs once. The mdb persists (unlike declarativeContents,
+        # which wipes the DB every start and would discard the users Keycloak
+        # writes), so this is idempotent: `ldapadd -c` skips entries that already
+        # exist (LDAP error 68).
+        systemd.services.openldap-bootstrap = {
+          description = "Seed the nomath.org base DN and OUs in OpenLDAP";
+          after = [ "openldap.service" ];
+          requires = [ "openldap.service" ];
+          wantedBy = [ "multi-user.target" ];
+          serviceConfig = {
+            Type = "oneshot";
+            RemainAfterExit = true;
+            LoadCredential = [ "admin-pw:${adminPasswordFile}" ];
+          };
+          script = ''
+            pw="$(cat "$CREDENTIALS_DIRECTORY/admin-pw")"
+            ${pkgs.openldap}/bin/ldapadd -c -x \
+              -H ldap://127.0.0.1:${toString ldapPort} \
+              -D ${adminDn} -w "$pw" \
+              -f ${bootstrapLdif} || true
+          '';
+        };
 
         services.keycloak.runtime = {
           ldap_user_federations.lldap = {
@@ -70,12 +132,32 @@
             bind_credentialFile = adminPasswordFile;
             username_ldap_attribute = "uid";
             rdn_ldap_attribute = "uid";
-            uuid_ldap_attribute = "uuid";
-            user_object_classes = [ "person" ];
+            # OpenLDAP's server-assigned immutable id (lldap exposed `uuid`).
+            uuid_ldap_attribute = "entryUUID";
+            # inetOrgPerson so Keycloak may write `mail`; its `person` superclass
+            # makes `sn` + `cn` mandatory on the create-time add -- satisfied by
+            # the users' last names (-> sn) and the cn mapper below.
+            user_object_classes = [
+              "inetOrgPerson"
+              "organizationalPerson"
+              "person"
+            ];
             edit_mode = "WRITABLE";
             sync_registrations = true;
             import_enabled = true;
             search_scope = "SUBTREE";
+          };
+
+          # person/inetOrgPerson require cn, but Keycloak's default mappers only
+          # set it from the first name (empty -> " " for users without one). A
+          # full-name mapper writes cn = "First Last" (falling back to whichever
+          # name is present) and takes precedence, giving tidy, always-present
+          # cns while still satisfying the schema's mandatory cn.
+          ldap_full_name_mappers.cn = {
+            realm = "nomath";
+            ldap_user_federation = "lldap";
+            ldap_full_name_attribute = "cn";
+            write_only = true;
           };
 
           ldap_group_mappers.groups = {
@@ -83,7 +165,9 @@
             ldap_user_federation = "lldap";
             ldap_groups_dn = groupsDn;
             group_name_ldap_attribute = "cn";
-            group_object_classes = [ "groupOfUniqueNames" ];
+            # OpenLDAP's groupOfNames carries membership on `member`
+            # (groupOfUniqueNames would use uniqueMember).
+            group_object_classes = [ "groupOfNames" ];
             membership_ldap_attribute = "member";
             membership_attribute_type = "DN";
             membership_user_ldap_attribute = "uid";
@@ -92,15 +176,12 @@
           };
         };
 
+        # OpenLDAP keeps the directory under /var/lib/openldap via StateDirectory=
+        # (systemd chowns it, so the bare-string /persist bind-mount self-heals).
+        # The cn=config tree is regenerated from `settings` every boot, so only
+        # the mdb data must survive tower's rootfs rollback.
         state.directories = [
-          # lldap now runs as DynamicUser=, so systemd keeps its StateDirectory
-          # under /var/lib/private/lldap (with a /var/lib/lldap symlink). Persist
-          # that real path, not the public symlink: persisting /var/lib/lldap
-          # bind-mounts it, and on start systemd then tries to migrate the
-          # pre-existing public dir to private -- a rename of a bind mount --
-          # which fails with EBUSY (same reasoning as src/keycloak.nix).
-          "/var/lib/private/lldap"
-          "/var/lib/acme"
+          "/var/lib/openldap"
         ];
       }
     )

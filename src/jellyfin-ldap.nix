@@ -182,9 +182,13 @@
           # a real email and no password; UPDATE_PASSWORD + VERIFY_EMAIL drive
           # onboarding over the realm SMTP above. The password the user sets lands
           # in lldap, which is what Jellyfin's LDAP login then verifies against.
+          # first_name/last_name populate givenName/sn; OpenLDAP's person schema
+          # (src/ldap.nix) makes sn mandatory on the create-time LDAP add.
           users.aforemny = {
             realm = realm;
             email = "aforemny@posteo.de";
+            first_name = "Alexander";
+            last_name = "Foremny";
             enabled = true;
             required_actions = [
               "UPDATE_PASSWORD"
@@ -194,6 +198,8 @@
           users.kirchner = {
             realm = realm;
             email = "kirchner@posteo.de";
+            first_name = "Fabian";
+            last_name = "Kirchner";
             enabled = true;
             required_actions = [
               "UPDATE_PASSWORD"
