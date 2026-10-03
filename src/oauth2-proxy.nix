@@ -14,6 +14,13 @@
           "sonarr.nomath.org"
           "radarr.nomath.org"
           "prowlarr.nomath.org"
+          # calibre-web. Only its browser surface ends up gated: src/calibre.nix
+          # turns auth_request off for the Kobo sync and OPDS locations, which
+          # authenticate by sync token resp. HTTP Basic and cannot follow an
+          # OIDC redirect. calibre.nomath.org (calibre-server) is deliberately
+          # absent -- it cannot consume a proxied identity, so SSO in front of
+          # it would only stack a second login on the same UI.
+          "books.nomath.org"
         ];
       in
       {
