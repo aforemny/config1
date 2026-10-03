@@ -60,6 +60,19 @@
 
         services.nginx = {
           enable = true;
+          # oauth2-proxy packs the full Keycloak id/access/refresh tokens (plus
+          # every realm role) into its session cookie, so the Set-Cookie on
+          # /oauth2/callback and the Cookie header on each subsequent request
+          # overflow nginx's default 8k header buffers -> "upstream sent too big
+          # header" 502 at the callback. Enlarge the upstream response-header
+          # buffers and the client request-header buffers so the oversized auth
+          # cookies pass through.
+          commonHttpConfig = ''
+            proxy_buffer_size 32k;
+            proxy_buffers 8 32k;
+            proxy_busy_buffers_size 64k;
+            large_client_header_buffers 8 32k;
+          '';
           virtualHosts.${fqdn} = {
             forceSSL = true;
             enableACME = true;
