@@ -162,9 +162,9 @@
       },
       "branch": "main",
       "submodules": false,
-      "revision": "f73d95e5b1840442e6072578d92cc4acc4df0951",
-      "url": "https://github.com/numtide/llm-agents.nix/archive/f73d95e5b1840442e6072578d92cc4acc4df0951.tar.gz",
-      "hash": "sha256-bbCdjF08PfczKCUm+vIB8oXceVtw27zR4jrTp+XxZVE="
+      "revision": "c9ef0fb47c91abf5c637218b69a018d3b37bb8d9",
+      "url": "https://github.com/numtide/llm-agents.nix/archive/c9ef0fb47c91abf5c637218b69a018d3b37bb8d9.tar.gz",
+      "hash": "sha256-3exhcZ9ebN8cVVP+RJe2omsc0l6Mb6ju/kmqCwJJQpo="
     },
     "naersk": {
       "type": "Git",
