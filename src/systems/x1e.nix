@@ -58,11 +58,7 @@
     (
       { pkgs, ... }:
       {
-        powerManagement = {
-          enable = true;
-          powertop.enable = true;
-          scsiLinkPolicy = "med_power_with_dipm";
-        };
+        powerManagement.enable = true;
         services.thermald.enable = true;
         boot.kernelParams = [ "intel_pstate=disable" ];
         environment.systemPackages = with pkgs; [
