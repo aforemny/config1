@@ -74,6 +74,12 @@
         # LDAP-Auth.dll, so the file must be exactly this.
         pluginConfigFile = "LDAP-Auth.xml";
 
+        # Jellyfin administrators, by lldap uid. Fed to the plugin's admin
+        # filter, which it re-evaluates on every login and syncs onto the
+        # account's IsAdministrator flag -- so removing a name here demotes
+        # that user on their next sign-in.
+        admins = [ "aforemny" ];
+
         # ABI-matched release (targetAbi 10.11.9.0, <= Jellyfin 10.11.11). The
         # official zip carries LDAP-Auth.dll, its Novell.Directory.Ldap runtime
         # dep, and meta.json at the zip root, hence stripRoot = false.
@@ -112,7 +118,7 @@
             <LdapBaseDn>${usersDn}</LdapBaseDn>
             <LdapSearchFilter>(&amp;(objectClass=person)(!(uid=admin)))</LdapSearchFilter>
             <LdapAdminBaseDn></LdapAdminBaseDn>
-            <LdapAdminFilter></LdapAdminFilter>
+            <LdapAdminFilter>(|${lib.concatMapStrings (uid: "(uid=${uid})") admins})</LdapAdminFilter>
             <EnableLdapAdminFilterMemberUid>false</EnableLdapAdminFilterMemberUid>
             <LdapSearchAttributes>uid, mail</LdapSearchAttributes>
             <LdapClientCertPath></LdapClientCertPath>
