@@ -245,6 +245,19 @@
       "url": "https://releases.nixos.org/nixos/22.05/nixos-22.05.4694.380be19fbd2d/nixexprs.tar.xz",
       "hash": "sha256-gosYWvsTx3bR91jmpAZ7MT9RywQmPHujSMKh8fIXXts="
     },
+    "nixpkgs-funkwhale": {
+      "type": "Git",
+      "repository": {
+        "type": "GitHub",
+        "owner": "phanirithvij",
+        "repo": "nixpkgs"
+      },
+      "branch": "funkwhale-2",
+      "submodules": false,
+      "revision": "a1308e9e7fa7c3f4b63988268e1b6512df2c5e9d",
+      "url": "https://github.com/phanirithvij/nixpkgs/archive/a1308e9e7fa7c3f4b63988268e1b6512df2c5e9d.tar.gz",
+      "hash": "sha256-UeZweLD6s7QWMM2Suir0vanAFUy8oQByCcbiI8OQJXs="
+    },
     "nm2nix": {
       "type": "Git",
       "repository": {
