@@ -56,6 +56,14 @@
           extraComponents = [
             "default_config"
             "met"
+            # Zigbee via the ConBee II on tower
+            # (/dev/serial/by-id/usb-dresden_elektronik_ingenieurtechnik_GmbH_ConBee_II_DE2664551-if00).
+            # Pulls in zigpy-deconz and, through the module's serial-component
+            # list, grants the unit DeviceAllow=char-ttyACM + the dialout group.
+            # The radio itself is added once in the UI (Settings -> Devices &
+            # services -> ZHA); its config entry and zigbee.db live in the
+            # persisted /var/lib/hass.
+            "zha"
           ];
           config = {
             homeassistant = {
