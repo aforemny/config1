@@ -214,6 +214,38 @@
             enabled = true;
             email_verified = true;
           };
+          users.aapostol = {
+            realm = realm;
+            email = "apostol.adina@gmail.com";
+            first_name = "Adina";
+            last_name = "Apostol";
+            enabled = true;
+            email_verified = true;
+          };
+          users.tapostol = {
+            realm = realm;
+            email = "tapostol@foremny.me";
+            first_name = "Tammo";
+            last_name = "Apostol";
+            enabled = true;
+            email_verified = true;
+          };
+          users.kapostol = {
+            realm = realm;
+            email = "kapostol@foremny.me";
+            first_name = "Koda";
+            last_name = "Apostol";
+            enabled = true;
+            email_verified = true;
+          };
+          users.frunge = {
+            realm = realm;
+            email = "fabianr1987@hotmail.com";
+            first_name = "Fabian";
+            last_name = "Runge";
+            enabled = true;
+            email_verified = true;
+          };
         };
 
         # --- Jellyfin side -------------------------------------------------
