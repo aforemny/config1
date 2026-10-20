@@ -176,8 +176,16 @@
           {
             interface = "wlan24";
             band = "2g";
-            channel = 0;
-            wifi4Capabilities = mt7915Wifi4;
+            # Pinned to ch1 at 20 MHz (2401-2423 MHz), clear of the Zigbee
+            # network (tower's ConBee II, Zigbee ch20 = 2450 MHz). ACS had
+            # picked ch9 HT40 (2442-2482 MHz), which swamped the ConBee's
+            # clear-channel check: every transmission, permit-join included,
+            # failed with MAC_CHANNEL_ACCESS_FAILURE. ap emits no 2.4 GHz.
+            channel = 1;
+            wifi4Capabilities = lib.subtractLists [
+              "HT40+"
+              "SHORT-GI-40"
+            ] mt7915Wifi4;
             # Only the 2.4 GHz BSS offers WPS: the enrollees that need it (the
             # HP Laser MFP) are 802.11b/g/n, i.e. 2.4 GHz-only. ap is 5 GHz-only
             # and therefore cannot serve them at all.
