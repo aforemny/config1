@@ -185,9 +185,17 @@
           # Users are Keycloak-authoritative: declared here and written through
           # to lldap by the WRITABLE federation (src/ldap.nix), so lldap stays
           # the directory Jellyfin and mail consume. Each account is created with
-          # a real email and no password; UPDATE_PASSWORD + VERIFY_EMAIL drive
-          # onboarding over the realm SMTP above. The password the user sets lands
-          # in lldap, which is what Jellyfin's LDAP login then verifies against.
+          # a real email and no password; the user onboards via "Forgot
+          # password" over the realm SMTP above, which both proves the address
+          # and sets the password. The password the user sets lands in lldap,
+          # which is what Jellyfin's LDAP login then verifies against.
+          #
+          # No required_actions, and email_verified = true: the reconciler
+          # re-applies both on every run, so required actions the user already
+          # completed would be re-added, and the provider's email_verified
+          # default (false) would re-trigger the realm's verify_email on the
+          # next login. The address is admin-declared, and the reset email
+          # already verifies it.
           # first_name/last_name populate givenName/sn; OpenLDAP's person schema
           # (src/ldap.nix) makes sn mandatory on the create-time LDAP add.
           users.aforemny = {
@@ -196,10 +204,7 @@
             first_name = "Alexander";
             last_name = "Foremny";
             enabled = true;
-            required_actions = [
-              "UPDATE_PASSWORD"
-              "VERIFY_EMAIL"
-            ];
+            email_verified = true;
           };
           users.kirchner = {
             realm = realm;
@@ -207,10 +212,7 @@
             first_name = "Fabian";
             last_name = "Kirchner";
             enabled = true;
-            required_actions = [
-              "UPDATE_PASSWORD"
-              "VERIFY_EMAIL"
-            ];
+            email_verified = true;
           };
         };
 
