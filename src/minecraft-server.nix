@@ -7,6 +7,14 @@
       pkgs,
       ...
     }:
+    let
+      # Hermitcraft Server Pack, pinned by ./minecraft-server/update-modpack.sh.
+      modpackLock = lib.importJSON ./minecraft-server/modpack.json;
+      modpack = pkgs.fetchModrinthModpack {
+        pname = "hermitcraft-server";
+        inherit (modpackLock) version url packHash;
+      };
+    in
     lib.mkIf (config.networking.hostName == "tower") {
       services.minecraft-servers = {
         enable = true;
@@ -15,12 +23,22 @@
         servers.fabric = {
           enable = true;
           jvmOpts = "-Xms2G -Xmx4G";
-          package = pkgs.fabricServers.fabric-26_1_2.override { jre_headless = pkgs.jdk25_headless; };
+          # Minecraft and Fabric loader versions follow the modpack.
+          package =
+            pkgs.fabricServers."fabric-${lib.replaceStrings [ "." ] [ "_" ] modpackLock.minecraft}".override
+              {
+                loaderVersion = modpackLock.fabricLoader;
+                jre_headless = pkgs.jdk25_headless;
+              };
+          symlinks = {
+            mods = "${modpack}/mods";
+            datapacks = "${modpack}/datapacks";
+          };
           serverProperties = {
             difficulty = 3;
             enforce-whitelist = true;
             level-type = "large_biomes";
-            motd = "Hermitcraft Server Pack 2.0.1, large biomes";
+            motd = "Hermitcraft Server Pack ${modpackLock.version}, large biomes";
             view-distance = 24;
             white-list = true;
           };
