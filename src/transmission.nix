@@ -183,11 +183,17 @@
 
         environment.systemPackages = [ pkgs.tremc ];
 
-        # /var/lib/transmission is its own ZFS dataset (zdata/local/transmission,
-        # see platforms/tower.nix): bulk data on the raidz2 pool that survives the
-        # rootfs rollback on its own, so it must NOT be persisted via impermanence.
-        # Only ACME material still lives on /persist.
-        state.directories = [ "/var/lib/acme" ];
+        # Downloads go to /srv/media/downloads (zdata/local/media, see
+        # src/servarr.nix), but the daemon's own state -- the torrent list,
+        # .torrent files and resume data under .config/transmission-daemon --
+        # stays in its home, /var/lib/transmission, on the rollback rootfs.
+        # Persist it, or every reboot empties Transmission. The module creates
+        # the home via StateDirectory= (systemd chowns the bind mount at start),
+        # so a bare string is fine.
+        state.directories = [
+          "/var/lib/transmission"
+          "/var/lib/acme"
+        ];
       }
     )
   ];
