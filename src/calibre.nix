@@ -213,6 +213,12 @@
               # store and firmware updates keep working.
               "config_kobo_sync": 1,
               "config_kobo_proxy": 1,
+              # Serve the stored file as-is. With embedding on, every download
+              # and kepub conversion first runs `calibredb export --with-library
+              # <dir>` (cps/embed_helper.py), which refuses to open a library
+              # calibre-server holds -- the export writes nothing and the Kobo
+              # download fails. The Kobo takes its metadata from the sync API.
+              "config_embed_metadata": 0,
               # constants.LOGIN_LDAP. 2 is the admin UI's "Simple" bind: the
               # constant LDAP_AUTH_SIMPLE is 0 upstream (a bug -- it collides
               # with LDAP_AUTH_ANONYMOUS), and the code only ever compares
