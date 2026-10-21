@@ -19,7 +19,8 @@
       ]
     );
   homeManagerModules.claude-code =
-    { lib, osConfig, ... }: lib.mkIf osConfig.tags.graphical {
+    { lib, osConfig, ... }:
+    lib.mkIf osConfig.tags.graphical {
       state = {
         directories = [ ".claude" ];
         files = [ ".claude.json" ];
