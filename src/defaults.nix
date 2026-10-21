@@ -19,8 +19,8 @@
       }
       {
         environment.systemPackages = with pkgs; [
+          acpi
           alsa-utils
-          btop
           btop
           chromium
           csvkit
@@ -34,7 +34,6 @@
           iw
           jq
           #libreoffice
-          libreoffice
           mpv
           nixos-facter
           nm2nix
