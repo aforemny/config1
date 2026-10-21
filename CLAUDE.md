@@ -97,6 +97,14 @@ ASECRET_DRY_RUN= cake eval --expr 'config.systems.<system>.config.services.<svc>
 ### Deploy a system
 `cake deploy <system>` = build → `nix-copy-closure` → set `/nix/var/nix/profiles/system` → `switch-to-configuration switch`; its `postCopyClosure` runs `asecret export` to the host (**needs GPG**). Reminder (see *Persistence*): `state.directories` / persistence / secret-content / DynamicUser changes only fully apply on a **reboot**. To push a change touching no asecret secret without GPG, deploy by hand: `nix-copy-closure --to root@<host> "$sys"` → `ssh … nix-env -p /nix/var/nix/profiles/system --set "$sys"` → `ssh … "$sys"/bin/switch-to-configuration switch` (or `boot` to only set the next-boot default).
 
+### Deploy with colmena
+`hive.nix` (plain Nix, no flakes) turns every `config.systems.<name>` into a colmena node with the identical module list (same toplevel drv as cake). The devshell's `colmena` wrapper (`src/colmena.nix`) adds `-f hive.nix`, because colmena otherwise prefers the `flake.nix`. Nodes target `root@<name>`; x1e deploys itself with `colmena apply-local --sudo`.
+```bash
+colmena apply --on tower            # or: build, apply boot, apply --on @tag
+colmena eval -E '{ nodes, ... }: nodes.tower.config.services.transmission.enable'
+```
+Colmena has no `postCopyClosure` hook, so it does **not** run `asecret export`: after changing an asecret secret also run `ASECRET_OUT=root@<host>:/var/src/secrets asecret export` (agenix secrets ship in the closure and need nothing extra).
+
 ## Notes
 <!-- Add project-specific notes, decisions, or context here -->
 
