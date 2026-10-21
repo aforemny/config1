@@ -71,9 +71,10 @@
         # Battery care, formerly TLP's START/STOP_CHARGE_THRESH_BAT0 (TLP is
         # gone: Noctalia's power-profiles-daemon replaces it). thinkpad_acpi
         # exposes the thresholds in sysfs; the firmware keeps them, re-apply
-        # on every boot anyway.
+        # on every boot anyway. Also match "change": BAT0 is added before
+        # thinkpad_acpi loads, so the attributes don't exist yet on "add".
         services.udev.extraRules = ''
-          SUBSYSTEM=="power_supply", KERNEL=="BAT0", ACTION=="add", ATTR{charge_control_start_threshold}="75", ATTR{charge_control_end_threshold}="80"
+          SUBSYSTEM=="power_supply", KERNEL=="BAT0", ACTION=="add|change", ATTR{charge_control_start_threshold}="75", ATTR{charge_control_end_threshold}="80"
         '';
       }
     )
