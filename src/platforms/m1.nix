@@ -93,6 +93,8 @@
         };
         networking.networkmanager.wifi.backend = "iwd";
         services.libinput.enable = true;
+        # Battery state for the desktop shell (Noctalia).
+        services.upower.enable = true;
         system.stateVersion = "23.11";
         fileSystems."/persist".neededForBoot = true;
       }
