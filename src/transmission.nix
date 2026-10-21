@@ -68,7 +68,13 @@
             # drives the peer port explicitly (see below).
             port-forwarding-enabled = false;
             download-dir = "/srv/media/downloads";
-            incomplete-dir = "/srv/media/downloads/.incomplete";
+            # Download in place (partial files get a .part suffix; the *arrs
+            # only import completed torrents). The module bind-mounts an
+            # incomplete-dir into the sandbox separately from download-dir, so
+            # finishing a torrent cannot rename(2) across them (EXDEV) and
+            # copies it instead -- with the session blocked for the whole copy,
+            # i.e. RPC and t.nomath.org time out for minutes on large torrents.
+            incomplete-dir-enabled = false;
             umask = "002";
           };
         };
