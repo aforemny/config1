@@ -42,11 +42,15 @@ in
                 wl-clipboard
                 xwayland-satellite
               ];
-              programs.dms-shell.enable = true;
-              services.displayManager.dms-greeter = {
+              # Desktop shell, started by niri-session via graphical-session.target.
+              # recommendedServices backs its widgets: NetworkManager, bluetooth,
+              # UPower and power-profiles-daemon (hence no TLP on x1e).
+              programs.noctalia = {
                 enable = true;
-                compositor.name = "niri";
+                systemd.enable = true;
+                recommendedServices.enable = true;
               };
+              services.displayManager.noctalia-greeter.enable = true;
             }
             {
               programs.niri.config = lib.mkMerge [
