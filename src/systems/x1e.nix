@@ -60,7 +60,6 @@
       {
         powerManagement.enable = true;
         services.thermald.enable = true;
-        boot.kernelParams = [ "intel_pstate=disable" ];
         environment.systemPackages = with pkgs; [
           btop
           cpufrequtils
