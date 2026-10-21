@@ -70,6 +70,13 @@
               };
             };
 
+            age.secrets = lib.genAttrs' [ "jwtSecret" "sessionSecret" "storageEncryptionKey" ] (
+              name:
+              lib.nameValuePair "${service}-${name}" {
+                rekeyFile = ../secrets1/per-host/${config.networking.hostName}/per-service/${service}/${name}.age;
+              }
+            );
+
             systemd.services.${service} = {
               environment = {
                 AUTHELIA_JWT_SECRET_FILE = "%d/jwtSecret";
@@ -77,11 +84,7 @@
                 AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE = "%d/storageEncryptionKey";
               };
               serviceConfig.LoadCredential =
-                lib.map
-                  (
-                    name:
-                    "${name}:${pkgs.asecret-lib.password "per-host/${config.networking.hostName}/per-service/${service}/${name}"}"
-                  )
+                lib.map (name: "${name}:${config.age.secrets."${service}-${name}".path}")
                   [
                     "jwtSecret"
                     "sessionSecret"

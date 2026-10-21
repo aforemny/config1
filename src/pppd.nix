@@ -133,14 +133,10 @@
           };
         };
         networking.interfaces.enp4s0.useDHCP = false;
-        systemd.tmpfiles.rules = [ "f /etc/ppp/chap-secrets 0600 root root -" ];
-        fileSystems."/etc/ppp/chap-secrets" = {
-          device = pkgs.asecret-lib.password "isp/1und1/password";
-          fsType = "auto";
-          options = [
-            "bind"
-            "ro"
-          ];
+        # The whole chap-secrets file (root:root 0400).
+        age.secrets.isp-1und1-chap-secrets = {
+          rekeyFile = ../secrets1/isp/1und1/password.age;
+          path = "/etc/ppp/chap-secrets";
         };
       }
     )

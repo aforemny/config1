@@ -55,7 +55,7 @@
         {
           # Mailboxes are read over IMAP (no local sync), so neomutt talks to the
           # servers directly and sends through their SMTP. Passwords come from
-          # ~/.secrets, the bindfs view of the asecret store (see user-secrets.nix).
+          # ~/.secrets (see user-secrets.nix).
           accounts.email.accounts = {
             "posteo.de" = {
               address = "aforemny@posteo.de";

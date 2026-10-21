@@ -28,11 +28,14 @@
     # services.hetzner-dns.runtime.{zone_rrsets,zone_records} (see src/maddy.nix).
     "${sources.declarative-runtime}/services/hetzner-dns/module.nix"
     (
-      { pkgs, ... }:
+      { config, ... }:
       {
+        # Hetzner Cloud API token (DNS scope) for the nomath.org project; also
+        # read by set-hetzner-dns below.
+        age.secrets.hetzner-api-key.rekeyFile = ../secrets1/nomath.org/hetzner-api-key.age;
         services.hetzner-dns.runtime = {
           enable = true;
-          tokenFile = pkgs.asecret-lib.password "nomath.org/hetzner-api-key";
+          tokenFile = config.age.secrets.hetzner-api-key.path;
         };
         environment.persistence."/persist".directories = [
           {
@@ -57,7 +60,7 @@
       lib.mkIf (config.dns.dynamicAAAA != [ ]) {
         systemd.services.set-hetzner-dns = {
           serviceConfig.LoadCredential = [
-            "api-key:${pkgs.asecret-lib.password "${zone}/hetzner-api-key"}"
+            "api-key:${config.age.secrets.hetzner-api-key.path}"
           ];
           environment.CREDENTIALS_DIRECTORY = "%d";
           script = lib.getExe (

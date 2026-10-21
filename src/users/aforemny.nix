@@ -8,12 +8,15 @@
     }:
     lib.mkMerge [
       {
+        # agenix decrypts before the `users` activation step, so this is in
+        # place when the password is set (also root's, below).
+        age.secrets.aforemny-hashed-password.rekeyFile = ../../secrets1/users/aforemny/hashed-password.age;
         users = {
           users.aforemny = {
             uid = 1000;
             isNormalUser = true;
             group = "aforemny";
-            hashedPasswordFile = "/persist${pkgs.asecret-lib.hashedPassword "users/aforemny/hashed-password"}";
+            hashedPasswordFile = config.age.secrets.aforemny-hashed-password.path;
             openssh.authorizedKeys.keys = [
               "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBvRliydgYlyjKeMAEuVWWvmr82rZBXaA5ZM9U8r0pyN aforemny@x1e" # TODO
             ];

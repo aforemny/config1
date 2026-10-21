@@ -107,10 +107,16 @@
       };
     }
     (
-      { lib, pkgs, ... }:
       {
-        # Outgoing mail via msmtp; the SMTP password comes from the asecret
-        # store, read at send time by the (root) setuid sendmail wrapper.
+        config,
+        lib,
+        pkgs,
+        ...
+      }:
+      {
+        # Outgoing mail via msmtp; the SMTP password is aforemny's user secret
+        # (src/user-secrets.nix), read at send time by the (root) setuid
+        # sendmail wrapper.
         programs.msmtp = {
           enable = true;
           setSendmail = true;
@@ -129,7 +135,9 @@
           source = lib.mkForce (
             pkgs.writers.writeDashBin "sendmail" ''
               set -efu
-              MSMTP_ACCOUNTS_DEFAULT_PASSWORD=$(cat ${lib.escapeShellArg (pkgs.asecret-lib.password "per-user/aforemny/a@foremny.me")}); export MSMTP_ACCOUNTS_DEFAULT_PASSWORD
+              MSMTP_ACCOUNTS_DEFAULT_PASSWORD=$(cat ${
+                lib.escapeShellArg config.age.secrets."user-aforemny-a-at-foremny.me".path
+              }); export MSMTP_ACCOUNTS_DEFAULT_PASSWORD
               exec ${pkgs.msmtp}/bin/sendmail "$@"
             ''
             + "/bin/sendmail"
@@ -276,8 +284,7 @@
           { config, ... }:
           {
             # CalDAV calendar (apostolforemny.de) synced with vdirsyncer; khal
-            # reads it. The password comes from ~/.secrets (user-secrets bindfs
-            # of the asecret store).
+            # reads it. The password comes from ~/.secrets (src/user-secrets.nix).
             accounts.calendar = {
               basePath = ".calendar";
               accounts."apostolforemny.de".remote = {

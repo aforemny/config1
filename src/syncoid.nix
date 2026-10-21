@@ -8,7 +8,12 @@
     }:
     let
       target = "root@tower:zdata/replicas/${config.networking.hostName}/zroot/safe";
-      sshKey = pkgs.asecret-lib.sshKeyPair "per-user/root/syncoid_ed25519";
+      # The private key is root's user secret (src/user-secrets.nix); its
+      # public half is committed next to it for eval-time use.
+      sshKey = {
+        privateKeyFile = config.age.secrets.user-root-syncoid_ed25519.path;
+        publicKey = lib.fileContents ../secrets1/per-user/root/syncoid_ed25519.pub;
+      };
     in
     lib.mkMerge [
       {

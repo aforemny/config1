@@ -25,7 +25,7 @@ in
   # zones 63.99.91.in-addr.arpa and 8.f.4.0.1.0.a.2.ip6.arpa are delegated to
   # Hetzner's own nameservers and the PTR is a field on the server object
   # (hcloud_rdns / POST /v1/servers/<id>/actions/change_dns_ptr). The token in
-  # the asecret store belongs to the project holding nomath.org, which has no
+  # secrets1/nomath.org/hetzner-api-key belongs to the project holding nomath.org, which has no
   # servers, so it could not set it either.
   #
   # Both PTRs matter: the AAAA is published and receivers prefer v6, so mail
