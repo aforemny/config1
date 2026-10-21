@@ -73,7 +73,7 @@
             age.secrets = lib.genAttrs' [ "jwtSecret" "sessionSecret" "storageEncryptionKey" ] (
               name:
               lib.nameValuePair "${service}-${name}" {
-                rekeyFile = ../secrets1/per-host/${config.networking.hostName}/per-service/${service}/${name}.age;
+                rekeyFile = ../secrets/per-host/${config.networking.hostName}/per-service/${service}/${name}.age;
               }
             );
 

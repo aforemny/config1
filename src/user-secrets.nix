@@ -1,5 +1,5 @@
 {
-  # Per-user secrets: every secrets1/per-user/<user>/**.age (agenix-rekey,
+  # Per-user secrets: every secrets/per-user/<user>/**.age (agenix-rekey,
   # master-key encrypted) is decrypted to /run/user-secrets/<user>/<path>,
   # owned by that user, and ~<user>/.secrets links there. Consumers read
   # ~/.secrets/<path> (neomutt, msmtp, vdirsyncer, gnupg, ~/.ssh).
@@ -14,7 +14,7 @@
         "aforemny"
         "root"
       ];
-      secretsDir = ../secrets1/per-user;
+      secretsDir = ../secrets/per-user;
       # Strings, not paths: these names (@, spaces) are not valid store paths,
       # so nothing here may be copied to the store.
       secretsOf =

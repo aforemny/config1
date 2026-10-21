@@ -5,7 +5,7 @@ let
   selector = "default";
   publicIPv4 = "91.99.63.134";
   publicIPv6 = "2a01:4f8:1c1b:e9e6::1";
-  dkimRecord = lib.fileContents ../secrets1/generated/maddy-dkim-key.pub;
+  dkimRecord = lib.fileContents ../secrets/generated/maddy-dkim-key.pub;
   # TXT allows at most 255 bytes, RSA-20248 is ~410
   dkimTxt =
     let
@@ -25,7 +25,7 @@ in
   # zones 63.99.91.in-addr.arpa and 8.f.4.0.1.0.a.2.ip6.arpa are delegated to
   # Hetzner's own nameservers and the PTR is a field on the server object
   # (hcloud_rdns / POST /v1/servers/<id>/actions/change_dns_ptr). The token in
-  # secrets1/nomath.org/hetzner-api-key belongs to the project holding nomath.org, which has no
+  # secrets/nomath.org/hetzner-api-key belongs to the project holding nomath.org, which has no
   # servers, so it could not set it either.
   #
   # Both PTRs matter: the AAAA is published and receivers prefer v6, so mail

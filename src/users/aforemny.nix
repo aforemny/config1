@@ -10,7 +10,7 @@
       {
         # agenix decrypts before the `users` activation step, so this is in
         # place when the password is set (also root's, below).
-        age.secrets.aforemny-hashed-password.rekeyFile = ../../secrets1/users/aforemny/hashed-password.age;
+        age.secrets.aforemny-hashed-password.rekeyFile = ../../secrets/users/aforemny/hashed-password.age;
         users = {
           users.aforemny = {
             uid = 1000;

@@ -135,7 +135,7 @@
         networking.interfaces.enp4s0.useDHCP = false;
         # The whole chap-secrets file (root:root 0400).
         age.secrets.isp-1und1-chap-secrets = {
-          rekeyFile = ../secrets1/isp/1und1/password.age;
+          rekeyFile = ../secrets/isp/1und1/password.age;
           path = "/etc/ppp/chap-secrets";
         };
       }

@@ -19,7 +19,7 @@
         gateway = "10.2.0.1";
       in
       {
-        age.secrets.transmission-wg.rekeyFile = toString ../secrets1/transmission-wg.age;
+        age.secrets.transmission-wg.rekeyFile = toString ../secrets/transmission-wg.age;
 
         vpnNamespaces.${ns} = {
           enable = true;

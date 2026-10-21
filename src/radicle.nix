@@ -63,7 +63,7 @@
             services.radicle = {
               enable = true;
               privateKey = config.age.secrets.radicle-node-key.path;
-              publicKey = lib.fileContents ../secrets1/generated/radicle-node-key.pub;
+              publicKey = lib.fileContents ../secrets/generated/radicle-node-key.pub;
               node.openFirewall = true;
               # nginx is configured manually below (the explorer owns `/`, the API is
               # mounted under `/api`), so `httpd.nginx` stays null and we set the

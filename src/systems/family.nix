@@ -13,7 +13,7 @@
           aforemny.passwordFile = config.age.secrets."user-aforemny-apostolforemny.de-aforemny-password".path;
           shared.passwordFile = config.age.secrets.family-shared-password.path;
         };
-        age.secrets.family-shared-password.rekeyFile = ../../secrets1/per-host/family/per-user/shared/password.age;
+        age.secrets.family-shared-password.rekeyFile = ../../secrets/per-host/family/per-user/shared/password.age;
         services.babeld.enable = lib.mkForce false;
         services.syncoid.enable = lib.mkForce false;
       }

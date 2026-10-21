@@ -37,7 +37,7 @@
         # Owned by the static `argunix` user so the daemon reads token_path
         # directly (the module's sandbox allows /run/agenix).
         age.secrets.argunix-github-token = {
-          rekeyFile = toString ../secrets1/argunix-github-token.age;
+          rekeyFile = toString ../secrets/argunix-github-token.age;
           owner = "argunix";
           group = "argunix";
         };
@@ -77,7 +77,7 @@
               {
                 push_url = "file://${cacheDir}";
                 public_url = "https://${cacheHost}";
-                public_key = lib.fileContents ../secrets1/generated/argunix-cache-key.pub;
+                public_key = lib.fileContents ../secrets/generated/argunix-cache-key.pub;
                 signing_key_path = config.age.secrets.argunix-cache-key.path;
               }
             ];

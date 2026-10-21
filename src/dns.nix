@@ -32,7 +32,7 @@
       {
         # Hetzner Cloud API token (DNS scope) for the nomath.org project; also
         # read by set-hetzner-dns below.
-        age.secrets.hetzner-api-key.rekeyFile = ../secrets1/nomath.org/hetzner-api-key.age;
+        age.secrets.hetzner-api-key.rekeyFile = ../secrets/nomath.org/hetzner-api-key.age;
         services.hetzner-dns.runtime = {
           enable = true;
           tokenFile = config.age.secrets.hetzner-api-key.path;

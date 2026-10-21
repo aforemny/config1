@@ -26,7 +26,7 @@ src/
 ### System Configuration Updates
 - Primary systems: `apu` (router/gateway), `ap` (L2 WiFi access point, bridged to `apu`), `x1e` (laptop), `tower` (headless ZFS NAS/server), `m1` (Apple Silicon Mac)
 - Configuration pattern: platforms provide hardware, systems compose features
-- After changes: `ASECRET_DRY_RUN= cake build --expr config.systems.<system>.config.system.build.toplevel`
+- After changes: `cake build --expr config.systems.<system>.config.system.build.toplevel`
 
 ### Code Standards
 - Two layers: a top-level `src/*.nix` is a *cake* module (`{ config, lib, pkgs, sources, ... }`) that usually defines `nixosModules.<name> = { config, lib, pkgs, ... }: …`; these apply to every host.
@@ -49,8 +49,8 @@ src/
 - User-specific → `users/<name>.nix`
 
 ### Security
-- Two secret backends: `asecret` (GPG password-store under `secrets/`; `pkgs.asecret-lib.password "<path>"` yields a `LoadCredential` source) and `agenix-rekey` (age, under `secrets1/`).
-- agenix-rekey: a secret with a `generator` defaults its `rekeyFile` to `secrets1/generated/<name>.age`; per-host rekeyed copies are `secrets1/rekeyed/<host>/<hash>-<name>.age`. Define reusable generators centrally in `src/agenix-rekey.nix` (`age.generators.<name>`) and reference them via `age.secrets.<name>.generator.script = "<name>"`. A generator may write an adjacent committed `<name>.pub` for eval-time public keys (see `ssh-ed25519-pub`, used by `radicle.nix`).
+- Secrets are `agenix-rekey` (age) only, under `secrets/` (asecret, the former GPG store, is gone). Imported, non-generated secrets keep their old store path: `age.secrets.<name>.rekeyFile = ../secrets/<path>.age`. Per-user secrets are every `secrets/per-user/<user>/**.age`, decrypted to `/run/user-secrets/<user>/<path>` (owned by the user) with `~/.secrets` linking there (`src/user-secrets.nix`); their agenix names are `user-<user>-<path>` with `/`, ` `, `@` mangled. Add one by encrypting to the master key: `rage -e -r "$(grep -o 'ssh-ed25519 [^"]*' default.nix)" -o secrets/<path>.age`, then `agenix rekey`.
+- agenix-rekey: a secret with a `generator` defaults its `rekeyFile` to `secrets/generated/<name>.age`; per-host rekeyed copies are `secrets/rekeyed/<host>/<hash>-<name>.age`. Define reusable generators centrally in `src/agenix-rekey.nix` (`age.generators.<name>`) and reference them via `age.secrets.<name>.generator.script = "<name>"`. A generator may write an adjacent committed `<name>.pub` for eval-time public keys (see `ssh-ed25519-pub`, used by `radicle.nix`).
 - Rotate/create secrets with `agenix generate [-f] <name>`, then `agenix rekey` (needs the master identity `~/.ssh/id_ed25519`; master pubkey in `default.nix`, host pubkeys in `src/host-keys.nix`).
 - On rollback-rootfs hosts, agenix decrypts with the SSH host key **from `/persist`** — `age.identityPaths = [ "/persist/etc/ssh/ssh_host_ed25519_key" … ]` (set in `agenix-rekey.nix`, scoped to `fileSystems ? "/persist"`). The agenix *activation script* runs before impermanence bind-mounts `/etc/ssh` on cold boot, so the default `/etc/ssh` path gives "no readable identities" and **every** secret fails to decrypt; `/persist` is `neededForBoot` so it is mounted in time. Don't revert to the `/etc/ssh` default.
 - No plaintext passwords in configs.
@@ -79,23 +79,23 @@ src/
 
 ## Quick Commands
 
-All eval/build runs **inside the devshell** (`.envrc` = `use nix`, or `nix-shell`): its `shellHook` sets `NIX_CONFIG` (nix-plugins `plugin-files` + asecret `extra-builtins-file`) and `PASSWORD_STORE_DIR`. Outside it, eval fails with `attribute 'extraBuiltins' missing`. Always prefix with `ASECRET_DRY_RUN=` so GPG isn't invoked during eval.
+Run eval/build **inside the devshell** (`.envrc` = `use nix`, or `nix-shell`), which provides `cake`, `agenix`, `colmena` and `npins`. Evaluation needs no secrets (no GPG).
 
 ### Build a system
 ```bash
-ASECRET_DRY_RUN= cake build --expr config.systems.<system>.config.system.build.toplevel
+cake build --expr config.systems.<system>.config.system.build.toplevel
 ```
 
 ### Fast verify (eval only, no build)
 `cake eval` runs `with (import ./. {}); <expr>` with `--read-write-mode`, so freshly added/rekeyed secret files are picked up.
 ```bash
-ASECRET_DRY_RUN= cake eval --expr 'config.systems.<system>.config.system.build.toplevel.drvPath'
-ASECRET_DRY_RUN= cake eval --expr 'config.systems.<system>.config.services.<svc>.enable'
+cake eval --expr 'config.systems.<system>.config.system.build.toplevel.drvPath'
+cake eval --expr 'config.systems.<system>.config.services.<svc>.enable'
 ```
-- Evaluating the **whole** toplevel forces every module — it pulls unfree packages (`minecraft-server`, `replace`; a raw `cake build`/`eval` then needs `NIXPKGS_ALLOW_UNFREE=1`) and forces `dns.nix`'s asecret GPG read even under `ASECRET_DRY_RUN=`. To check a change without either, eval the specific attribute, not the toplevel: `…config.systemd.services.<svc>`, `…config.systemd.mounts`, `…config.fileSystems."/path"`.
+- Evaluating the **whole** toplevel forces every module — it pulls unfree packages (`minecraft-server`, `replace`; a raw `cake build`/`eval` then needs `NIXPKGS_ALLOW_UNFREE=1`). To check a change without that, eval the specific attribute, not the toplevel: `…config.systemd.services.<svc>`, `…config.systemd.mounts`, `…config.fileSystems."/path"`.
 
 ### Deploy a system
-`cake deploy <system>` = build → `nix-copy-closure` → set `/nix/var/nix/profiles/system` → `switch-to-configuration switch`; its `postCopyClosure` runs `asecret export` to the host (**needs GPG**). Reminder (see *Persistence*): `state.directories` / persistence / secret-content / DynamicUser changes only fully apply on a **reboot**. To push a change touching no asecret secret without GPG, deploy by hand: `nix-copy-closure --to root@<host> "$sys"` → `ssh … nix-env -p /nix/var/nix/profiles/system --set "$sys"` → `ssh … "$sys"/bin/switch-to-configuration switch` (or `boot` to only set the next-boot default).
+`cake deploy <system>` = build → `nix-copy-closure` → set `/nix/var/nix/profiles/system` → `switch-to-configuration switch`; Reminder (see *Persistence*): `state.directories` / persistence / secret-content / DynamicUser changes only fully apply on a **reboot**. To deploy by hand: `nix-copy-closure --to root@<host> "$sys"` → `ssh … nix-env -p /nix/var/nix/profiles/system --set "$sys"` → `ssh … "$sys"/bin/switch-to-configuration switch` (or `boot` to only set the next-boot default).
 
 ### Deploy with colmena
 `hive.nix` (plain Nix, no flakes) turns every `config.systems.<name>` into a colmena node with the identical module list (same toplevel drv as cake). The devshell's `colmena` wrapper (`src/colmena.nix`) adds `-f hive.nix`, because colmena otherwise prefers the `flake.nix`. Nodes target `root@<name>`; x1e deploys itself with `colmena apply-local --sudo`.
@@ -103,7 +103,7 @@ ASECRET_DRY_RUN= cake eval --expr 'config.systems.<system>.config.services.<svc>
 colmena apply --on tower            # or: build, apply boot, apply --on @tag
 colmena eval -E '{ nodes, ... }: nodes.tower.config.services.transmission.enable'
 ```
-Colmena has no `postCopyClosure` hook, so it does **not** run `asecret export`: after changing an asecret secret also run `ASECRET_OUT=root@<host>:/var/src/secrets asecret export` (agenix secrets ship in the closure and need nothing extra).
+Secrets need no extra step: agenix ships them rekeyed in the closure.
 
 ## Notes
 <!-- Add project-specific notes, decisions, or context here -->

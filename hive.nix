@@ -1,17 +1,13 @@
 # Colmena hive -- plain Nix, no flakes. Run colmena from the devshell: its
-# NIX_CONFIG carries asecret's extra-builtins, and its `colmena` wrapper
-# passes `-f hive.nix` (src/colmena.nix), since colmena would otherwise
-# prefer the flake.nix next to this file.
+# `colmena` wrapper passes `-f hive.nix` (src/colmena.nix), since colmena
+# would otherwise prefer the flake.nix next to this file.
 #
 # Every cake system becomes a node built from the very same module list as
 # `config.systems.<name>` (see src/options/systems.nix), so colmena and cake
 # evaluate identical configurations.
 #
-# Not covered: cake-deploy's postCopyClosure (`asecret export`, see
-# src/asecret.nix). Colmena has no such hook, so after changing an asecret
-# secret also run
-#   ASECRET_OUT=root@<host>:/var/src/secrets asecret export
-# agenix secrets need nothing extra: they ship rekeyed in the closure.
+# Secrets are agenix-rekey only and ship rekeyed in the closure, so there is
+# nothing to copy besides it.
 let
   cake = import ./. { };
   inherit (cake) lib sources;

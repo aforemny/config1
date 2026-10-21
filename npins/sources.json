@@ -43,19 +43,6 @@
       "url": "https://codeberg.org/tfc/argunix/archive/e92968c70556ac2d6369d18d0fe86231b1323d59.tar.gz",
       "hash": "sha256-pHGkXpC6f6n++S8Y6kuaqynv7xfWMV8yvHVj5k4tQgo="
     },
-    "asecret": {
-      "type": "Git",
-      "repository": {
-        "type": "GitHub",
-        "owner": "aforemny",
-        "repo": "asecret"
-      },
-      "branch": "main",
-      "submodules": false,
-      "revision": "cf9d86ecb2895029095dd1654a5b0d9914e522c0",
-      "url": "https://github.com/aforemny/asecret/archive/cf9d86ecb2895029095dd1654a5b0d9914e522c0.tar.gz",
-      "hash": "sha256-Yf5/UGjTGYZCA3B3M1Peax4lCYk5Li3MVbr7g7vTaog="
-    },
     "cake": {
       "type": "Git",
       "repository": {
