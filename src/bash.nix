@@ -1,5 +1,8 @@
 {
   homeManagerModules.bash = {
+    # A bind-mounted file is fine: with histappend (home-manager's default)
+    # bash appends to it in place instead of replacing it.
+    state.files = [ ".bash_history" ];
     programs.bash = {
       enable = true;
       shellAliases = {
