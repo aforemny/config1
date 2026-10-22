@@ -300,4 +300,17 @@ in
         ))
       ];
     };
+  homeManagerModules.niri =
+    { osConfig, lib, ... }:
+    lib.mkMerge [
+      # Settings changed in Noctalia's UI, plugins, notification and clipboard
+      # history.
+      (lib.mkIf (osConfig.programs.noctalia.enable or false) {
+        state.directories = [ ".local/state/noctalia" ];
+      })
+      # gnome-keyring (enabled by the niri module): secrets apps store.
+      (lib.mkIf (osConfig.services.gnome.gnome-keyring.enable or false) {
+        state.directories = [ ".local/share/keyrings" ];
+      })
+    ];
 }
