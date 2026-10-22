@@ -113,6 +113,22 @@
             ${pkgs.coreutils}/bin/cat "$tmp/key"
             ${pkgs.coreutils}/bin/rm -rf "$tmp"
           '';
+        # Generates a WireGuard private key and writes the adjacent public key
+        # next to the .age file, so peers can reference it at eval time (see
+        # mvpn.nix).
+        age.generators.wireguard-key =
+          {
+            pkgs,
+            lib,
+            file,
+            ...
+          }:
+          ''
+            key=$(${pkgs.wireguard-tools}/bin/wg genkey)
+            printf '%s\n' "$key" | ${pkgs.wireguard-tools}/bin/wg pubkey \
+              > ${lib.escapeShellArg (lib.removeSuffix ".age" file + ".pub")}
+            printf '%s\n' "$key"
+          '';
         # Generates a nix binary-cache signing key (`nix key generate-secret`)
         # and writes the adjacent public key -- `<name>:<base64>` from
         # `nix key convert-secret-to-public` -- next to the .age file, so the
