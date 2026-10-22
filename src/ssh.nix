@@ -18,4 +18,10 @@
     };
     services.fail2ban.enable = true;
   };
+  # known_hosts (and anything else ssh writes). Persist the directory even
+  # though home-manager links keys into it: a persisted known_hosts *file*
+  # breaks ssh-keygen -R, which replaces it by rename.
+  homeManagerModules.ssh = {
+    state.directories = [ ".ssh" ];
+  };
 }
