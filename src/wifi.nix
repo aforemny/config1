@@ -7,6 +7,13 @@
           matchConfig.Type = "wlan";
           linkConfig.Unmanaged = "yes";
         };
+        # Connections added interactively (ensureProfiles' live in /run), and
+        # NetworkManager's secret_key, which seeds stable-privacy IPv6
+        # addresses and randomized MACs.
+        state.directories = [
+          "/etc/NetworkManager/system-connections"
+          "/var/lib/NetworkManager"
+        ];
       })
       {
         networking.networkmanager.ensureProfiles.profiles = {
