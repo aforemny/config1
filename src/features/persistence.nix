@@ -30,6 +30,10 @@
               # rebooting into a generation that does -- exactly when the log is
               # needed.  journald caps it at 10% of the pool either way.
               "/var/log"
+              # Persistent= timers (fstrim, zpool-trim, fwupd-refresh, ...)
+              # catch up on a missed run only if their stamp survives; without
+              # it a machine that is off at the scheduled time never runs them.
+              "/var/lib/systemd/timers"
             ];
             # The rollback root wipes /etc on every boot; unless machine-id is
             # persisted it is regenerated each boot, which reshuffles everything
