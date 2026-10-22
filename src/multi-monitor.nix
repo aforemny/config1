@@ -26,4 +26,10 @@
         "uinput"
       ];
     };
+  # Sunshine's TLS identity, paired clients and settings made in its web UI.
+  homeManagerModules.multi-monitor =
+    { osConfig, lib, ... }:
+    lib.mkIf (osConfig.services.sunshine.enable or false) {
+      state.directories = [ ".config/sunshine" ];
+    };
 }
