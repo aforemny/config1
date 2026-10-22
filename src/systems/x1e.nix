@@ -13,6 +13,12 @@
     }
     {
       hardware.bluetooth.enable = true;
+      # Pairings and link keys.
+      state.directories = [ "/var/lib/bluetooth" ];
+    }
+    {
+      # Enrolled fingerprints (fprintd is enabled by nixos-facter).
+      state.directories = [ "/var/lib/fprint" ];
     }
     {
       services.usbmuxd.enable = true;
