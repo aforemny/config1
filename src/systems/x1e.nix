@@ -68,14 +68,19 @@
           upower
         ];
         services.upower.enable = true;
-        # Battery care, formerly TLP's START/STOP_CHARGE_THRESH_BAT0 (TLP is
-        # gone: Noctalia's power-profiles-daemon replaces it). thinkpad_acpi
-        # exposes the thresholds in sysfs; the firmware keeps them, re-apply
-        # on every boot anyway. Also match "change": BAT0 is added before
-        # thinkpad_acpi loads, so the attributes don't exist yet on "add".
-        services.udev.extraRules = ''
-          SUBSYSTEM=="power_supply", KERNEL=="BAT0", ACTION=="add|change", ATTR{charge_control_start_threshold}="75", ATTR{charge_control_end_threshold}="80"
-        '';
+        # Battery care (75-80%) is UPower's: its hwdb gives every battery
+        # CHARGE_LIMIT=75,80, and Noctalia's Control Center (Power tab)
+        # toggles it, e.g. off to charge to 100% before travelling. UPower
+        # keeps the toggle in charging-threshold-status ("1"/"0") and
+        # re-applies it at start; seed it on (`f` never overwrites) and
+        # persist it so the choice survives the rootfs rollback. Don't write
+        # the sysfs thresholds directly (udev rule, TLP): Noctalia then sees
+        # them as externally managed and locks the toggle.
+        systemd.tmpfiles.settings.upower."/var/lib/upower/charging-threshold-status".f = {
+          mode = "0640";
+          argument = "1";
+        };
+        state.directories = [ "/var/lib/upower" ];
       }
     )
     {
