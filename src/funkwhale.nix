@@ -213,12 +213,22 @@
           # it the agenix secret through the manager instead.
           apiKeyFile = "/run/credentials/typesense.service/api-key";
         };
-        systemd.services =
-          lib.genAttrs funkwhaleUnits (_: {
+        systemd.services = lib.mkMerge [
+          (lib.genAttrs funkwhaleUnits (_: {
             wants = [ "typesense.service" ];
             unitConfig.RequiresMountsFor = [ "/srv/media" ];
-          })
-          // {
+          }))
+          {
+            # The default per-user upload quota (in MB; upstream default 1000,
+            # i.e. 1G) is a dynamic preference stored in Postgres, not a
+            # setting, so pin it after the migrations on every start. Accounts
+            # with their own `upload_quota` still override it.
+            funkwhale-setup.script = lib.mkAfter ''
+              ${lib.getExe config.services.funkwhale.package} shell -c \
+                "from dynamic_preferences.registries import global_preferences_registry; \
+                global_preferences_registry.manager()['users__upload_quota'] = 1000000"
+            '';
+
             # Keeps the in-place library in sync with musicDir, which Lidarr
             # fills. import_files --watch only sees changes made while it
             # runs, so first do a plain import to catch up (files already in
@@ -272,7 +282,8 @@
             typesense.serviceConfig.LoadCredential = [
               "api-key:${config.age.secrets.funkwhale-typesense-api-key.path}"
             ];
-          };
+          }
+        ];
 
         users.users.funkwhale.extraGroups = [ "transmission" ];
         users.users.nginx.extraGroups = [ "transmission" ];
