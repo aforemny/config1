@@ -4,7 +4,7 @@
     let
       devices = super.writeText "airscan-devices.conf" ''
         [devices]
-        "HP Laser MFP 135wg" = http://192.168.1.56:8080/eSCL, eSCL
+        "HP Laser MFP 135wg" = http://192.168.1.5:8080/eSCL, eSCL
       '';
     in
     {
@@ -25,7 +25,7 @@
             {
               name = "hp-laser";
               description = "HP Laser MFP 135wg";
-              deviceUri = "ipp://192.168.1.56:631/ipp/print";
+              deviceUri = "ipp://192.168.1.5:631/ipp/print";
               model = "everywhere";
             }
           ];

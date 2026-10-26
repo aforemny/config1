@@ -43,6 +43,19 @@
       "url": "https://codeberg.org/tfc/argunix/archive/e92968c70556ac2d6369d18d0fe86231b1323d59.tar.gz",
       "hash": "sha256-pHGkXpC6f6n++S8Y6kuaqynv7xfWMV8yvHVj5k4tQgo="
     },
+    "artcraft-nix": {
+      "type": "Git",
+      "repository": {
+        "type": "GitHub",
+        "owner": "applicative-systems",
+        "repo": "artcraft-nix"
+      },
+      "branch": "main",
+      "submodules": false,
+      "revision": "f369624c9cf9524182324149cd1dd093772db57c",
+      "url": "https://github.com/applicative-systems/artcraft-nix/archive/f369624c9cf9524182324149cd1dd093772db57c.tar.gz",
+      "hash": "sha256-P/pDwjT+i6ARHSlK/MDzNHKPBUgE4wL1o//Q7LOVBrc="
+    },
     "cake": {
       "type": "Git",
       "repository": {
