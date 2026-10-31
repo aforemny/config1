@@ -52,6 +52,15 @@
         port = 8097;
         recoveryPort = 8098;
         package = pkgs.stalwart_0_16;
+        # The web UI passes the typed account name (<user>@nomath.org) to
+        # Keycloak as login_hint, which pre-fills a username Keycloak does not
+        # know; send only the local part, which is the Keycloak username.
+        webui = package.webui.overrideAttrs (old: {
+          postPatch = (old.postPatch or "") + ''
+            substituteInPlace src/services/auth/oauth.ts \
+              --replace-fail "login_hint: username," "login_hint: username.split('@')[0],"
+          '';
+        });
         dataDir = "/var/lib/stalwart";
 
         configFile = pkgs.writeText "stalwart-config.json" (
@@ -177,15 +186,15 @@
             }
             {
               # Serve the packaged web UI instead of fetching it from GitHub.
-              # Stalwart caches the bundle per Application object, so the
-              # version is part of the match key: an update replaces the object
+              # Stalwart caches the bundle per Application object, so the store
+              # path is part of the match key: any rebuild replaces the object
               # and with it the cached bundle.
               "@type" = "reconcile";
               object = "Application";
               matchOn = [ "description" ];
               value.webui = {
-                description = "Stalwart Web Interface ${package.webui.version}";
-                resourceUrl = "file://${package.webui}/webui.zip";
+                description = "Stalwart Web Interface (${baseNameOf webui})";
+                resourceUrl = "file://${webui}/webui.zip";
                 autoUpdateFrequency = 365 * 24 * 60 * 60 * 1000;
                 oauthClientId = clientId;
                 unpackDirectory = "/var/cache/stalwart/webui";
