@@ -1,0 +1,25 @@
+--- a/khal/khalendar/vdir.py
++++ b/khal/khalendar/vdir.py
+@@ -155,8 +155,20 @@
+         if overwrite:
+             os.rename(src, dest)
+         else:
+-            os.link(src, dest)
+-            os.unlink(src)
++            try:
++                os.link(src, dest)
++            except OSError as e:
++                # Filesystems without hard links (WebDAV mounts such as davfs2
++                # or rclone): rename instead, still refusing to overwrite.
++                if e.errno not in (errno.EPERM, errno.EOPNOTSUPP, errno.ENOSYS):
++                    os.unlink(src)
++                    raise
++                if os.path.lexists(dest):
++                    os.unlink(src)
++                    raise FileExistsError(errno.EEXIST, os.strerror(errno.EEXIST), dest)
++                os.rename(src, dest)
++            else:
++                os.unlink(src)
+ 
+ 
+ class VdirBase:

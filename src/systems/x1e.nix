@@ -300,63 +300,6 @@
             programs.bash.shellAliases.ledger = "hledger";
           }
         )
-        (
-          { config, ... }:
-          {
-            # CalDAV calendar (apostolforemny.de) synced with vdirsyncer; khal
-            # reads it. The password comes from ~/.secrets (src/user-secrets.nix).
-            accounts.calendar = {
-              basePath = ".calendar";
-              accounts."apostolforemny.de".remote = {
-                type = "caldav";
-                url = "apostolforemny.de";
-                userName = "aforemny";
-                vdirsyncer = {
-                  enable = true;
-                  auth = "basic";
-                };
-              };
-            };
-            programs.vdirsyncer.enable = true;
-            home.file.".config/vdirsyncer/calendar.conf".text = ''
-              [general]
-              status_path = "${config.accounts.calendar.basePath}/apostolforemny.de"
-
-              [pair default_calendar]
-              a = "local_calendar"
-              b = "remote_calendar"
-              collections = ["from a", "from b"]
-
-              [storage local_calendar]
-              type = "filesystem"
-              path = "${config.accounts.calendar.basePath}/apostolforemny.de"
-              fileext = ".ics"
-
-              [storage remote_calendar]
-              type = "caldav"
-              url = "https://calendar.apostolforemny.de/calendars/aforemny"
-              username = "aforemny"
-              password.fetch = ["command", "cat", "~/.secrets/apostolforemny.de/aforemny/password"]
-            '';
-            home.file.".config/khal/config".text = ''
-              [calendars]
-                [[default]]
-                  path = ~/.calendar/apostolforemny.de/5d887437-8458-eb9a-b96f-b73821eaa7a2
-                  color = dark blue
-                  priority = 90
-              [default]
-              default_calendar = default
-              highlight_event_days = true
-              [locale]
-              local_timezone = Europe/Berlin
-              default_timezone = Europe/Berlin
-              timeformat = %H:%M
-              dateformat = %d.%m
-              datetimeformat = %d.%m %H:%M
-              longdatetimeformat = %d.%m.%Y %H:%M
-            '';
-          }
-        )
       ];
     }
   ];
