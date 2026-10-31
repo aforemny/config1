@@ -23,7 +23,8 @@
   # with the single loopback listener the plan declares.
   #
   # AUTH. Keycloak's `nomath` realm is the account directory (OIDC). Accounts
-  # are created on first web-UI login as <preferred_username>@nomath.org.
+  # are created on first web-UI login as <preferred_username>@nomath.org; the
+  # web UI only sends a login to Keycloak when the full address is entered.
   # Devices use app passwords created in the web UI (/account); those are
   # checked by Stalwart itself, so CalDAV keeps working without Keycloak. The
   # fallback `admin` (password below) can always log in, also at /admin.
@@ -40,6 +41,7 @@
       }:
       let
         fqdn = "cal.nomath.org";
+        issuer = "https://keycloak.nomath.org/realms/${realm}";
         mailFqdn = "mail1.nomath.org";
         acmeDir = config.security.acme.certs.${mailFqdn}.directory;
         domain = "nomath.org";
@@ -116,7 +118,7 @@
               value.keycloak = {
                 "@type" = "Oidc";
                 description = "Keycloak";
-                issuerUrl = "https://keycloak.nomath.org/realms/${realm}";
+                issuerUrl = issuer;
                 claimUsername = "preferred_username";
                 usernameDomain = domain;
                 claimName = "name";
@@ -129,10 +131,16 @@
               matchOn = [ "name" ];
               value.nomath = {
                 name = domain;
-                directoryId = "#keycloak";
                 # No mail is sent from here; don't mint DKIM keys.
                 dkimManagement."@type" = "Manual";
               };
+            }
+            {
+              # The server-wide directory: a per-domain directoryId is an
+              # enterprise feature and ignored otherwise.
+              "@type" = "update";
+              object = "Authentication";
+              value.directoryId = "#keycloak";
             }
             {
               "@type" = "update";
@@ -208,6 +216,8 @@
           after = [
             "network-online.target"
             "acme-${mailFqdn}.service"
+            "keycloak.service"
+            "nginx.service"
           ];
           wants = [
             "network-online.target"
@@ -245,6 +255,14 @@
               stalwart-cli apply --quiet --no-color --file ${plan}
             kill -INT "$recovery"
             wait "$recovery" || true
+
+            # The Keycloak directory is given up on 30 seconds after Stalwart
+            # starts (until the next restart), and Keycloak boots slower. Wait
+            # for it, but not indefinitely: CalDAV and mail work without it.
+            for _ in $(seq 120); do
+              curl -sfo /dev/null "${issuer}/.well-known/openid-configuration" && break
+              sleep 1
+            done
 
             exec stalwart --config=${configFile}
           '';
