@@ -78,7 +78,12 @@
                 tabs.tabs_are_windows = true;
               };
             };
-            state.directories = [ ".local/share/qutebrowser" ];
+            state.directories = [
+              ".local/share/qutebrowser"
+              # bookmarks/quickmarks live here; persist the directory (not
+              # the files) because qutebrowser saves them by rename.
+              ".config/qutebrowser"
+            ];
           }
           {
             programs.qutebrowser.searchEngines = {

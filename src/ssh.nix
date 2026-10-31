@@ -17,6 +17,8 @@
       ];
     };
     services.fail2ban.enable = true;
+    # Ban database; without it every reboot forgives all banned hosts.
+    state.directories = [ "/var/lib/fail2ban" ];
   };
   # known_hosts (and anything else ssh writes). Persist the directory even
   # though home-manager links keys into it: a persisted known_hosts *file*

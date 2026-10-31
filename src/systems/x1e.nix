@@ -25,6 +25,13 @@
     }
     {
       services.fwupd.enable = true;
+      # Downloaded metadata and pending.db, which records an update staged
+      # for the next boot so its result can be reported afterwards.
+      state.directories = [ "/var/lib/fwupd" ];
+    }
+    {
+      # Last Wi-Fi/Bluetooth soft-block state, restored by systemd-rfkill.
+      state.directories = [ "/var/lib/systemd/rfkill" ];
     }
     (
       { pkgs, ... }:
@@ -277,6 +284,7 @@
             state.directories = [
               ".config/snapmaker-luban"
               ".config/OrcaSlicer"
+              ".local/share/orca-slicer"
             ];
           }
         ];

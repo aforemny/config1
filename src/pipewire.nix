@@ -1,4 +1,10 @@
 {
+  # WirePlumber's remembered default devices, routes and stream volumes.
+  homeManagerModules.pipewire =
+    { osConfig, lib, ... }:
+    lib.mkIf (osConfig.tags.graphical or false) {
+      state.directories = [ ".local/state/wireplumber" ];
+    };
   nixosModules.pipewire =
     { lib, ... }:
     lib.mkMerge [

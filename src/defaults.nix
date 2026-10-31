@@ -1,5 +1,14 @@
 { config, ... }:
 {
+  # Profiles/history of the browsers and viewers installed below.
+  homeManagerModules.defaults =
+    { osConfig, lib, ... }:
+    lib.mkIf (osConfig.tags.graphical or false) {
+      state.directories = [
+        ".config/mozilla"
+        ".local/share/zathura"
+      ];
+    };
   nixosModules.defaults =
     { lib, pkgs, ... }:
     lib.mkMerge [

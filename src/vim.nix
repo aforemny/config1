@@ -38,5 +38,7 @@
         '';
       };
       home.sessionVariables.EDITOR = "vim";
+      # shada (marks, registers, command history) and swap files.
+      state.directories = [ ".local/state/nvim" ];
     };
 }

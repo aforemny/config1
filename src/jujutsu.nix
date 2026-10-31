@@ -16,4 +16,9 @@
         }).wrapper
       ];
     };
+  # Per-repo config (`jj config edit --repo`) and its metadata live outside
+  # the repo, keyed by repo id.
+  homeManagerModules.jujutsu = {
+    state.directories = [ ".config/jj/repos" ];
+  };
 }

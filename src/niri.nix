@@ -62,6 +62,16 @@ in
                 recommendedServices.enable = true;
               };
               services.displayManager.noctalia-greeter.enable = true;
+              # Last session and UI settings. Created by tmpfiles as greeter,
+              # so a bare state.directories string (root:root) won't do.
+              environment.persistence."/persist".directories = [
+                {
+                  directory = "/var/lib/noctalia-greeter";
+                  user = "greeter";
+                  group = "greeter";
+                  mode = "0750";
+                }
+              ];
               # nixpkgs' niri module enables it by default; nothing here uses
               # the Secret Service (secrets live in pass).
               services.gnome.gnome-keyring.enable = false;
