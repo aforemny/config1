@@ -22,6 +22,22 @@
               pool = "zroot";
             };
           };
+          # The disk is shared with macOS, so disko must not partition it:
+          # this partition is carved out of the end of the former (larger)
+          # zroot partition by hand, before disko runs, with
+          #
+          #   sgdisk -d 5 \
+          #     -n 5:15268870:57871477 -t 5:8300 -u 5:6e40af2b-9bec-4703-a5e2-c2c11f190275 \
+          #     -n 7:57871478:59968629 -t 7:8200 -u 7:b999a059-bb4d-4512-80a6-278f0b90d7e7 \
+          #     /dev/nvme0n1
+          disk.swap = {
+            type = "disk";
+            device = "/dev/disk/by-partuuid/b999a059-bb4d-4512-80a6-278f0b90d7e7";
+            content = {
+              type = "swap";
+              randomEncryption = true;
+            };
+          };
           zpool.zroot = {
             type = "zpool";
             rootFsOptions = {

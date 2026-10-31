@@ -103,25 +103,28 @@ in
       }
     ];
   };
+  # Bootable installer image for `m1`, built on nixos-apple-silicon's own
+  # installer configuration (EFI boot via U-Boot, iwd, peripheral firmware
+  # extracted from the ESP at boot). Build with:
+  #   cake build --expr config.isoImages.m1.config.system.build.isoImage
+  # then `dd` it to a USB stick and boot it from the U-Boot boot menu.
   config.isoImages.m1 = import "${pkgs.path}/nixos/lib/eval-config.nix" {
     modules = [
-      #"${sources.disko}/module.nix"
       "${sources.nixos-apple-silicon}/apple-silicon-support"
-      "${sources.nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
+      "${sources.nixos-apple-silicon}/iso-configuration/installer-configuration.nix"
       sshModule
       toolingModule
       consoleIpModule
-      #config.platforms.m1
-      (
-        #  #{ lib, ... }:
-        {
-          #    disabledModules = [
-          #      "${sources.nixos-images}/nix/latest-zfs-kernel.nix"
-          #    ];
-          #    #system.stateVersion = lib.mkForce lib.trivial.release;
-          hardware.asahi.peripheralFirmwareDirectory = ./platforms/m1;
-        })
+      {
+        # The upstream installer disables ZFS in case it does not build
+        # against the Asahi kernel; m1's root pool needs it, and the pinned
+        # ZFS builds against m1's kernel already.
+        boot.supportedFilesystems.zfs = lib.mkForce true;
+        # Same hostId as m1, so its pool imports without `-f`.
+        networking.hostId = config.systems.m1.config.networking.hostId;
+        # The upstream installer reads `nixpkgs.hostPlatform`.
+        nixpkgs.hostPlatform = "aarch64-linux";
+      }
     ];
-    system = "aarch64-linux";
   };
 }
