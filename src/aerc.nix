@@ -34,6 +34,7 @@
                   "posteo.de"
                   "foremny.me"
                   "applicative.systems"
+                  "nomath.org"
                 ]
                 (_: {
                   aerc.enable = true;

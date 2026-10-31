@@ -123,6 +123,40 @@
                 '';
               };
             };
+            # Internal mail on tower's Stalwart (src/stalwart.nix): only reaches
+            # other Stalwart accounts. The password is an app password created
+            # at https://cal.nomath.org/account.
+            "nomath.org" = {
+              address = "aforemny@nomath.org";
+              realName = "Alexander Foremny";
+              primary = false;
+              neomutt = {
+                enable = true;
+                mailboxType = "imap";
+                extraMailboxes = [
+                  "Drafts"
+                  "Sent Items"
+                  "Deleted Items"
+                ];
+              };
+              userName = "aforemny@nomath.org";
+              passwordCommand = "cat ~/.secrets/aforemny@nomath.org";
+              imap = {
+                host = "mail1.nomath.org";
+                port = 993;
+              };
+              smtp = {
+                host = "mail1.nomath.org";
+                port = 465;
+              };
+              # Stalwart's default folder names.
+              folders = {
+                inbox = "INBOX";
+                drafts = "Drafts";
+                sent = "Sent Items";
+                trash = "Deleted Items";
+              };
+            };
             "applicative.systems" = {
               address = "alexander.foremny@applicative.systems";
               realName = "Alexander Foremny";
