@@ -1,6 +1,7 @@
 {
   systems.x1e.modules = [
     {
+      tags.workstation = true;
       networking.hostId = "05cfef68";
       i18n.supportedLocales = [
         "en_US.UTF-8/UTF-8"
