@@ -166,6 +166,19 @@
       "url": "https://github.com/numtide/llm-agents.nix/archive/c9ef0fb47c91abf5c637218b69a018d3b37bb8d9.tar.gz",
       "hash": "sha256-3exhcZ9ebN8cVVP+RJe2omsc0l6Mb6ju/kmqCwJJQpo="
     },
+    "minetest-game": {
+      "type": "Git",
+      "repository": {
+        "type": "GitHub",
+        "owner": "luanti-org",
+        "repo": "minetest_game"
+      },
+      "branch": "master",
+      "submodules": false,
+      "revision": "9e895af6e9feb98332fa1a778001442f5669bc20",
+      "url": "https://github.com/luanti-org/minetest_game/archive/9e895af6e9feb98332fa1a778001442f5669bc20.tar.gz",
+      "hash": "sha256-/wKjCyZVkmUadWJoOJpsgCxh+YLchZNIweZ15nSvvPI="
+    },
     "naersk": {
       "type": "Git",
       "repository": {
