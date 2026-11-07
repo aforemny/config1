@@ -34,6 +34,20 @@
       # Last Wi-Fi/Bluetooth soft-block state, restored by systemd-rfkill.
       state.directories = [ "/var/lib/systemd/rfkill" ];
     }
+    {
+      # Each job may use every core already (cores = 0), so 16 parallel jobs
+      # oversubscribe the 16 threads several times over and starve test
+      # suites into timeouts.
+      nix.settings.max-jobs = 4;
+      # Build in RAM: unpacking and scanning trees of many small files (e.g.
+      # Home Assistant's ~170k) is I/O-bound on ZFS. tmpfs defaults to half of
+      # RAM and can spill into the 64G of swap; a build that outgrows it fails
+      # with ENOSPC.
+      fileSystems."/nix/var/nix/builds" = {
+        fsType = "tmpfs";
+        options = [ "mode=0755" ];
+      };
+    }
     (
       { pkgs, ... }:
       {
