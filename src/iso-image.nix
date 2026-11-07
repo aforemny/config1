@@ -6,6 +6,7 @@
   ...
 }:
 let
+  towerConfig = config.systems.tower.config;
   # The operator's SSH public key (mirrors users/aforemny.nix).
   aforemnyKey = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBvRliydgYlyjKeMAEuVWWvmr82rZBXaA5ZM9U8r0pyN aforemny@x1e"; # TODO
   # Enable the SSH daemon and authorize the operator's key for root on every
@@ -55,6 +56,19 @@ let
         fi
       '';
     };
+  # Reinstalling tower from the installer.
+  towerInstallerModule =
+    { lib, ... }:
+    {
+      # Same hostId as tower, so zdata imports without `-f`.
+      networking.hostId = towerConfig.networking.hostId;
+      # tower's network profile, in case it is not on Ethernet. The PSK is
+      # already in plaintext in src/wifi.nix.
+      networking.wireless.enable = lib.mkForce false;
+      networking.networkmanager.enable = true;
+      networking.networkmanager.ensureProfiles.profiles.apu =
+        towerConfig.networking.networkmanager.ensureProfiles.profiles.apu;
+    };
 in
 {
   options.isoImages = lib.mkOption {
@@ -62,6 +76,9 @@ in
     default = { };
   };
   # TODO `systems.m1.config.system.build.isoImage`
+  # Installer for reinstalling `tower`. Build with:
+  #   cake build --expr config.isoImages.tower.config.system.build.isoImage
+  # then `dd` it to a USB stick.
   config.isoImages.tower = import "${pkgs.path}/nixos/lib/eval-config.nix" {
     modules = [
       #"${sources.disko}/module.nix"
@@ -70,6 +87,7 @@ in
       sshModule
       toolingModule
       consoleIpModule
+      towerInstallerModule
       #config.platforms.m1
       (
         #  #{ lib, ... }:
