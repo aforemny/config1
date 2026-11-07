@@ -15,6 +15,10 @@
       {
         boot.zfs.forceImportRoot = false;
         environment.enableAllTerminfo = true;
+        # Modern TLS everywhere nginx runs: TLSv1.2/1.3, strong ciphers, OCSP
+        # stapling, hybrid-PQ key exchange. No effect on hosts without nginx.
+        # NB: this does NOT add HSTS -- that still needs an explicit add_header.
+        services.nginx.recommendedTlsSettings = true;
         networking.nftables.enable = true;
         networking.useNetworkd = true;
         services.resolved.enable = lib.mkDefault true;
