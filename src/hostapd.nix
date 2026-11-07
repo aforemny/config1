@@ -15,11 +15,11 @@
       # ACS needs) and a reduced capability set (hostapd refuses to start if
       # told to advertise a capability the driver lacks).
       ssid = "apu";
-      password = "my_sekret"; # TODO
+      credentials = "/run/credentials/hostapd.service";
       authentication = {
         mode = "wpa3-sae-transition";
-        saePasswords = [ { inherit password; } ];
-        wpaPassword = password;
+        saePasswords = [ { passwordFile = "${credentials}/wifi-password"; } ];
+        wpaPasswordFile = "${credentials}/wifi-password";
       };
 
       # 802.11r Fast BSS Transition. DISABLED (fastRoaming = false): when a
@@ -34,7 +34,6 @@
       # each other with one shared key, so no per-BSS BSSID is hard-coded.
       fastRoaming = false;
       mobilityDomain = "adc0"; # 2-octet MDID (hex); identical on every BSS
-      ftKey = "7f1d6789d423984d1c4a249eabee0150e830a6cf3eb19337bf557c97ab66802f"; # 256-bit RRB key; TODO: move to a secret
 
       # WPS push-button (PBC) provisioning, for enrollees that cannot be
       # configured by hand -- e.g. the HP Laser MFP, which is 2.4 GHz-only, so
@@ -65,8 +64,16 @@
       #     radioSettings ? { }; }
       hostapd =
         radios:
-        { pkgs, ... }:
+        { config, pkgs, ... }:
         {
+          age.secrets = {
+            wifi-apu-password.rekeyFile = ../secrets/wifi/apu.age;
+            # Shared 256-bit RRB key. Generated on first use: after enabling
+            # fastRoaming, run `agenix generate` and `agenix rekey`.
+            hostapd-ft-key = lib.mkIf fastRoaming {
+              generator.script = { pkgs, ... }: "${pkgs.openssl}/bin/openssl rand -hex 32";
+            };
+          };
           services.hostapd = {
             enable = true;
             # nixpkgs builds hostapd from upstream's defconfig, which leaves
@@ -97,6 +104,16 @@
                   settings = r.radioSettings or { };
                   networks.${r.interface} = {
                     inherit ssid authentication;
+                    dynamicConfigScripts = lib.mkIf fastRoaming {
+                      # Wildcards: learn peer key holders over the bridge on demand.
+                      "30-ftKey" = pkgs.writeShellScript "ft-key" ''
+                        ftKey=$(cat ${credentials}/ft-key)
+                        cat >> "$1" <<EOF
+                        r0kh=ff:ff:ff:ff:ff:ff * $ftKey
+                        r1kh=00:00:00:00:00:00 00:00:00:00:00:00 $ftKey
+                        EOF
+                      '';
+                    };
                     settings = {
                       bridge = "lan";
                       # 802.11k/v: help the client discover and switch to the
@@ -114,9 +131,6 @@
                       ft_over_ds = 0; # over-the-air FT: widest client support
                       ft_psk_generate_local = 1; # PSK roams need no RRB round-trip
                       pmk_r1_push = 1;
-                      # Wildcards: learn peer key holders over the bridge on demand.
-                      r0kh = "ff:ff:ff:ff:ff:ff * ${ftKey}";
-                      r1kh = "00:00:00:00:00:00 00:00:00:00:00:00 ${ftKey}";
                     };
                   };
                 }
@@ -126,6 +140,10 @@
           systemd.services.hostapd = {
             after = [ "sys-subsystem-net-devices-lan.device" ];
             bindsTo = [ "sys-subsystem-net-devices-lan.device" ];
+            serviceConfig.LoadCredential = [
+              "wifi-password:${config.age.secrets.wifi-apu-password.path}"
+            ]
+            ++ lib.optional fastRoaming "ft-key:${config.age.secrets.hostapd-ft-key.path}";
           };
           # hostapd adds each radio to the `lan` bridge once it enters master mode.
           # facter declares every NIC with `useDHCP = true`, so turn that off here.

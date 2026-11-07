@@ -14,6 +14,24 @@
           "/etc/NetworkManager/system-connections"
           "/var/lib/NetworkManager"
         ];
+        age.secrets = {
+          wifi-apu-password.rekeyFile = ../secrets/wifi/apu.age;
+          wifi-fritzbox-password.rekeyFile = ../secrets/wifi/fritzbox.age;
+        };
+        # The profiles' $WIFI_*_PSK references are filled in by envsubst, which
+        # this script runs. Exported from the raw secrets, as hostapd shares
+        # wifi-apu-password and can't read an environment file.
+        systemd.services.NetworkManager-ensure-profiles = {
+          serviceConfig.LoadCredential = [
+            "wifi-apu:${config.age.secrets.wifi-apu-password.path}"
+            "wifi-fritzbox:${config.age.secrets.wifi-fritzbox-password.path}"
+          ];
+          script = lib.mkBefore ''
+            WIFI_APU_PSK=$(cat "$CREDENTIALS_DIRECTORY/wifi-apu")
+            WIFI_FRITZBOX_PSK=$(cat "$CREDENTIALS_DIRECTORY/wifi-fritzbox")
+            export WIFI_APU_PSK WIFI_FRITZBOX_PSK
+          '';
+        };
       })
       {
         networking.networkmanager.ensureProfiles.profiles = {
@@ -36,7 +54,7 @@
             wifi-security = {
               auth-alg = "open";
               key-mgmt = "wpa-psk";
-              psk = "adinaandalex"; # TODO
+              psk = "$WIFI_FRITZBOX_PSK";
             };
           };
           apu = {
@@ -57,7 +75,7 @@
             };
             wifi-security = {
               key-mgmt = "sae";
-              psk = "my_sekret"; # TODO
+              psk = "$WIFI_APU_PSK";
             };
           };
         };

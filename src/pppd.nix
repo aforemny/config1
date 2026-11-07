@@ -1,11 +1,7 @@
 {
   systems.apu.modules = [
     (
-      { lib, pkgs, ... }:
-      let
-        username = "1und1/ui6870-442@online.de"; # TODO
-        password = "7V9RRzam@"; # TODO
-      in
+      { config, lib, ... }:
       {
         systemd.network.networks."40-ppp0" = {
           matchConfig.Name = "ppp0";
@@ -86,8 +82,7 @@
               plugin pppoe.so wan
 
               nic-wan
-              name "${username}"
-              password "${password}"
+              file /run/credentials/pppd-1und1.service/credentials
 
               persist
               nodetach
@@ -105,7 +100,10 @@
             '';
           };
         };
-        systemd.services.pppd-1und1.unitConfig.StartLimitIntervalSec = 0;
+        systemd.services.pppd-1und1 = {
+          unitConfig.StartLimitIntervalSec = 0;
+          serviceConfig.LoadCredential = [ "credentials:${config.age.secrets.isp-1und1-credentials.path}" ];
+        };
         # WAN NIC (enp4s0) tuning for gigabit PPPoE. A single PPPoE session is
         # one outer flow, so the i211's hardware RSS cannot spread it — all WAN
         # RX lands on one core (~90% busy at 1 Gbit download). RPSCPUMask steers
@@ -133,11 +131,9 @@
           };
         };
         networking.interfaces.enp4s0.useDHCP = false;
-        # The whole chap-secrets file (root:root 0400).
-        age.secrets.isp-1und1-chap-secrets = {
-          rekeyFile = ../secrets/isp/1und1/password.age;
-          path = "/etc/ppp/chap-secrets";
-        };
+        # pppd options holding the login (`name "…"` and `password "…"` lines).
+        # 1&1 authenticates with PAP, so this can't be a chap-secrets file.
+        age.secrets.isp-1und1-credentials.rekeyFile = ../secrets/isp/1und1/credentials.age;
       }
     )
   ];

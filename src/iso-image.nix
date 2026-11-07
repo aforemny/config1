@@ -62,12 +62,21 @@ let
     {
       # Same hostId as tower, so zdata imports without `-f`.
       networking.hostId = towerConfig.networking.hostId;
-      # tower's network profile, in case it is not on Ethernet. The PSK is
-      # already in plaintext in src/wifi.nix.
+      # tower's network profile, in case it is not on Ethernet. The installer
+      # can't decrypt the PSK, so it is not stored: join from the console with
+      # `nmcli --ask connection up apu`.
       networking.wireless.enable = lib.mkForce false;
       networking.networkmanager.enable = true;
       networking.networkmanager.ensureProfiles.profiles.apu =
-        towerConfig.networking.networkmanager.ensureProfiles.profiles.apu;
+        let
+          inherit (towerConfig.networking.networkmanager.ensureProfiles.profiles) apu;
+        in
+        apu
+        // {
+          wifi-security = removeAttrs apu.wifi-security [ "psk" ] // {
+            psk-flags = 2; # NM_SETTING_SECRET_FLAG_NOT_SAVED: ask for it
+          };
+        };
     };
 in
 {
