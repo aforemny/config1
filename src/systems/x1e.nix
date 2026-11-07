@@ -278,7 +278,12 @@
           snapmaker-luban
           orca-slicer
         ];
-        nixpkgs.config.permittedInsecurePackages = [ "snapmaker-luban-4.15.0" ];
+        # nixpkgs.config does not merge lists across modules, so this replaces
+        # the radicle-node entry from src/radicle.nix and has to repeat it.
+        nixpkgs.config.permittedInsecurePackages = [
+          "radicle-node-1.10.3"
+          "snapmaker-luban-4.15.0"
+        ];
         unfree.packages = [ "snapmaker-luban" ];
         home-manager.users.aforemny.imports = [
           {

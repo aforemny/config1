@@ -15,7 +15,6 @@
       }
       {
         boot = {
-          initrd.systemd.enable = true;
           initrd.availableKernelModules = [
             "nvme"
             "rtsx_pci_sdmmc"

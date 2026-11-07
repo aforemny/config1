@@ -9,6 +9,11 @@
       ...
     }:
     lib.mkIf (config.tags.graphical or false) {
+      # No fixed release yet, and it needs a breaking protocol change. Node
+      # traffic is unencrypted and Node IDs can be spoofed, which exposes private
+      # repositories, so publish public ones only. See
+      # https://radicle.dev/2026/09/23/disclosure-of-vulnerability-in-network-protocol
+      nixpkgs.config.permittedInsecurePackages = [ "radicle-node-1.10.3" ];
       environment.systemPackages = with pkgs; [
         radicle-node
         radicle-desktop
@@ -59,6 +64,9 @@
             # agenix-rekey.nix), which also writes the committed public key
             # referenced below. Rotate with `agenix generate -f radicle-node-key`.
             age.secrets.radicle-node-key.generator.script = "ssh-ed25519-pub";
+
+            # See the note on nixosModules.radicle above.
+            nixpkgs.config.permittedInsecurePackages = [ "radicle-node-1.10.3" ];
 
             services.radicle = {
               enable = true;

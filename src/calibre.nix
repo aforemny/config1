@@ -57,31 +57,23 @@
   # yourself in the UI is left alone. Same for the calibre-server account
   # `aforemny`: /run/agenix/calibre-server-password.
 
-  # Four defects in nixpkgs 26.11pre1075288's calibre-web, each fatal to a
+  # Three defects in nixpkgs 26.11pre1109744's calibre-web, each fatal to a
   # piece of what this host is for.
   #
-  # 1. It cannot start at all: upstream 0.6.27 declares its console script as
-  #    `calibreweb.__main__:main`, but the tag ships no __main__ module -- the
-  #    launcher is cps.py, which nixpkgs installs as calibreweb/__init__.py and
-  #    which exports main itself. bin/calibre-web dies with
-  #      ModuleNotFoundError: No module named 'calibreweb.__main__'
-  #    before parsing a single argument, so the service and the module's own
-  #    migration ExecStartPre fail alike. nixpkgs master already rewrites the
-  #    entry point to `calibreweb:main`; do the same.
-  # 2. jsonschema -- upstream's `kobo` extra -- is only a check input, so it is
+  # 1. jsonschema -- upstream's `kobo` extra -- is only a check input, so it is
   #    absent at runtime. cps/services/__init__.py swallows the resulting
   #    ImportError and binds SyncToken = None, which does not stop the Kobo
   #    blueprint from registering: the device authenticates fine and then every
   #    sync dies in kobo.py's SyncToken.SyncToken.from_headers(). Pull the
   #    extra into the runtime closure.
-  # 3. services.calibre-web.options.enableKepubify is a no-op on Linux: it
+  # 2. services.calibre-web.options.enableKepubify is a no-op on Linux: it
   #    points config_kepubifypath at ${pkgs.kepubify}/bin/kepubify, but
   #    cps/binary_helper.py only accepts a binary whose *realpath* basename is
   #    `kepubify-linux-64bit`/`-32bit` (the names of upstream's release
   #    downloads), so resolve_binary_path() returns "" and no EPUB is ever
   #    kepubified -- the Kobo silently gets plain EPUBs. Accept the plain name,
   #    which is what upstream already does on FreeBSD.
-  # 4. Same story as (2) for the `ldap` extra: without flask-simpleldap and
+  # 3. Same story as (1) for the `ldap` extra: without flask-simpleldap and
   #    python-ldap, cps/services/__init__.py binds ldap = None, calibre-web
   #    logs "Cannot activate LDAP authentication" and every OPDS Basic login
   #    fails -- config_login_type = LDAP would be dead config.
@@ -92,10 +84,6 @@
   overlays.calibre-web = _: super: {
     calibre-web = super.calibre-web.overrideAttrs (old: {
       postPatch = (old.postPatch or "") + ''
-        substituteInPlace pyproject.toml \
-          --replace-fail 'calibre-web = "calibreweb.__main__:main"' \
-                         'calibre-web = "calibreweb:main"'
-
         substituteInPlace src/calibreweb/cps/binary_helper.py \
           --replace-fail 'SUPPORTED_KEPUBIFY_BINARIES = ("kepubify-linux-64bit", "kepubify-linux-32bit")' \
                          'SUPPORTED_KEPUBIFY_BINARIES = ("kepubify", "kepubify-linux-64bit", "kepubify-linux-32bit")'
