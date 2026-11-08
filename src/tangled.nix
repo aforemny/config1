@@ -154,6 +154,11 @@ in
           "knot"
           "spindle"
         ];
+        # atproto relays and Tangled's indexer only connect over IPv4.
+        dns.dynamicA = [
+          "knot"
+          "spindle"
+        ];
 
         # Created via tmpfiles, not StateDirectory=, so a bare state.directories
         # string would be root:root (same reasoning as src/jellyfin.nix).
