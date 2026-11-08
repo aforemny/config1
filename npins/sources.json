@@ -310,6 +310,18 @@
       "url": "https://github.com/DavHau/sbox/archive/7827da62f09f8cb921da57292407c463481a095a.tar.gz",
       "hash": "sha256-2Li0rEkBHmAOcFkOKhScAhehaiAU9yuDbufB1ZVK8qk="
     },
+    "tangled": {
+      "type": "Git",
+      "repository": {
+        "type": "Git",
+        "url": "https://tangled.org/@tangled.org/core"
+      },
+      "branch": "master",
+      "submodules": false,
+      "revision": "f70c71c7696a1cb0caaf472cca950bbbc74f174f",
+      "url": null,
+      "hash": "sha256-jRgXaKHAmtx352F2VCdn9nbAF/mdk2hyDHZEKosaiWs="
+    },
     "treefmt-nix": {
       "type": "Git",
       "repository": {
