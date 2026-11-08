@@ -57,10 +57,11 @@ in
             };
             atproto.plc_directory = "https://plc.directory";
             contact.email = "aforemny@nomath.org";
-            # Existing SHA-1 repositories (GitHub and most others) cannot be
-            # pushed into these; they need converting first. It only applies
-            # to repositories created after it is set.
-            git.object_format = "sha256";
+            # SHA-1, so existing repositories (this one, GitHub and Radicle
+            # mirrors) can be pushed as they are; SHA-256 and SHA-1 repositories
+            # cannot exchange objects. It only applies to repositories created
+            # after it is set.
+            git.object_format = "sha1";
             # nginx is the only HTTP client; take the client address from it.
             xrpc = {
               trusted_proxy_header = "x-forwarded-for";
