@@ -9,7 +9,24 @@
       }:
       let
         fqdn = "agame.nomath.org";
-        agame = import ../../agame { }; # TODO
+        # agame's own expressions use `src = ./.`, which would copy its 22 GiB
+        # Cargo `target/` into the store (and, through the derivations
+        # src/vulnix.nix ships, onto tower). Import a copy without build
+        # output and VCS data instead; its `./.` then refers to that copy.
+        agameSrc = lib.cleanSourceWith {
+          name = "agame-source";
+          src = ../../agame;
+          filter =
+            path: type:
+            !(builtins.elem (baseNameOf path) [
+              "target"
+              "result"
+              ".git"
+              ".jj"
+              ".direnv"
+            ]);
+        };
+        agame = import "${agameSrc}" { }; # TODO
       in
       {
         systemd.services.agame = {
