@@ -7,7 +7,7 @@
   systems.tower.modules = [
     "${sources.declarative-runtime}/services/keycloak/module.nix"
     (
-      { config, ... }:
+      { config, pkgs, ... }:
       let
         fqdn = "keycloak.nomath.org";
         # Keycloak's own HTTP listener: loopback only, nginx is the only client.
@@ -80,6 +80,50 @@
           '';
         };
         systemd.services.keycloak.serviceConfig.EnvironmentFile = "/run/keycloak-bootstrap-admin/env";
+
+        # Keycloak 26.8 accepts admin API calls only from tokens carrying the
+        # `kc-admin-api` client scope. declarative-runtime's bootstrap mints
+        # its service-account client without it, so every reconcile fails with
+        # 401 on /admin/serverinfo. The reconciler cannot grant the scope to
+        # itself, so give it from the master admin before each reconcile.
+        # Assigning an already-assigned default scope is a no-op.
+        systemd.services.declarative-keycloak-admin-api-scope = {
+          description = "Give the declarative-keycloak client Keycloak's kc-admin-api scope";
+          requires = [ "declarative-keycloak-bootstrap.service" ];
+          after = [ "declarative-keycloak-bootstrap.service" ];
+          requiredBy = [ "declarative-keycloak.service" ];
+          before = [ "declarative-keycloak.service" ];
+          path = [
+            pkgs.curl
+            pkgs.jq
+          ];
+          serviceConfig = {
+            Type = "oneshot";
+            RemainAfterExit = true;
+            DynamicUser = true;
+            LoadCredential = [ "admin-password:${adminPasswordFile}" ];
+          };
+          script = ''
+            set -euo pipefail
+            api=${baseUrl}/admin/realms/master
+            # The `alnum` secret ends in a newline; strip it from the password.
+            token=$(tr -d '\n' < "$CREDENTIALS_DIRECTORY/admin-password" |
+              curl -fsS ${baseUrl}/realms/master/protocol/openid-connect/token \
+                -d grant_type=password -d client_id=admin-cli -d username=admin \
+                --data-urlencode password@- |
+              jq -r .access_token)
+            auth="Authorization: Bearer $token"
+            client=$(curl -fsS -H "$auth" "$api/clients?clientId=${config.services.keycloak.runtime.clientName}" |
+              jq -r '.[0].id // empty')
+            scope=$(curl -fsS -H "$auth" "$api/client-scopes" |
+              jq -r '.[] | select(.name == "kc-admin-api") | .id')
+            if [ -z "$client" ] || [ -z "$scope" ]; then
+              echo "client ${config.services.keycloak.runtime.clientName} or scope kc-admin-api not found" >&2
+              exit 1
+            fi
+            curl -fsS -X PUT -H "$auth" "$api/clients/$client/default-client-scopes/$scope"
+          '';
+        };
 
         services.nginx = {
           enable = true;
