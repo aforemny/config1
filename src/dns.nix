@@ -58,99 +58,117 @@
         zone = "nomath.org";
       in
       lib.mkIf (config.dns.dynamicAAAA != [ ]) {
-        systemd.services.set-hetzner-dns = {
-          serviceConfig.LoadCredential = [
-            "api-key:${config.age.secrets.hetzner-api-key.path}"
-          ];
-          environment.CREDENTIALS_DIRECTORY = "%d";
-          script = lib.getExe (
-            pkgs.writeShellApplication {
-              name = "set-hetzner-dns-script";
-              text = ''
-                # The WAN interface is determined dynamically from the default
-                # IPv6 route rather than hardcoded: the USB WiFi adapter is
-                # renamed by the kernel (e.g. wlp5s0u1i2 -> wlp0s29u1u2i2) when
-                # it is moved to a different port, which would otherwise break
-                # this updater.
-                interface=$(
-                  ip -6 route show default |
-                  awk '{ for (i = 1; i < NF; i++) if ($i == "dev") { print $(i + 1); exit } }'
-                )
-                if [ -z "$interface" ]; then
-                  echo "no default IPv6 route; cannot determine WAN interface" >&2
-                  exit 1
-                fi
-                echo "set-hetzner-dns: WAN interface $interface"
-                # Current global IPv6 addresses as a JSON array of { value: ... }.
-                addrs=$(
-                  ip -6 addr show "$interface" |
-                  grep -i global |
-                  grep -Pv 'temporary|deprecated' |
-                  awk '{print $2}' |
-                  jq -R |
-                  jq -s 'map({ value: sub("/.*"; "") })'
-                )
-                addr_list=$(printf '%s' "$addrs" | jq -r 'map(.value) | join(", ")')
-                if [ "$(printf '%s' "$addrs" | jq 'length')" -eq 0 ]; then
-                  echo "set-hetzner-dns: no global IPv6 address on $interface; refusing to publish empty rrset" >&2
-                  exit 1
-                fi
-                echo "set-hetzner-dns: current global IPv6: $addr_list"
-                token="$(cat "$CREDENTIALS_DIRECTORY"/api-key)"
-                base="https://api.hetzner.cloud/v1/zones/${zone}/rrsets"
-                set_body=$(jq -n --argjson records "$addrs" '{ records: $records }')
-                for name in ${lib.escapeShellArgs config.dns.dynamicAAAA}; do
-                  # Replace the records if the AAAA rrset exists, otherwise create it.
-                  status=$(
-                    curl -sS -o /dev/null -w '%{http_code}' \
-                      -H "Authorization: Bearer $token" \
-                      "$base/$name/AAAA"
+        systemd.services = {
+          set-hetzner-dns = {
+            # oneshot, so that units ordered after it wait for the records.
+            serviceConfig.Type = "oneshot";
+            after = [ "network-online.target" ];
+            wants = [ "network-online.target" ];
+            serviceConfig.LoadCredential = [
+              "api-key:${config.age.secrets.hetzner-api-key.path}"
+            ];
+            environment.CREDENTIALS_DIRECTORY = "%d";
+            script = lib.getExe (
+              pkgs.writeShellApplication {
+                name = "set-hetzner-dns-script";
+                text = ''
+                  # The WAN interface is determined dynamically from the default
+                  # IPv6 route rather than hardcoded: the USB WiFi adapter is
+                  # renamed by the kernel (e.g. wlp5s0u1i2 -> wlp0s29u1u2i2) when
+                  # it is moved to a different port, which would otherwise break
+                  # this updater.
+                  interface=$(
+                    ip -6 route show default |
+                    awk '{ for (i = 1; i < NF; i++) if ($i == "dev") { print $(i + 1); exit } }'
                   )
-                  case "$status" in
-                    200)
-                      curl -fsS -o /dev/null \
+                  if [ -z "$interface" ]; then
+                    echo "no default IPv6 route; cannot determine WAN interface" >&2
+                    exit 1
+                  fi
+                  echo "set-hetzner-dns: WAN interface $interface"
+                  # Current global IPv6 addresses as a JSON array of { value: ... }.
+                  addrs=$(
+                    ip -6 addr show "$interface" |
+                    grep -i global |
+                    grep -Pv 'temporary|deprecated' |
+                    awk '{print $2}' |
+                    jq -R |
+                    jq -s 'map({ value: sub("/.*"; "") })'
+                  )
+                  addr_list=$(printf '%s' "$addrs" | jq -r 'map(.value) | join(", ")')
+                  if [ "$(printf '%s' "$addrs" | jq 'length')" -eq 0 ]; then
+                    echo "set-hetzner-dns: no global IPv6 address on $interface; refusing to publish empty rrset" >&2
+                    exit 1
+                  fi
+                  echo "set-hetzner-dns: current global IPv6: $addr_list"
+                  token="$(cat "$CREDENTIALS_DIRECTORY"/api-key)"
+                  base="https://api.hetzner.cloud/v1/zones/${zone}/rrsets"
+                  set_body=$(jq -n --argjson records "$addrs" '{ records: $records }')
+                  for name in ${lib.escapeShellArgs config.dns.dynamicAAAA}; do
+                    # Replace the records if the AAAA rrset exists, otherwise create it.
+                    status=$(
+                      curl -sS -o /dev/null -w '%{http_code}' \
                         -H "Authorization: Bearer $token" \
-                        -H 'Content-Type: application/json' \
-                        --data "$set_body" \
-                        "$base/$name/AAAA/actions/set_records"
-                      echo "set-hetzner-dns: updated $name.${zone} AAAA -> $addr_list"
-                      ;;
-                    404)
-                      # Low TTL because the address is dynamic.
-                      create_body=$(jq -n --arg name "$name" --argjson records "$addrs" \
-                        '{ name: $name, type: "AAAA", ttl: 60, records: $records }')
-                      curl -fsS -o /dev/null \
-                        -H "Authorization: Bearer $token" \
-                        -H 'Content-Type: application/json' \
-                        --data "$create_body" \
-                        "$base"
-                      echo "set-hetzner-dns: created $name.${zone} AAAA -> $addr_list (ttl 60)"
-                      ;;
-                    *)
-                      echo "set-hetzner-dns: unexpected status $status for $name.${zone}" >&2
-                      exit 1
-                      ;;
-                  esac
-                done
-              '';
-              runtimeInputs = with pkgs; [
-                coreutils
-                curl
-                gawk
-                gnugrep
-                iproute2
-                jq
-              ];
-              inheritPath = false;
-              bashOptions = [
-                "errexit"
-                "noglob"
-                "nounset"
-                "pipefail"
-              ];
-            }
-          );
-        };
+                        "$base/$name/AAAA"
+                    )
+                    case "$status" in
+                      200)
+                        curl -fsS -o /dev/null \
+                          -H "Authorization: Bearer $token" \
+                          -H 'Content-Type: application/json' \
+                          --data "$set_body" \
+                          "$base/$name/AAAA/actions/set_records"
+                        echo "set-hetzner-dns: updated $name.${zone} AAAA -> $addr_list"
+                        ;;
+                      404)
+                        # Low TTL because the address is dynamic.
+                        create_body=$(jq -n --arg name "$name" --argjson records "$addrs" \
+                          '{ name: $name, type: "AAAA", ttl: 60, records: $records }')
+                        curl -fsS -o /dev/null \
+                          -H "Authorization: Bearer $token" \
+                          -H 'Content-Type: application/json' \
+                          --data "$create_body" \
+                          "$base"
+                        echo "set-hetzner-dns: created $name.${zone} AAAA -> $addr_list (ttl 60)"
+                        ;;
+                      *)
+                        echo "set-hetzner-dns: unexpected status $status for $name.${zone}" >&2
+                        exit 1
+                        ;;
+                    esac
+                  done
+                '';
+                runtimeInputs = with pkgs; [
+                  coreutils
+                  curl
+                  gawk
+                  gnugrep
+                  iproute2
+                  jq
+                ];
+                inheritPath = false;
+                bashOptions = [
+                  "errexit"
+                  "noglob"
+                  "nounset"
+                  "pipefail"
+                ];
+              }
+            );
+          };
+        }
+        # Let's Encrypt validates over DNS, so a certificate ordered before its
+        # label's AAAA record exists fails (and the failure is cached for a
+        # while). Order each label's certificate after the records are synced.
+        // lib.listToAttrs (
+          map (label: {
+            name = "acme-order-renew-${label}.${zone}";
+            value = {
+              wants = [ "set-hetzner-dns.service" ];
+              after = [ "set-hetzner-dns.service" ];
+            };
+          }) (lib.filter (label: config.security.acme.certs ? "${label}.${zone}") config.dns.dynamicAAAA)
+        );
         systemd.timers.set-hetzner-dns = {
           wantedBy = [ "timers.target" ];
           timerConfig = {
