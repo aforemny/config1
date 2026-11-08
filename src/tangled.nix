@@ -17,13 +17,29 @@ in
   # STATE. /var/lib/knot holds the repositories, the sealed key store and the
   # SSH host key. The sealed keys are useless without KNOT_MASTER_KEY, which is
   # the knot-env secret below; both together are every repository's identity.
+  #
+  # CI. A spindle at https://spindle.nomath.org runs .tangled/workflows/*.yml;
+  # pick it per repository under Settings -> Pipelines in the web app. It
+  # serves only the owner below and DIDs added with `spindle allowlist add`.
+  # Workflows need `engine: microvm`: the nixery engine needs Docker and the
+  # nixery.tangled.sh image service, and neither is set up here. Secrets and
+  # logs stay in /var/lib/spindle and /var/log/spindle.
   systems.tower.modules = [
     tangled.nixosModules.knot-rs
+    tangled.nixosModules.spindle
     (
-      { config, ... }:
+      {
+        config,
+        lib,
+        pkgs,
+        ...
+      }:
       let
         fqdn = "knot.nomath.org";
         port = 5555;
+        owner = "did:plc:nrbyhbnlvjbyplyw5vpnoghn"; # aforemny.tngl.sh
+        spindleFqdn = "spindle.nomath.org";
+        spindlePort = 6555;
       in
       {
         age.secrets.knot-env.generator.script =
@@ -36,7 +52,7 @@ in
           settings = {
             server = {
               hostname = fqdn;
-              admins = [ "did:plc:nrbyhbnlvjbyplyw5vpnoghn" ]; # aforemny.tngl.sh
+              admins = [ owner ];
               listen_addr = "127.0.0.1:${toString port}";
             };
             atproto.plc_directory = "https://plc.directory";
@@ -53,8 +69,59 @@ in
           };
         };
 
+        # The spindle's identity: the public half goes into its did:web
+        # document. It never makes one itself, and losing it makes the web app
+        # distrust the spindle for a while.
+        age.secrets.spindle-key.generator.script =
+          { pkgs, ... }: "${pkgs.openssl}/bin/openssl ecparam -name prime256v1 -genkey -noout";
+
+        services.tangled.spindle = {
+          enable = true;
+          keyPath = config.age.secrets.spindle-key.path;
+          contact.email = "aforemny@nomath.org";
+          server = {
+            hostname = spindleFqdn;
+            inherit owner;
+            listenAddr = "127.0.0.1:${toString spindlePort}";
+          };
+          # Logs stay on disk, in /var/log/spindle, rather than in S3.
+          artifactStores.s3.bucket = "";
+          pipelines = {
+            # The default 5m is too short for Nix builds.
+            workflowTimeout = "1h";
+            # tower has 16 GiB and serves Jellyfin, Home Assistant and the
+            # rest: room for two 4 GiB VMs, or one large-image VM.
+            microvm.limits.total = {
+              memoryMiB = 8192;
+              vcpus = 6;
+            };
+          };
+        };
+
+        # Only the microvm engine is used; see CI above. Docker would also put
+        # its storage on the rollback rootfs.
+        virtualisation.docker.enable = lib.mkForce false;
+
+        systemd.tmpfiles.rules = [
+          "L+ /var/lib/spindle/images/nixos - - - - ${
+            tangled.packages.${pkgs.stdenv.hostPlatform.system}.spindle-nixos-image
+          }"
+        ];
+
         services.nginx = {
           enable = true;
+          virtualHosts.${spindleFqdn} = {
+            forceSSL = true;
+            enableACME = true;
+            locations."/" = {
+              proxyPass = "http://127.0.0.1:${toString spindlePort}";
+              proxyWebsockets = true; # live logs
+              recommendedProxySettings = true;
+              extraConfig = ''
+                proxy_buffering off;
+              '';
+            };
+          };
           virtualHosts.${fqdn} = {
             forceSSL = true;
             enableACME = true;
@@ -76,8 +143,11 @@ in
           443
         ];
 
-        # Published as knot.nomath.org by src/dns.nix.
-        dns.dynamicAAAA = [ "knot" ];
+        # Published as knot.nomath.org and spindle.nomath.org by src/dns.nix.
+        dns.dynamicAAAA = [
+          "knot"
+          "spindle"
+        ];
 
         # Created via tmpfiles, not StateDirectory=, so a bare state.directories
         # string would be root:root (same reasoning as src/jellyfin.nix).
@@ -90,7 +160,13 @@ in
           }
         ];
 
-        state.directories = [ "/var/lib/acme" ];
+        # The spindle runs as root and gets these from StateDirectory= and
+        # LogsDirectory=, so bare strings are fine.
+        state.directories = [
+          "/var/lib/spindle"
+          "/var/log/spindle"
+          "/var/lib/acme"
+        ];
       }
     )
   ];
