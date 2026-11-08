@@ -144,13 +144,13 @@
       {
         config,
         lib,
-        pkgs,
         ...
       }:
       {
-        # Outgoing mail via msmtp; the SMTP password is aforemny's user secret
-        # (src/user-secrets.nix), read at send time by the (root) setuid
-        # sendmail wrapper.
+        # Outgoing mail via msmtp. The SMTP password is aforemny's user secret
+        # (src/user-secrets.nix), so only aforemny and root can send. No setuid
+        # wrapper to widen that: NixOS refuses setuid scripts, and msmtp
+        # running as root would take -C and other options from any caller.
         programs.msmtp = {
           enable = true;
           setSendmail = true;
@@ -161,21 +161,8 @@
             port = "587";
             user = "a@foremny.me";
             from = "a@foremny.me";
-            passwordeval = "echo $MSMTP_ACCOUNTS_DEFAULT_PASSWORD";
+            passwordeval = "cat ${lib.escapeShellArg config.age.secrets."user-aforemny-a-at-foremny.me".path}";
           };
-        };
-        services.mail.sendmailSetuidWrapper = {
-          setuid = lib.mkForce true;
-          source = lib.mkForce (
-            pkgs.writers.writeDashBin "sendmail" ''
-              set -efu
-              MSMTP_ACCOUNTS_DEFAULT_PASSWORD=$(cat ${
-                lib.escapeShellArg config.age.secrets."user-aforemny-a-at-foremny.me".path
-              }); export MSMTP_ACCOUNTS_DEFAULT_PASSWORD
-              exec ${pkgs.msmtp}/bin/sendmail "$@"
-            ''
-            + "/bin/sendmail"
-          );
         };
       }
     )
