@@ -114,6 +114,12 @@
         # that dir too. Merges with the module's own ReadWritePaths list.
         systemd.services.argunix.serviceConfig.ReadWritePaths = [ cacheDir ];
 
+        # systemd 262 refuses to start a Type=notify-reload unit whose main
+        # process has no handler for its ReloadSignal (SIGHUP), and argunix
+        # installs none: it reloads through ExecReload=argunixctl reload.
+        # Plain notify keeps readiness and that ExecReload.
+        systemd.services.argunix.serviceConfig.Type = lib.mkForce "notify";
+
         networking.firewall.allowedTCPPorts = [
           80
           443
