@@ -1,0 +1,24 @@
+--- a/spindle/engines/microvm/networking.go
++++ b/spindle/engines/microvm/networking.go
+@@ -111,6 +111,9 @@
+ 	}
+ 	args = append(args,
+ 		"--disable-dns",
++		// IPv6 egress through the host. The netns wrapper blackholes the
++		// special-use IPv6 ranges, like the IPv4 ones.
++		"--enable-ipv6",
+ 		"--enable-seccomp",
+ 		"--exit-fd=3",
+ 		"--cidr="+outerSlirpCIDR,
+--- a/spindle/engines/microvm/qemu.go
++++ b/spindle/engines/microvm/qemu.go
+@@ -764,6 +764,9 @@
+ 		netdevOpts.KV("host", innerSlirpHost)
+ 		netdevOpts.KV("dns", innerSlirpDNS)
+ 		netdevOpts.KV("dhcpstart", innerSlirpDHCP)
++		// libslirp's default, spelled out: the guest gets a fec0::/64 address
++		// from slirp's router advertisement and leaves through the netns.
++		netdevOpts.KV("ipv6", "on")
+ 
+ 		b.Opt("-netdev", netdevOpts.String())
+ 		b.Optf(

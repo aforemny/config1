@@ -78,6 +78,11 @@ in
 
         services.tangled.spindle = {
           enable = true;
+          # Upstream gives microVMs IPv4 egress only, which cannot reach
+          # IPv6-only hosts such as ours.
+          package = tangled.packages.${pkgs.stdenv.hostPlatform.system}.spindle.overrideAttrs (old: {
+            patches = old.patches or [ ] ++ [ ./tangled-spindle-ipv6.patch ];
+          });
           keyPath = config.age.secrets.spindle-key.path;
           contact.email = "aforemny@nomath.org";
           server = {
