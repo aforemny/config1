@@ -16,7 +16,10 @@
       nixpkgs.config.permittedInsecurePackages = [ "radicle-node-1.10.3" ];
       environment.systemPackages = with pkgs; [
         radicle-node
-        radicle-desktop
+        # Hydra builds nothing that depends on an insecure package, so this is
+        # built here on every update, and its unit tests assert wall-clock
+        # limits (500 ms, 5 s) that fail when the machine is busy building.
+        (radicle-desktop.overrideAttrs { doCheck = false; })
       ];
     };
 
