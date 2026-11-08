@@ -17,7 +17,11 @@
           # dnsmasq name, because single-label names do not resolve there
           # (systemd-resolved refuses single-label unicast DNS, and the
           # `applicative.internal` search domain sends bare names to Tailscale).
-          dhcp-host = [ "04:0e:3c:82:ce:be,192.168.1.5,printer" ];
+          # tower too: apu forwards its public IPv4 ports there (src/dns.nix).
+          dhcp-host = [
+            "04:0e:3c:82:ce:be,192.168.1.5,printer"
+            "bc:5f:f4:02:53:6e,192.168.1.7,tower"
+          ];
           dhcp-option = [ "option6:dns-server,[::]" ];
           enable-ra = true;
           ra-param = "lan,200,1800";
