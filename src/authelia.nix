@@ -1,5 +1,5 @@
 {
-  systems.family.modules = [
+  systems.apostolforemny.modules = [
     (
       {
         config,

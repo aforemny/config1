@@ -43,7 +43,7 @@
           settings = {
             default_phone_region = "DE";
             maintenance_window_start = 1; # UTC
-            # Notifications go out through maddy on family, as admin@nomath.org,
+            # Notifications go out through maddy on apostolforemny, as admin@nomath.org,
             # like Keycloak's mail (src/jellyfin-ldap.nix). An empty
             # mail_smtpsecure means STARTTLS on 587.
             mail_smtpmode = "smtp";

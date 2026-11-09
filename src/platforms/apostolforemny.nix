@@ -1,5 +1,5 @@
 {
-  platforms.family =
+  platforms.apostolforemny =
     { lib, modulesPath, ... }:
     {
       imports = [ "${modulesPath}/profiles/qemu-guest.nix" ];
@@ -7,7 +7,7 @@
         {
           hardware.facter = {
             enable = true;
-            reportPath = ./family.json;
+            reportPath = ./apostolforemny.json;
           };
           system.stateVersion = "25.11";
           fileSystems."/persist".neededForBoot = true;

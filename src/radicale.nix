@@ -1,5 +1,5 @@
 {
-  # The family CalDAV/CardDAV server on family, published twice:
+  # The family CalDAV/CardDAV server on apostolforemny, published twice:
   #
   #   calendar.apostolforemny.de   behind authelia (src/authelia.nix)
   #   calendar1.apostolforemny.de  straight to radicale
@@ -9,7 +9,7 @@
   # htpasswd file -- so the second vhost is the fallback for a client that
   # cannot get past the gateway. x1e's vdirsyncer uses the first
   # (src/systems/x1e.nix).
-  systems.family.modules = [
+  systems.apostolforemny.modules = [
     (
       {
         config,

@@ -31,7 +31,7 @@ in
   # Both PTRs matter: the AAAA is published and receivers prefer v6, so mail
   # leaves from the v6 address. verifier.port25.com now reports SPF pass,
   # iprev pass, DKIM pass.
-  systems.family.modules = [
+  systems.apostolforemny.modules = [
     (
       { config, ... }:
       {

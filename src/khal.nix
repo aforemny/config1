@@ -16,11 +16,11 @@
   # and discovery would name them after those.
   systems.x1e.modules = [
     {
-      # The family's `shared` Radicale account (src/systems/family.nix), whose
-      # password is only encrypted for family otherwise. Also used by plann
+      # The family's `shared` Radicale account (src/systems/apostolforemny.nix), whose
+      # password is only encrypted for apostolforemny otherwise. Also used by plann
       # (src/plann.nix).
       age.secrets.radicale-shared-password = {
-        rekeyFile = ../secrets/per-host/family/per-user/shared/password.age;
+        rekeyFile = ../secrets/per-host/apostolforemny/per-user/shared/password.age;
         owner = "aforemny";
       };
 
@@ -48,7 +48,7 @@
                 passwordFile = secret "aforemny@nomath.org";
                 calendars.nomath = "default";
               };
-              # family's Radicale (src/radicale.nix), via its direct vhost:
+              # apostolforemny's Radicale (src/radicale.nix), via its direct vhost:
               # the Authelia-gated one is for browsers.
               apostolforemny = {
                 dir = "apostolforemny.de";

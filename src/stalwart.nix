@@ -1,13 +1,13 @@
 {
   # Stalwart at https://cal.nomath.org: calendars (and contacts) shared per
   # calendar between the realm's users, read-only or read-write, set from the
-  # web UI. Radicale on family stays as it is.
+  # web UI. Radicale on apostolforemny stays as it is.
   #
   # MAIL. Internal only, at mail1.nomath.org: IMAPS (993) and submission
   # (465) for the same accounts, delivering between them. There is no SMTP
   # listener on 25 and relaying to other domains is refused, so nothing is
   # received from or sent to the internet -- nomath.org's MX stays maddy on
-  # family, so these addresses do not exist outside Stalwart.
+  # apostolforemny, so these addresses do not exist outside Stalwart.
   #
   # VERSION. 0.16 is pinned on purpose: it keeps all configuration in its
   # database and is managed over JMAP, so nixpkgs' services.stalwart (TOML,

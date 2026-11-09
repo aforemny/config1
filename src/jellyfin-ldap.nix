@@ -165,7 +165,7 @@
             display_name = "nomath.org";
             # Email-based onboarding for Keycloak-managed accounts: users are
             # created with no password and self-serve via "Forgot password".
-            # Requires working outbound mail (SMTP below -> maddy on family).
+            # Requires working outbound mail (SMTP below -> maddy on apostolforemny).
             reset_password_allowed = true;
             verify_email = true;
             login_with_email_allowed = true;

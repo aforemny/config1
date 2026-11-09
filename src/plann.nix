@@ -87,7 +87,7 @@
   };
 
   # On x1e, against tower's Stalwart (src/stalwart.nix, with the app password
-  # neomutt and aerc use) and family's Radicale (src/radicale.nix); `default`
+  # neomutt and aerc use) and apostolforemny's Radicale (src/radicale.nix); `default`
   # covers both, `--config-section` picks one. The URLs must be the calendar
   # homes: the caldav library cannot find the principal from
   # https://cal.nomath.org/, nor through Radicale's Authelia-gated vhost, so
