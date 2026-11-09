@@ -154,4 +154,42 @@ in
       }
     ];
   };
+  # SD card installer for `m1s` (ODROID-M1S). Its eMMC is empty until the
+  # install, so the board boots from SD. The image carries m1s's own U-Boot at
+  # sector 64, like the eMMC will. Build with:
+  #   cake build --expr config.isoImages.m1s.config.system.build.sdImage
+  # then `zstdcat result/sd-image/*.img.zst | dd of=/dev/<sd card> bs=4M`
+  # and watch the serial console (UART header, 1500000 baud).
+  config.isoImages.m1s = import "${pkgs.path}/nixos/lib/eval-config.nix" {
+    modules = [
+      "${sources.nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64-installer.nix"
+      sshModule
+      toolingModule
+      consoleIpModule
+      (
+        { lib, ... }:
+        let
+          uboot = config.systems.m1s.config.system.build.uboot;
+        in
+        {
+          nixpkgs.hostPlatform = "aarch64-linux";
+          # Same hostId as m1s, so its pool imports without `-f`.
+          networking.hostId = config.systems.m1s.config.networking.hostId;
+          # The serial console last, so it becomes /dev/console; HDMI as tty1.
+          boot.kernelParams = lib.mkAfter [
+            "console=tty1"
+            "console=ttyS2,1500000n8"
+          ];
+          sdImage = {
+            # Room for U-Boot in front of the first partition, as on the eMMC
+            # (see platforms/m1s.nix).
+            firmwarePartitionOffset = 16;
+            postBuildCommands = ''
+              dd if=${uboot}/u-boot-rockchip.bin of=$img seek=64 conv=notrunc,fsync
+            '';
+          };
+        }
+      )
+    ];
+  };
 }
