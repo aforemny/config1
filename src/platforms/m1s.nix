@@ -7,6 +7,10 @@
     { config, pkgs, ... }:
     {
       nixpkgs.hostPlatform = "aarch64-linux";
+      hardware.facter = {
+        enable = true;
+        reportPath = ./m1s.json;
+      };
       system.stateVersion = "26.11";
 
       # Mainline U-Boot, which boots the extlinux.conf below. The board has no
@@ -45,9 +49,8 @@
       disko.devices = {
         disk.main = {
           type = "disk";
-          # TODO Pin by /dev/disk/by-id once installed: the eMMC and an SD card
-          # (mmcblk1) may swap numbers.
-          device = "/dev/mmcblk0";
+          # By id: the eMMC and an SD card may swap mmcblk numbers.
+          device = "/dev/disk/by-id/mmc-MMC64G_0x6d669b79";
           content = {
             type = "gpt";
             partitions = {
