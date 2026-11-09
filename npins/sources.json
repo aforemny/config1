@@ -227,9 +227,9 @@
       },
       "branch": "main",
       "submodules": false,
-      "revision": "57a14ae9be0eaf7bf66e95490ed2d7c6f4bd4c9e",
-      "url": "https://github.com/nix-community/nixos-apple-silicon/archive/57a14ae9be0eaf7bf66e95490ed2d7c6f4bd4c9e.tar.gz",
-      "hash": "sha256-QIPbA+dtbY6OFeREyisXu/QsrNhT1jNr4DT7rHWKImE="
+      "revision": "f49c9a13328485186e058b0c11058850af6b5d1a",
+      "url": "https://github.com/nix-community/nixos-apple-silicon/archive/f49c9a13328485186e058b0c11058850af6b5d1a.tar.gz",
+      "hash": "sha256-vMLsA5eX6qMsrXAPuHhvo4K3z4NW09V+DP78L2G4HbQ="
     },
     "nixos-images": {
       "type": "Git",
