@@ -35,6 +35,10 @@
         };
         kernelParams = [ "console=ttyS2,1500000n8" ];
       };
+      # Named in extlinux.conf (FDT rather than FDTDIR), so any U-Boot boots
+      # it: one with an empty fdtfile, like the board's earlier eMMC install,
+      # guesses rockchip-odroid-m1s.dtb, which does not exist.
+      hardware.deviceTree.name = "rockchip/rk3566-odroid-m1s.dtb";
       hardware.enableRedistributableFirmware = true;
       fileSystems."/persist".neededForBoot = true;
 

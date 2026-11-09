@@ -175,6 +175,7 @@ in
           nixpkgs.hostPlatform = "aarch64-linux";
           # Same hostId as m1s, so its pool imports without `-f`.
           networking.hostId = config.systems.m1s.config.networking.hostId;
+          hardware.deviceTree.name = config.systems.m1s.config.hardware.deviceTree.name;
           # The serial console last, so it becomes /dev/console; HDMI as tty1.
           boot.kernelParams = lib.mkAfter [
             "console=tty1"
