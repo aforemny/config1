@@ -24,7 +24,9 @@ in
 // lib.mapAttrs (name: system: {
   imports = system.modules;
   deployment = {
-    targetHost = name;
+    # The bare name resolves through the babel mesh's /etc/hosts entries;
+    # a host off the mesh (apostolforemny) is reached by its FQDN.
+    targetHost = system.config.networking.fqdnOrHostName;
     targetUser = "root";
     # x1e is the workstation: `colmena apply-local --sudo` deploys it.
     allowLocalDeployment = name == "x1e";

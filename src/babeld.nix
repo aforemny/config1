@@ -102,7 +102,9 @@ in
           ip6 saddr fe80::/10 udp dport 6696 accept
         '';
       }
-      # assign hostnames
+      # assign hostnames, for the hosts on the mesh only: one without babeld
+      # (apostolforemny, a cloud VM) never has its address, and must resolve
+      # through DNS instead.
       {
         networking.hosts = lib.mapAttrs' (
           name:
@@ -110,7 +112,7 @@ in
           lib.nameValuePair "${(pkgs.lib.mkIPv6 prefix config.networking.hostName "babel0").address}" [
             config.networking.hostName
           ]
-        ) systems;
+        ) (lib.filterAttrs (_: system: system.config.services.babeld.enable) systems);
       }
     ];
 }
