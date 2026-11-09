@@ -47,6 +47,7 @@
           iw
           jq
           #libreoffice
+          magic-wormhole
           mpv
           nixos-facter
           nm2nix
