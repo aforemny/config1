@@ -58,6 +58,7 @@
           stress-ng
           tcpdump
           texliveFull
+          tldr
           usbutils
           wev
           wf-recorder
