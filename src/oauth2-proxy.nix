@@ -24,6 +24,10 @@
           # absent -- it cannot consume a proxied identity, so SSO in front of
           # it would only stack a second login on the same UI.
           "books.nomath.org"
+          # Private web archive (src/webarchive.nix). The replay service worker
+          # and its range requests for the WACZ are same-origin, so they carry
+          # the session cookie.
+          "archive.nomath.org"
         ];
       in
       {
