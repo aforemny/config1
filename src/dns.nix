@@ -166,6 +166,10 @@ in
             mode = "0700";
           }
         ];
+        # Not inferred by features/persistence.nix (no StateDirectory=).
+        systemd.services.declarative-hetzner-dns.unitConfig.RequiresMountsFor = [
+          "/var/lib/declarative-hetzner-dns"
+        ];
       }
     )
     (

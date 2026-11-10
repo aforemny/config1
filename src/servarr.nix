@@ -100,9 +100,18 @@
         };
 
         systemd.services.sonarr.unitConfig.RequiresMountsFor = [ "/srv/media" ];
-        systemd.services.radarr.unitConfig.RequiresMountsFor = [ "/srv/media" ];
-        systemd.services.lidarr.unitConfig.RequiresMountsFor = [ "/srv/media" ];
-        systemd.services.readarr.unitConfig.RequiresMountsFor = [ "/srv/media" ];
+        systemd.services.radarr.unitConfig.RequiresMountsFor = [
+          "/srv/media"
+          config.services.radarr.dataDir
+        ];
+        systemd.services.lidarr.unitConfig.RequiresMountsFor = [
+          "/srv/media"
+          config.services.lidarr.dataDir
+        ];
+        systemd.services.readarr.unitConfig.RequiresMountsFor = [
+          "/srv/media"
+          config.services.readarr.dataDir
+        ];
         systemd.services.bazarr.unitConfig.RequiresMountsFor = [ "/srv/media" ];
 
         # Confine the download-automation layer to Transmission's VPN namespace:

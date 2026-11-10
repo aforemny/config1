@@ -164,6 +164,11 @@
             mode = "0750";
           }
         ];
+        # Not inferred by features/persistence.nix (no StateDirectory=).
+        systemd.services.nextcloud-cron.unitConfig.RequiresMountsFor = [ "/var/lib/nextcloud" ];
+        systemd.services.nextcloud-setup.unitConfig.RequiresMountsFor = [ "/var/lib/nextcloud" ];
+        systemd.services.nextcloud-update-db.unitConfig.RequiresMountsFor = [ "/var/lib/nextcloud" ];
+        systemd.services.phpfpm-nextcloud.unitConfig.RequiresMountsFor = [ "/var/lib/nextcloud" ];
 
         state.directories = [ "/var/lib/acme" ];
       }
