@@ -258,6 +258,20 @@
       "url": "https://releases.nixos.org/nixos/22.05/nixos-22.05.4694.380be19fbd2d/nixexprs.tar.xz",
       "hash": "sha256-gosYWvsTx3bR91jmpAZ7MT9RywQmPHujSMKh8fIXXts="
     },
+    "nixpkgs-bootvine": {
+      "type": "Git",
+      "repository": {
+        "type": "GitHub",
+        "owner": "NixOS",
+        "repo": "nixpkgs"
+      },
+      "branch": "master",
+      "submodules": false,
+      "revision": "95f4fd37b0edd383afff9325923e9b8ba40330a0",
+      "url": "https://github.com/NixOS/nixpkgs/archive/95f4fd37b0edd383afff9325923e9b8ba40330a0.tar.gz",
+      "hash": "sha256-aOgmGfNWfoS3aE8vQHPuQpA6xYKF89T/dIBXddBCsdU=",
+      "frozen": true
+    },
     "nixpkgs-funkwhale": {
       "type": "Git",
       "repository": {
