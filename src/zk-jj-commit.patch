@@ -1,0 +1,206 @@
+--- /dev/null
++++ b/internal/adapter/jj/jj.go
+@@ -0,0 +1,132 @@
++package jj
++
++import (
++	"bytes"
++	"fmt"
++	"io/fs"
++	"os/exec"
++	"path/filepath"
++	"strings"
++	"time"
++)
++
++// Bin is the jj executable. Override it at link time with
++// -X github.com/zk-org/zk/internal/adapter/jj.Bin=/path/to/jj
++var Bin = "jj"
++
++// index is zk's database, which changes on every run and can be rebuilt from
++// the notes, so it is never committed.
++const index = ".zk/notebook.db"
++
++type fileState struct {
++	size    int64
++	modTime time.Time
++}
++
++// Snapshot records the files of a notebook, to tell which ones a command
++// touched.
++type Snapshot struct {
++	dir   string
++	files map[string]fileState
++}
++
++// Take records the files of the notebook at dir.
++func Take(dir string) Snapshot {
++	return Snapshot{dir: dir, files: walk(dir)}
++}
++
++// Commit records the files touched since the snapshot as a new jj change
++// described by message, leaving any other change in the working copy alone.
++// It does nothing when no file was touched, when jj is not installed, or when
++// the notebook is not inside a jj workspace.
++func (s Snapshot) Commit(message string) error {
++	if s.dir == "" {
++		return nil
++	}
++
++	touched := []string{}
++	after := walk(s.dir)
++	for path, state := range after {
++		if before, ok := s.files[path]; !ok || before.size != state.size || !before.modTime.Equal(state.modTime) {
++			touched = append(touched, path)
++		}
++	}
++	for path := range s.files {
++		if _, ok := after[path]; !ok {
++			touched = append(touched, path)
++		}
++	}
++	if len(touched) == 0 {
++		return nil
++	}
++
++	if _, err := exec.LookPath(Bin); err != nil {
++		return nil
++	}
++	if _, err := run(s.dir, "root"); err != nil {
++		return nil
++	}
++
++	patterns := make([]string, len(touched))
++	for i, path := range touched {
++		patterns[i] = `file:"` + strings.NewReplacer(`\`, `\\`, `"`, `\"`).Replace(path) + `"`
++	}
++	fileset := strings.Join(patterns, " | ")
++
++	// A touched file may be ignored by jj, leaving nothing to commit.
++	changed, err := run(s.dir, "diff", "--name-only", "--", fileset)
++	if err != nil {
++		return err
++	}
++	if strings.TrimSpace(changed) == "" {
++		return nil
++	}
++
++	_, err = run(s.dir, "commit", "--message", message, "--", fileset)
++	return err
++}
++
++// walk returns the state of every file under dir, relative to it, except the
++// index and VCS directories.
++func walk(dir string) map[string]fileState {
++	files := map[string]fileState{}
++	filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
++		if err != nil {
++			return nil
++		}
++		rel, err := filepath.Rel(dir, path)
++		if err != nil {
++			return nil
++		}
++		if d.IsDir() {
++			if d.Name() == ".jj" || d.Name() == ".git" {
++				return filepath.SkipDir
++			}
++			return nil
++		}
++		// Also skips SQLite's -journal/-wal companions of the index.
++		if strings.HasPrefix(filepath.ToSlash(rel), index) {
++			return nil
++		}
++		info, err := d.Info()
++		if err != nil {
++			return nil
++		}
++		files[rel] = fileState{size: info.Size(), modTime: info.ModTime()}
++		return nil
++	})
++	return files
++}
++
++func run(dir string, args ...string) (string, error) {
++	args = append([]string{"--quiet", "--no-pager", "--color", "never"}, args...)
++	cmd := exec.Command(Bin, args...)
++	cmd.Dir = dir
++	var stdout, stderr bytes.Buffer
++	cmd.Stdout = &stdout
++	cmd.Stderr = &stderr
++	if err := cmd.Run(); err != nil {
++		return "", fmt.Errorf("jj %s: %w: %s", strings.Join(args, " "), err, strings.TrimSpace(stderr.String()))
++	}
++	return stdout.String(), nil
++}
+--- a/internal/adapter/lsp/server.go
++++ b/internal/adapter/lsp/server.go
+@@ -14,6 +14,7 @@
+ 	glspserv "github.com/tliron/glsp/server"
+ 	"github.com/tliron/kutil/logging"
+ 	_ "github.com/tliron/kutil/logging/simple"
++	"github.com/zk-org/zk/internal/adapter/jj"
+ 	"github.com/zk-org/zk/internal/cli"
+ 	"github.com/zk-org/zk/internal/core"
+ 	"github.com/zk-org/zk/internal/util"
+@@ -365,7 +366,12 @@
+ 			if err != nil {
+ 				return nil, err
+ 			}
+-			return executeCommandNew(nb, server.documents, context, params.Arguments)
++			before := jj.Take(nb.Path)
++			res, err := executeCommandNew(nb, server.documents, context, params.Arguments)
++			if err == nil {
++				err = before.Commit("zk lsp " + cmdNew)
++			}
++			return res, err
+ 
+ 		case cmdLink:
+ 			nb, err := openNotebook()
+--- a/main.go
++++ b/main.go
+@@ -12,6 +12,7 @@
+ 	"strings"
+ 
+ 	"github.com/alecthomas/kong"
++	"github.com/zk-org/zk/internal/adapter/jj"
+ 	"github.com/zk-org/zk/internal/cli"
+ 	"github.com/zk-org/zk/internal/cli/cmd"
+ 	"github.com/zk-org/zk/internal/core"
+@@ -83,6 +84,12 @@
+ 	err = container.SetCurrentNotebook(searchDirs)
+ 	fatalIfError(err)
+ 
++	// Record the notebook's files, to commit the ones the command touches.
++	var before jj.Snapshot
++	if notebook, err := container.CurrentNotebook(); err == nil {
++		before = jj.Take(notebook.Path)
++	}
++
+ 	// Run the alias or command.
+ 	if isAlias, err := runAlias(container, args); isAlias {
+ 		fatalIfError(err)
+@@ -101,6 +108,11 @@
+ 
+ 		container.Terminal.ForceInput = root.ForceInput
+ 
++		// `init` creates the notebook, so it is not the current one yet.
++		if ctx.Command() == "init" || ctx.Command() == "init <directory>" {
++			before = jj.Take(root.Init.Directory)
++		}
++
+ 		// Index the current notebook except if the user is running the `index`
+ 		// command, otherwise it would hide the stats.
+ 		if ctx.Command() != "index" {
+@@ -114,6 +126,11 @@
+ 		err = ctx.Run(container)
+ 		ctx.FatalIfErrorf(err)
+ 	}
++
++	// Commit the touched files as a jj change described by the zk invocation,
++	// if the notebook is in a jj workspace.
++	message := strings.TrimSpace("zk " + strings.Join(os.Args[1:], " "))
++	fatalIfError(before.Commit(message))
+ }
+ 
+ func options(container *cli.Container) []kong.Option {
