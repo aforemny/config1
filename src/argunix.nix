@@ -1,4 +1,19 @@
 { sources, ... }:
+let
+  # SSH enrollment port of argunix's builder pool on tower (2222, the
+  # default, is taken there).
+  builderPort = 45678;
+
+  # `pkgs.argunix` (the modules' default package) comes from argunix's
+  # overlay, which `callPackage`s package.nix with `naersk` resolved from
+  # the *previous* package set — so the naersk overlay MUST be composed
+  # before argunix's. Keep both in this one ordered list;
+  # `config.overlays` (attrValues, alphabetical) could not guarantee it.
+  overlays = [
+    (import "${sources.naersk}/overlay.nix")
+    (import "${sources.argunix}/nix/overlay.nix")
+  ];
+in
 {
   # argunix (a declarative Nix-only CI daemon) as argunix.nomath.org, scoped
   # to tower (the public-facing host). Reverse-proxied over TLS; the daemon
@@ -21,15 +36,7 @@
       {
         imports = [ "${sources.argunix}/nix/module.nix" ];
 
-        # `pkgs.argunix` (the module's default package) comes from argunix's
-        # overlay, which `callPackage`s package.nix with `naersk` resolved
-        # from the *previous* package set — so the naersk overlay MUST be
-        # composed before argunix's. Keep both in this one ordered list;
-        # `config.overlays` (attrValues, alphabetical) could not guarantee it.
-        nixpkgs.overlays = [
-          (import "${sources.naersk}/overlay.nix")
-          (import "${sources.argunix}/nix/overlay.nix")
-        ];
+        nixpkgs.overlays = overlays;
 
         # GitHub PAT — fine-grained with Contents:read, Commit statuses:rw,
         # Webhooks:rw, Pull requests:read (classic PAT `repo` also works).
@@ -53,8 +60,22 @@
           group = "argunix";
         };
 
+        # Shared builder-enrollment token (m1's agent presents it, see
+        # below). The daemon reads token_path directly, hence owner `argunix`.
+        age.secrets.argunix-builder-enrollment-token = {
+          generator.script = "alnum";
+          owner = "argunix";
+          group = "argunix";
+        };
+
         services.argunix = {
           enable = true;
+          # Builders reach the enrollment listener over mvpn only (see the
+          # interface-scoped firewall rule below), never from the internet.
+          openBuilderFirewall = false;
+          # The coordinator builds nothing itself; m1 is the only builder, so
+          # evaluate for its system (x86_64 checks would have no builder).
+          systems = [ "aarch64-linux" ];
           # Loopback only; nginx below terminates TLS and proxies in.
           listen = "127.0.0.1:${toString port}";
           settings = {
@@ -69,6 +90,15 @@
                 "aforemny/awebframework" = { };
               };
             };
+            builder_enrollment = {
+              # All interfaces, so the daemon needn't wait for mvpn to come up;
+              # the firewall admits it on mvpn alone.
+              listen = "0.0.0.0:${toString builderPort}";
+              token_path = config.age.secrets.argunix-builder-enrollment-token.path;
+            };
+            # Wait for m1 to (re-)enroll after a reconnect instead of failing
+            # jobs straight away (the default 0 fails fast).
+            schedule.builder_wait_seconds = 120;
             # Sign + push every successful build's output closure here so the
             # team substitutes instead of rebuilding. public_url + public_key
             # let the daemon render paste-ready snippets at /cache. public_key
@@ -83,6 +113,8 @@
             ];
           };
         };
+
+        networking.firewall.interfaces.mvpn.allowedTCPPorts = [ builderPort ];
 
         services.nginx = {
           enable = true;
@@ -130,6 +162,9 @@
           "argunix"
           "cache"
         ];
+        # GitHub delivers webhooks over IPv4 only, so the webhook endpoint
+        # also needs an A record (apu's address, 80/443 forwarded to tower).
+        dns.dynamicA = [ "argunix" ];
 
         # `/var/lib/argunix` (sqlite DB, build logs, work dirs) is created and
         # chowned to the static `argunix` user by the unit's
@@ -152,6 +187,41 @@
             mode = "0755";
           }
         ];
+      }
+    )
+  ];
+
+  # m1 is argunix's builder: the coordinator on tower builds nothing itself,
+  # and tower is too loaded to build. The agent dials tower over mvpn, so it
+  # works off the LAN too, and runs builds through m1's own nix-daemon.
+  systems.m1.modules = [
+    (
+      { config, ... }:
+      {
+        imports = [ "${sources.argunix}/nix/builder-module.nix" ];
+        nixpkgs.overlays = overlays;
+
+        # Same generated token as tower's; the agent gets it through
+        # LoadCredential=, which reads as root, so root ownership is fine.
+        age.secrets.argunix-builder-enrollment-token.rekeyFile = ../secrets/generated/argunix-builder-enrollment-token.age;
+
+        # One CI build at a time: m1 has 8 GB of RAM and is a desktop (see
+        # systems/m1.nix). That build still gets every core.
+        services.argunix-builder = {
+          enable = true;
+          argunixHost = "10.77.0.1"; # tower on mvpn
+          argunixPort = builderPort;
+          enrollmentTokenFile = config.age.secrets.argunix-builder-enrollment-token.path;
+          maxJobs = 1;
+        };
+
+        # Keep the desktop responsive while CI builds run.
+        nix.daemonCPUSchedPolicy = "idle";
+        nix.daemonIOSchedClass = "idle";
+
+        # Agent's ed25519 identity (enrolled pubkey); StateDirectory=
+        # chowns it, so a bare-string bind-mount self-heals.
+        state.directories = [ "/var/lib/argunix-builder" ];
       }
     )
   ];
