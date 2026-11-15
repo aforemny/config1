@@ -5,7 +5,7 @@
   # at 1500000 baud. Mainline U-Boot (pinebook-pro-rk3399_defconfig) and
   # mainline Linux (rockchip/rk3399-pinebook-pro.dtb) support it.
   platforms.pinebookpro =
-    { config, pkgs, ... }:
+    { lib, pkgs, ... }:
     {
       nixpkgs.hostPlatform = "aarch64-linux";
       # TODO Enable once the report exists:
@@ -19,8 +19,7 @@
       # Mainline U-Boot in the SPI flash, so booting does not depend on what
       # is on the eMMC (the boot ROM tries SPI before eMMC and SD). It boots
       # systemd-boot from the ESP through its EFI implementation. Flash it from
-      # the installer (see src/iso-image.nix), which runs the same U-Boot from
-      # the SD card:
+      # the installer (see src/iso-image.nix):
       #
       #   flash-spi-uboot
       #
@@ -80,6 +79,12 @@
       hardware.deviceTree.name = "rockchip/rk3399-pinebook-pro.dtb";
       # WiFi/Bluetooth (AP6256, BCM43456) firmware and its board nvram.
       hardware.enableRedistributableFirmware = true;
+      # brcmfmac can't do SAE (WPA3) with this chip: "Failed to select
+      # authenticated key management type". apu runs WPA3 transition mode, so
+      # WPA2-PSK with the same password works. The installer copies this
+      # profile.
+      networking.networkmanager.ensureProfiles.profiles.apu.wifi-security.key-mgmt =
+        lib.mkForce "wpa-psk";
       hardware.graphics.enable = true;
       services.libinput.enable = true;
       fileSystems."/persist".neededForBoot = true;

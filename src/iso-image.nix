@@ -59,23 +59,19 @@ let
   # A host's `apu` WiFi profile on the installer. The installer can't decrypt
   # the PSK, so it is not stored: join from the console with
   # `nmcli --ask connection up apu`.
-  apuWifiModule =
-    hostConfig:
-    { lib, ... }:
-    {
-      networking.wireless.enable = lib.mkForce false;
-      networking.networkmanager.enable = true;
-      networking.networkmanager.ensureProfiles.profiles.apu =
-        let
-          inherit (hostConfig.networking.networkmanager.ensureProfiles.profiles) apu;
-        in
-        apu
-        // {
-          wifi-security = removeAttrs apu.wifi-security [ "psk" ] // {
-            psk-flags = 2; # NM_SETTING_SECRET_FLAG_NOT_SAVED: ask for it
-          };
+  apuWifiModule = hostConfig: {
+    networking.networkmanager.enable = true;
+    networking.networkmanager.ensureProfiles.profiles.apu =
+      let
+        inherit (hostConfig.networking.networkmanager.ensureProfiles.profiles) apu;
+      in
+      apu
+      // {
+        wifi-security = removeAttrs apu.wifi-security [ "psk" ] // {
+          psk-flags = 2; # NM_SETTING_SECRET_FLAG_NOT_SAVED: ask for it
         };
-    };
+      };
+  };
   # Reinstalling tower from the installer.
   towerInstallerModule = {
     imports = [
@@ -200,12 +196,13 @@ in
       )
     ];
   };
-  # SD card installer for `pinebookpro`, the target for nixos-anywhere. It
-  # carries pinebookpro's own U-Boot at sector 64 and boots once the boot ROM
-  # gets to the SD card: with an empty SPI flash and the eMMC switched off
-  # (the eMMC switch on the mainboard) or empty. Build with:
-  #   cake build --expr config.isoImages.pinebookpro.config.system.build.sdImage
-  # then `zstdcat result/sd-image/*.img.zst | dd of=/dev/<sd card> bs=4M`.
+  # USB installer for `pinebookpro`, the target for nixos-anywhere. An EFI
+  # ISO, so any firmware with EFI boots it: Tow-Boot or the U-Boot from
+  # platforms/pinebookpro.nix in the SPI flash. (An old Tow-Boot fails on
+  # extlinux, as it places the initrd inside the kernel.) GRUB keeps the
+  # firmware's device tree. Build with:
+  #   cake build --expr config.isoImages.pinebookpro.config.system.build.isoImage
+  # then `dd if=result/iso/*.iso of=/dev/<usb stick> bs=4M`.
   # The Pinebook Pro has no Ethernet: join WiFi from the console with
   # `nmcli --ask connection up apu` (or use a USB-C adapter), and put U-Boot
   # into the SPI flash with `flash-spi-uboot`. Then, from x1e, mint the host
@@ -223,7 +220,7 @@ in
   # and delete host/ afterwards.
   config.isoImages.pinebookpro = import "${pkgs.path}/nixos/lib/eval-config.nix" {
     modules = [
-      "${sources.nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64-installer.nix"
+      "${sources.nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
       sshModule
       toolingModule
       consoleIpModule
@@ -238,7 +235,6 @@ in
           nixpkgs.hostPlatform = "aarch64-linux";
           # Same hostId as pinebookpro, so its pool imports without `-f`.
           networking.hostId = pinebookpro.networking.hostId;
-          hardware.deviceTree.name = pinebookpro.hardware.deviceTree.name;
           hardware.enableRedistributableFirmware = true;
           boot.kernelParams = lib.mkAfter pinebookpro.boot.kernelParams;
           environment.systemPackages = [
@@ -251,13 +247,6 @@ in
               '';
             })
           ];
-          sdImage = {
-            # Room for U-Boot in front of the first partition (sector 64).
-            firmwarePartitionOffset = 16;
-            postBuildCommands = ''
-              dd if=${uboot}/u-boot-rockchip.bin of=$img seek=64 conv=notrunc,fsync
-            '';
-          };
         }
       )
     ];
