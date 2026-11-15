@@ -56,20 +56,18 @@ let
         fi
       '';
     };
-  # Reinstalling tower from the installer.
-  towerInstallerModule =
+  # A host's `apu` WiFi profile on the installer. The installer can't decrypt
+  # the PSK, so it is not stored: join from the console with
+  # `nmcli --ask connection up apu`.
+  apuWifiModule =
+    hostConfig:
     { lib, ... }:
     {
-      # Same hostId as tower, so zdata imports without `-f`.
-      networking.hostId = towerConfig.networking.hostId;
-      # tower's network profile, in case it is not on Ethernet. The installer
-      # can't decrypt the PSK, so it is not stored: join from the console with
-      # `nmcli --ask connection up apu`.
       networking.wireless.enable = lib.mkForce false;
       networking.networkmanager.enable = true;
       networking.networkmanager.ensureProfiles.profiles.apu =
         let
-          inherit (towerConfig.networking.networkmanager.ensureProfiles.profiles) apu;
+          inherit (hostConfig.networking.networkmanager.ensureProfiles.profiles) apu;
         in
         apu
         // {
@@ -78,6 +76,15 @@ let
           };
         };
     };
+  # Reinstalling tower from the installer.
+  towerInstallerModule = {
+    imports = [
+      # In case it is not on Ethernet.
+      (apuWifiModule towerConfig)
+    ];
+    # Same hostId as tower, so zdata imports without `-f`.
+    networking.hostId = towerConfig.networking.hostId;
+  };
 in
 {
   options.isoImages = lib.mkOption {
@@ -184,6 +191,68 @@ in
           sdImage = {
             # Room for U-Boot in front of the first partition, as on the eMMC
             # (see platforms/m1s.nix).
+            firmwarePartitionOffset = 16;
+            postBuildCommands = ''
+              dd if=${uboot}/u-boot-rockchip.bin of=$img seek=64 conv=notrunc,fsync
+            '';
+          };
+        }
+      )
+    ];
+  };
+  # SD card installer for `pinebookpro`, the target for nixos-anywhere. It
+  # carries pinebookpro's own U-Boot at sector 64 and boots once the boot ROM
+  # gets to the SD card: with an empty SPI flash and the eMMC switched off
+  # (the eMMC switch on the mainboard) or empty. Build with:
+  #   cake build --expr config.isoImages.pinebookpro.config.system.build.sdImage
+  # then `zstdcat result/sd-image/*.img.zst | dd of=/dev/<sd card> bs=4M`.
+  # The Pinebook Pro has no Ethernet: join WiFi from the console with
+  # `nmcli --ask connection up apu` (or use a USB-C adapter), and put U-Boot
+  # into the SPI flash with `flash-spi-uboot`. Then, from x1e, mint the host
+  # key first, so agenix can decrypt on the first boot (rollback-rootfs: it
+  # reads the key from /persist):
+  #   mkdir -p host/persist/etc/ssh
+  #   ssh-keygen -t ed25519 -N "" -f host/persist/etc/ssh/ssh_host_ed25519_key
+  # add its .pub to src/host-keys.nix, `agenix rekey`, then
+  #   cake build --expr config.systems.pinebookpro.config.system.build.diskoScript
+  #   cake build --expr config.systems.pinebookpro.config.system.build.toplevel
+  #   nixos-anywhere --store-paths <diskoScript> <toplevel> \
+  #     --extra-files host \
+  #     --disk-encryption-keys /tmp/secret.key <(read -rs p; printf %s "$p") \
+  #     root@<ip>
+  # and delete host/ afterwards.
+  config.isoImages.pinebookpro = import "${pkgs.path}/nixos/lib/eval-config.nix" {
+    modules = [
+      "${sources.nixpkgs}/nixos/modules/installer/sd-card/sd-image-aarch64-installer.nix"
+      sshModule
+      toolingModule
+      consoleIpModule
+      (apuWifiModule config.systems.pinebookpro.config)
+      (
+        { lib, pkgs, ... }:
+        let
+          pinebookpro = config.systems.pinebookpro.config;
+          uboot = pinebookpro.system.build.uboot;
+        in
+        {
+          nixpkgs.hostPlatform = "aarch64-linux";
+          # Same hostId as pinebookpro, so its pool imports without `-f`.
+          networking.hostId = pinebookpro.networking.hostId;
+          hardware.deviceTree.name = pinebookpro.hardware.deviceTree.name;
+          hardware.enableRedistributableFirmware = true;
+          boot.kernelParams = lib.mkAfter pinebookpro.boot.kernelParams;
+          environment.systemPackages = [
+            (pkgs.writeShellApplication {
+              name = "flash-spi-uboot";
+              runtimeInputs = [ pkgs.mtdutils ];
+              text = ''
+                echo "Flashing $(cat /sys/class/mtd/mtd0/name) ($(cat /sys/class/mtd/mtd0/size) bytes)"
+                flashcp --verbose ${uboot}/u-boot-rockchip-spi.bin /dev/mtd0
+              '';
+            })
+          ];
+          sdImage = {
+            # Room for U-Boot in front of the first partition (sector 64).
             firmwarePartitionOffset = 16;
             postBuildCommands = ''
               dd if=${uboot}/u-boot-rockchip.bin of=$img seek=64 conv=notrunc,fsync
