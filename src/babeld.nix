@@ -13,9 +13,9 @@ in
     let
       networkInterfaces = (
         lib.filter (unix_device_name: unix_device_name != "lo") (
-          lib.concatMap (
-            interface: interface.unix_device_names
-          ) config.hardware.facter.report.hardware.network_interface
+          lib.concatMap (interface: interface.unix_device_names) (
+            config.hardware.facter.report.hardware.network_interface or [ ]
+          )
         )
       );
       # apu's two USB Ethernet dongles are extra babel mesh links. They are in
