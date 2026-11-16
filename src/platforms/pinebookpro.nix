@@ -8,12 +8,10 @@
     { lib, pkgs, ... }:
     {
       nixpkgs.hostPlatform = "aarch64-linux";
-      # TODO Enable once the report exists:
-      #   nixos-facter -o src/platforms/pinebookpro.json   (on the installer)
-      #hardware.facter = {
-      #  enable = true;
-      #  reportPath = ./pinebookpro.json;
-      #};
+      hardware.facter = {
+        enable = true;
+        reportPath = ./pinebookpro.json;
+      };
       system.stateVersion = "26.11";
 
       # Mainline U-Boot in the SPI flash, so booting does not depend on what
@@ -92,9 +90,7 @@
       disko.devices = {
         disk.main = {
           type = "disk";
-          # The eMMC: rk3399.dtsi's mmc aliases pin the numbering (SD card is
-          # mmcblk1). With the NVMe adapter, the pool could go there instead.
-          device = "/dev/mmcblk2";
+          device = "/dev/disk/by-id/mmc-DA4064_0xe7b1210f";
           content = {
             type = "gpt";
             partitions = {
