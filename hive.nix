@@ -30,8 +30,11 @@ in
     targetUser = "root";
     # x1e is the workstation: `colmena apply-local --sudo` deploys it.
     allowLocalDeployment = name == "x1e";
-    # Build on the deploying machine, like cake deploy (m1 builds via
-    # binfmt emulation, see src/emulated-systems.nix).
-    buildOnTarget = false;
+    # Build on the deploying machine, like cake deploy -- except m1 when
+    # deployed from x86_64-linux: binfmt emulation (src/emulated-systems.nix)
+    # takes hours for webkitgtk or the Asahi kernel, which m1 builds natively.
+    # (Non-flake evaluation is impure, so builtins.currentSystem is the
+    # deploying machine.)
+    buildOnTarget = name == "m1" && builtins.currentSystem == "x86_64-linux";
   };
 }) systems
