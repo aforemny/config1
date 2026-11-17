@@ -1,4 +1,4 @@
-{ sources, ... }:
+{ lib, sources, ... }:
 {
   nixosModules.bootvine =
     { pkgs, ... }:
@@ -15,4 +15,8 @@
         };
       };
     };
+
+  # tower's boot asks for zdata's ZFS passphrase on the console, which
+  # bootvine's live tree draws over.
+  systems.tower.modules = [ { services.bootvine.enable = lib.mkForce false; } ];
 }
