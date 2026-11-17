@@ -28,6 +28,12 @@
               collection_type = "tvshows";
               paths = [ "/srv/media/library/tv" ];
             };
+            # Pinchflat's downloads (src/servarr.nix), one show per channel
+            # from the NFOs it writes.
+            libraries.youtube = {
+              collection_type = "tvshows";
+              paths = [ "/srv/media/library/youtube" ];
+            };
 
             # Transcode on the Quadro T400 (TU117), not the CPU: the software
             # path drives the i7-3770 to TjMax and throttles every core. This

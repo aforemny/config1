@@ -17,6 +17,7 @@
           "lidarr.nomath.org"
           "readarr.nomath.org"
           "bazarr.nomath.org"
+          "pinchflat.nomath.org"
           # calibre-web. Only its browser surface ends up gated: src/calibre.nix
           # turns auth_request off for the Kobo sync and OPDS locations, which
           # authenticate by sync token resp. HTTP Basic and cannot follow an

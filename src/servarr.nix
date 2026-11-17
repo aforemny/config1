@@ -1,6 +1,6 @@
 {
-  # PERMISSIONS: Transmission, Sonarr, Radarr, Lidarr, Readarr, Bazarr and
-  # Jellyfin all run with
+  # PERMISSIONS: Transmission, Sonarr, Radarr, Lidarr, Readarr, Bazarr,
+  # Pinchflat and Jellyfin all run with
   # 'transmission' as their PRIMARY group -- PrivateUsers=true (on every one of
   # these units) maps only the unit's own user+group into its namespace, so a
   # merely-supplementary shared group would appear as 'nobody' and grant no
@@ -24,6 +24,11 @@
   #     VPN namespace, so that is an intra-namespace address -- see
   #     src/transmission.nix), category "tv" / "movies" / "music" / "books";
   #     add the root folder /srv/media/library/tv / movies / music / readarr.
+  #   * Pinchflat (https://pinchflat.nomath.org): add YouTube channels as
+  #     sources. Its media profile's output template must give Jellyfin's
+  #     show layout (e.g. the "Media Center (Plex, Jellyfin, Kodi)" preset),
+  #     with NFO and thumbnail downloads on; it writes into
+  #     /srv/media/library/youtube, Jellyfin's "youtube" library.
   #   * Bazarr (https://bazarr.nomath.org): under Settings -> Sonarr / Radarr
   #     connect to localhost:8989 / localhost:7878 with their API keys; add
   #     subtitle providers and a language profile.
@@ -36,7 +41,12 @@
   # Readarr is retired upstream (2025); its metadata lookups may fail.
   systems.tower.modules = [
     (
-      { config, lib, ... }:
+      {
+        config,
+        lib,
+        pkgs,
+        ...
+      }:
       let
         # Same VPN namespace as Transmission (src/transmission.nix).
         ns = "tvpn";
@@ -48,6 +58,7 @@
           lidarr = 8686;
           readarr = 8787;
           bazarr = 6767;
+          pinchflat = 8945;
         };
         externalAuth = {
           method = "External";
@@ -105,6 +116,28 @@
         # RuntimeDirectory only), so nothing to persist; no UI, so no vhost.
         services.flaresolverr.enable = true;
 
+        # YouTube downloader (yt-dlp) for channels and playlists.
+        services.pinchflat = {
+          enable = true;
+          # nixpkgs marks upstream Pinchflat insecure (CVEs in its
+          # dependencies) and points at this maintained fork, a drop-in for
+          # the same module.
+          package = pkgs.pinchflat-ngx;
+          group = "transmission";
+          port = arr.pinchflat;
+          mediaDir = "/srv/media/library/youtube";
+          secretsFile = config.age.secrets.pinchflat-env.path;
+        };
+        # Read by systemd (as root) as EnvironmentFile=. SECRET_KEY_BASE needs at
+        # least 64 bytes. No BASIC_AUTH_*: oauth2-proxy (src/oauth2-proxy.nix)
+        # gates the vhost.
+        age.secrets.pinchflat-env.generator.script =
+          { pkgs, ... }:
+          "printf 'SECRET_KEY_BASE=%s\\n' \"$(${pkgs.pwgen}/bin/pwgen -s 96 1)\"";
+        # Group-writable like Sonarr/Radarr below, so the downloads stay
+        # manageable by the shared group.
+        systemd.services.pinchflat.serviceConfig.UMask = "0002";
+
         systemd.services.sonarr.unitConfig.RequiresMountsFor = [ "/srv/media" ];
         systemd.services.radarr.unitConfig.RequiresMountsFor = [
           "/srv/media"
@@ -119,6 +152,7 @@
           config.services.readarr.dataDir
         ];
         systemd.services.bazarr.unitConfig.RequiresMountsFor = [ "/srv/media" ];
+        systemd.services.pinchflat.unitConfig.RequiresMountsFor = [ "/srv/media" ];
 
         # Confine the download-automation layer to Transmission's VPN namespace:
         # indexer searches and .torrent/magnet fetches egress through the
@@ -152,6 +186,13 @@
           enable = true;
           vpnNamespace = ns;
         };
+        # YouTube often answers VPN exit IPs with "Sign in to confirm you're not
+        # a bot"; if downloads fail that way, drop this (or give yt-dlp
+        # cookies in Pinchflat's settings).
+        systemd.services.pinchflat.vpnConfinement = {
+          enable = true;
+          vpnNamespace = ns;
+        };
         # Same namespace as Prowlarr: the clearance cookies FlareSolverr hands
         # back are bound to the solving IP, so it must share Prowlarr's VPN
         # exit; Prowlarr reaches it at localhost:8191 intra-namespace.
@@ -182,6 +223,7 @@
           "d /srv/media/library/tv 2770 root transmission -"
           "d /srv/media/library/movies 2770 root transmission -"
           "d /srv/media/library/readarr 2770 root transmission -"
+          "d /srv/media/library/youtube 2770 root transmission -"
         ];
 
         services.nginx = {
@@ -215,8 +257,8 @@
         # Radarr, Lidarr, Readarr and Bazarr create their state dirs via
         # tmpfiles (not StateDirectory=), so under impermanence the bind-mount
         # root would default to root:root and they could not write their
-        # dataDir. Persist them with explicit ownership. Sonarr uses
-        # StateDirectory= and Prowlarr is DynamicUser (both get chowned by
+        # dataDir. Persist them with explicit ownership. Sonarr and Pinchflat use
+        # StateDirectory= and Prowlarr is DynamicUser (all get chowned by
         # systemd), so bare strings work there.
         environment.persistence."/persist".directories =
           map
@@ -235,6 +277,7 @@
 
         state.directories = [
           "/var/lib/sonarr"
+          "/var/lib/pinchflat"
           "/var/lib/private/prowlarr"
           "/var/lib/acme"
         ];
