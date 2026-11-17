@@ -90,10 +90,9 @@ let
       }
     );
 
-  # oneshot, so that units ordered after it wait for the records.
-  # network-online.target is reached on IPv4 alone (NetworkManager-wait-online
-  # does not wait for SLAAC), so at boot the IPv6 default route may not exist
-  # yet; retry instead of failing until the next timer tick.
+  # oneshot, so that units ordered after it wait for the records. Restart is
+  # a fallback for a failed run (e.g. the API is unreachable), so the next try
+  # does not wait for the next timer tick.
   updaterService = hetznerApiKey: script: {
     serviceConfig.Type = "oneshot";
     serviceConfig.Restart = "on-failure";
@@ -195,19 +194,32 @@ in
             # renamed by the kernel (e.g. wlp5s0u1i2 -> wlp0s29u1u2i2) when
             # it is moved to a different port, which would otherwise break
             # this updater.
+            #
+            # At boot network-online.target is reached on IPv4 alone, before
+            # SLAAC has installed the route and address, so wait up to 60s for
+            # them (a tentative address is still in DAD, so it does not count).
             discover = ''
-              interface=$(
-                ip -6 route show default |
-                awk '{ for (i = 1; i < NF; i++) if ($i == "dev") { print $(i + 1); exit } }'
-              )
-              if [ -z "$interface" ]; then
-                echo "no default IPv6 route; cannot determine WAN interface" >&2
-                exit 1
-              fi
-              ip -6 addr show "$interface" |
-                grep -i global |
-                grep -Pv 'temporary|deprecated' |
-                awk '{print $2}'
+              for _ in $(seq 60); do
+                interface=$(
+                  ip -6 route show default |
+                  awk '{ for (i = 1; i < NF; i++) if ($i == "dev") { print $(i + 1); exit } }'
+                )
+                if [ -n "$interface" ]; then
+                  addrs=$(
+                    ip -6 addr show "$interface" |
+                      grep -i global |
+                      grep -Pv 'temporary|deprecated|tentative' |
+                      awk '{print $2}' || true
+                  )
+                  if [ -n "$addrs" ]; then
+                    printf '%s\n' "$addrs"
+                    exit 0
+                  fi
+                fi
+                sleep 1
+              done
+              echo "no global IPv6 address on the default route's interface after 60s" >&2
+              exit 1
             '';
           });
         }
