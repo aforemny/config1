@@ -91,8 +91,13 @@ let
     );
 
   # oneshot, so that units ordered after it wait for the records.
+  # network-online.target is reached on IPv4 alone (NetworkManager-wait-online
+  # does not wait for SLAAC), so at boot the IPv6 default route may not exist
+  # yet; retry instead of failing until the next timer tick.
   updaterService = hetznerApiKey: script: {
     serviceConfig.Type = "oneshot";
+    serviceConfig.Restart = "on-failure";
+    serviceConfig.RestartSec = "10s";
     after = [ "network-online.target" ];
     wants = [ "network-online.target" ];
     serviceConfig.LoadCredential = [ "api-key:${hetznerApiKey}" ];
