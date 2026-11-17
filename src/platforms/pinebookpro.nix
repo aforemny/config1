@@ -133,14 +133,8 @@
             xattr = "sa";
             encryption = "aes-256-gcm";
             keyformat = "passphrase";
-            # nixos-anywhere uploads the passphrase here for the install
-            # (--disk-encryption-keys /tmp/secret.key <file>); the booted
-            # system asks for it.
-            keylocation = "file:///tmp/secret.key";
+            keylocation = "prompt";
           };
-          postCreateHook = ''
-            zfs set keylocation=prompt zroot
-          '';
           options.ashift = "12";
           datasets = {
             "local" = {
