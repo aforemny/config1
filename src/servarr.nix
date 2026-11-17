@@ -15,7 +15,10 @@
   #   * Prowlarr (https://prowlarr.nomath.org): add indexers; under
   #     Settings -> Apps add Sonarr (http://localhost:8989), Radarr
   #     (http://localhost:7878), Lidarr (http://localhost:8686) and Readarr
-  #     (http://localhost:8787) with their API keys for a Full Sync.
+  #     (http://localhost:8787) with their API keys for a Full Sync. Under
+  #     Settings -> Indexers add a FlareSolverr proxy (host
+  #     http://localhost:8191, tag "flaresolverr") and give that tag to the
+  #     Cloudflare-protected indexers (e.g. 1337x).
   #   * Sonarr / Radarr / Lidarr / Readarr: add a Transmission download client
   #     at host 192.168.15.1 port 9091 (no auth; they all share Transmission's
   #     VPN namespace, so that is an intra-namespace address -- see
@@ -98,6 +101,9 @@
           enable = true;
           settings.auth = externalAuth;
         };
+        # Solves Cloudflare challenges for Prowlarr. Stateless (DynamicUser,
+        # RuntimeDirectory only), so nothing to persist; no UI, so no vhost.
+        services.flaresolverr.enable = true;
 
         systemd.services.sonarr.unitConfig.RequiresMountsFor = [ "/srv/media" ];
         systemd.services.radarr.unitConfig.RequiresMountsFor = [
@@ -143,6 +149,13 @@
           vpnNamespace = ns;
         };
         systemd.services.bazarr.vpnConfinement = {
+          enable = true;
+          vpnNamespace = ns;
+        };
+        # Same namespace as Prowlarr: the clearance cookies FlareSolverr hands
+        # back are bound to the solving IP, so it must share Prowlarr's VPN
+        # exit; Prowlarr reaches it at localhost:8191 intra-namespace.
+        systemd.services.flaresolverr.vpnConfinement = {
           enable = true;
           vpnNamespace = ns;
         };
