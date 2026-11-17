@@ -196,10 +196,6 @@
                     type = "zfs_fs";
                     mountpoint = "/srv/media";
                   };
-                  "local/webarchive" = {
-                    type = "zfs_fs";
-                    mountpoint = "/srv/webarchive";
-                  };
                 };
               };
             };

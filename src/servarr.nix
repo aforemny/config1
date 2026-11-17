@@ -169,7 +169,9 @@
         }) (lib.attrValues arr);
 
         systemd.tmpfiles.rules = [
-          "d /srv/media 2770 root transmission -"
+          # o+x only: lets the web archive (src/webarchive.nix) and its nginx
+          # reach /srv/media/webarchive; the media dirs below stay 2770.
+          "d /srv/media 2771 root transmission -"
           "d /srv/media/downloads 2770 root transmission -"
           "d /srv/media/downloads/.incomplete 2770 root transmission -"
           "d /srv/media/downloads/tv 2770 root transmission -"

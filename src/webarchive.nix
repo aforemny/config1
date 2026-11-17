@@ -4,7 +4,7 @@
   # CRAWL. Each site in `sites` gets a `webarchive-<site>` oneshot on a timer:
   # wget crawls the whole site (plain HTTP, no JavaScript) into WARC files, and
   # `wacz create` packs those into one dated WACZ (WARCs + CDXJ index + page
-  # list with full-text) under /srv/webarchive/<site>/. Every run is a new,
+  # list with full-text) under /srv/media/webarchive/<site>/. Every run is a new,
   # complete snapshot; snapshots are kept forever. wget cannot resume a WARC
   # crawl, so an interrupted run is discarded and the next one starts over.
   #
@@ -17,12 +17,10 @@
   # AUTH. The archive republishes other people's content, so the vhost is
   # private: src/oauth2-proxy.nix lists it (Keycloak `admins` only).
   #
-  # STORAGE. /srv/webarchive is its own dataset, zdata/local/webarchive (see
-  # platforms/tower.nix). disko only creates datasets when formatting, so on
-  # the running host create it once before deploying:
-  #   zfs create -o mountpoint=/srv/webarchive zdata/local/webarchive
-  # It is not under /persist: like /srv/media it survives the rootfs rollback
-  # by being its own dataset.
+  # STORAGE. A plain directory on zdata's media dataset (zdata/local/media,
+  # mounted at /srv/media), so it survives the rootfs rollback without a
+  # dataset of its own. /srv/media is traversable by others (src/servarr.nix)
+  # so the webarchive user and nginx can reach it.
   systems.tower.modules = [
     (
       {
@@ -33,7 +31,7 @@
       }:
       let
         fqdn = "archive.nomath.org";
-        root = "/srv/webarchive";
+        root = "/srv/media/webarchive";
 
         sites = {
           "seriouseats.com" = {
