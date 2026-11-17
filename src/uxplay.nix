@@ -93,6 +93,12 @@
             ExecStart = "${pkgs.coreutils}/bin/stdbuf -oL -eL ${lib.getExe pkgs.uxplay} -n m1 -nh -p -hls -fs";
             Restart = "on-failure";
           };
+          # GStreamer's HLS demuxer (adaptivedemux2) aborts in libsoup when it
+          # stops an HTTP/2 download, i.e. when a handed-off https:// stream
+          # (Jellyfin via tower's nginx) is stopped: "message_completed:
+          # assertion failed: (item->context == soup_thread_default_context
+          # ())". libsoup's HTTP/1.1 path does not have that problem.
+          environment.SOUP_FORCE_HTTP1 = "1";
         };
       }
     )
