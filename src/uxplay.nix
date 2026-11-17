@@ -20,6 +20,12 @@
         ports = l: lib.concatMapStringsSep ", " toString l;
       in
       {
+        # systemd-resolved also answers mDNS (on wlan0 by default) and claims
+        # m1.local, so avahi saw a conflict on every start and renamed itself
+        # m1-2 ... m1-6.local; the iPhone then could not resolve the service.
+        # Leave mDNS to avahi alone.
+        services.resolved.settings.Resolve.MulticastDNS = false;
+
         # UxPlay announces _airplay._tcp/_raop._tcp through avahi's dns_sd
         # compat library, i.e. as a user service.
         services.avahi = {
@@ -51,7 +57,15 @@
           after = [ "graphical-session.target" ];
           wantedBy = [ "graphical-session.target" ];
           serviceConfig = {
-            ExecStart = "${lib.getExe pkgs.uxplay} -n m1 -nh -p";
+            # -hls: accept the YouTube app's handed-off (HLS) video, which m1
+            # then streams itself; without it YouTube falls back to mirroring.
+            #
+            # -fs: full screen, for mirroring and handed-off video alike.
+            #
+            # stdbuf -oL: UxPlay logs to stdout, which glibc fully buffers when
+            # it is not a terminal, so the journal got its lines in delayed
+            # bursts (or not at all for a quiet session).
+            ExecStart = "${pkgs.coreutils}/bin/stdbuf -oL -eL ${lib.getExe pkgs.uxplay} -n m1 -nh -p -hls -fs";
             Restart = "on-failure";
           };
         };
