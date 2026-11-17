@@ -1,4 +1,29 @@
 {
+  # UxPlay, patched so that apps other than YouTube (e.g. Jellyfin) can hand off
+  # video. In the order they would go upstream:
+  #   * uxplay-action-no-video: don't crash on a client's last POST /action
+  #     after the video ended (EOS), when there is no current video any more.
+  #   * uxplay-fcup-relative-hls: UxPlay fetches handed-off playlists over the
+  #     client (FCUP) and serves them on localhost, written around YouTube's
+  #     absolute playlist URIs; handle relative URIs and query strings too.
+  #   * uxplay-rfc3986-uris: resolve those relative URIs per RFC 3986, with
+  #     GLib's g_uri_resolve_relative.
+  #   * uxplay-direct-hls: play a plain http(s) HLS URL directly instead
+  #     (taking precedence over FCUP), which also covers live playlists that
+  #     FCUP's one-time snapshot of the playlists would miss.
+  # glib-networking gives GStreamer's souphttpsrc TLS for https://.
+  overlays.uxplay = _: super: {
+    uxplay = super.uxplay.overrideAttrs (old: {
+      patches = (old.patches or [ ]) ++ [
+        ./uxplay-action-no-video.patch
+        ./uxplay-fcup-relative-hls.patch
+        ./uxplay-rfc3986-uris.patch
+        ./uxplay-direct-hls.patch
+      ];
+      buildInputs = old.buildInputs ++ [ super.glib-networking ];
+    });
+  };
+
   # AirPlay mirroring/video target: iPhones and iPads list m1 under Screen
   # Mirroring, and AirPlay video from apps plays in a window on its desktop.
   systems.m1.modules = [
@@ -57,8 +82,8 @@
           after = [ "graphical-session.target" ];
           wantedBy = [ "graphical-session.target" ];
           serviceConfig = {
-            # -hls: accept the YouTube app's handed-off (HLS) video, which m1
-            # then streams itself; without it YouTube falls back to mirroring.
+            # -hls: accept apps' handed-off (HLS) video, which m1 then streams
+            # itself; without it they fall back to mirroring or audio only.
             #
             # -fs: full screen, for mirroring and handed-off video alike.
             #

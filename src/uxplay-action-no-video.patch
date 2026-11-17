@@ -1,0 +1,28 @@
+diff --git a/lib/http_handlers.h b/lib/http_handlers.h
+index 7984be8..bf13691 100644
+--- a/lib/http_handlers.h
++++ b/lib/http_handlers.h
+@@ -468,7 +468,6 @@ http_handler_action(raop_conn_t *conn, http_request_t *request, http_response_t
+ 
+     raop_t *raop = conn->raop;
+     airplay_video_t *airplay_video = (airplay_video_t *) hls_get_current_video(raop);
+-    assert(airplay_video);
+     bool data_is_plist = false;
+     plist_t req_root_node = NULL;
+     uint64_t uint_val = 0;
+@@ -477,6 +476,15 @@ http_handler_action(raop_conn_t *conn, http_request_t *request, http_response_t
+     char *type = NULL;
+     bool logger_debug = (logger_get_level(raop->logger) >= LOGGER_DEBUG);
+ 
++    /* There may be no current video any more: when it ends (EOS), the HLS
++       session is shut down, but the client can still send a last action
++       (e.g. playlistRemove). Without this check (the assert is compiled out
++       with NDEBUG) get_apple_session_id(NULL) made strcmp() crash below. */
++    if (!airplay_video) {
++        logger_log(raop->logger, LOGGER_INFO, "POST /action without a current video, ignored");
++        goto post_action_error;
++    }
++
+     const char* session_id = http_request_get_header(request, "X-Apple-Session-ID");
+     if (!session_id) {
+         logger_log(raop->logger, LOGGER_ERR, "Play request had no X-Apple-Session-ID");

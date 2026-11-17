@@ -1,0 +1,45 @@
+diff --git a/lib/http_handlers.h b/lib/http_handlers.h
+index 90820a7..85bac93 100644
+--- a/lib/http_handlers.h
++++ b/lib/http_handlers.h
+@@ -743,6 +743,7 @@ http_handler_play(raop_conn_t *conn, http_request_t *request, http_response_t *r
+     float start_position_seconds = 0.0f;
+     bool data_is_binary_plist = false;
+     char supported_hls_proc_names[] = "YouTube;";
++    bool hls_proc_supported = true;
+     airplay_video_t *airplay_video = NULL;
+     
+     logger_log(raop->logger, LOGGER_DEBUG, "http_handler_play");
+@@ -879,6 +880,7 @@ http_handler_play(raop_conn_t *conn, http_request_t *request, http_response_t *r
+     } else {
+         plist_get_string_val(req_client_proc_name_node, &client_proc_name);
+         if (!strstr(supported_hls_proc_names, client_proc_name)){
++            hls_proc_supported = false;
+             logger_log(raop->logger, LOGGER_WARNING, "Unsupported HLS streaming format: clientProcName %s not found in supported list: %s",
+                        client_proc_name, supported_hls_proc_names);
+         }
+@@ -895,6 +897,24 @@ http_handler_play(raop_conn_t *conn, http_request_t *request, http_response_t *r
+     }
+     set_start_position_seconds(airplay_video, (float) start_position_seconds);
+ 
++    /* Other apps (e.g. Jellyfin, clientProcName com.apple.WebKit.GPU) hand off a
++       plain http(s) HLS URL that the server can fetch itself: play it directly
++       instead of fetching the playlists from the client over FCUP, which only
++       YouTube's playlists survive. The query string often carries an access
++       token, so it is not logged. */
++    if (!hls_proc_supported && playback_location &&
++        (!strncmp(playback_location, "http://", 7) || !strncmp(playback_location, "https://", 8))) {
++        logger_log(raop->logger, LOGGER_INFO, "playing Content-Location directly: %.*s",
++                   (int) strcspn(playback_location, "?"), playback_location);
++        set_playback_location(airplay_video, playback_location, strlen(playback_location));
++        raop->callbacks.on_video_play(raop->callbacks.cls, playback_location, start_position_seconds);
++        plist_mem_free(playback_location);
++        if (req_root_node) {
++            plist_free(req_root_node);
++        }
++        return;
++    }
++
+     /* we only support HLS if the playback location is terminated by "/master.m3u8" */
+     const char *uri_suffix = strstr(playback_location, "/master.m3u8");
+     if (!uri_suffix) { 

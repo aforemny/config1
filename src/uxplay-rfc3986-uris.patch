@@ -1,0 +1,160 @@
+diff --git a/lib/CMakeLists.txt b/lib/CMakeLists.txt
+index 9040c51..49aefa6 100644
+--- a/lib/CMakeLists.txt
++++ b/lib/CMakeLists.txt
+@@ -113,6 +113,11 @@ if ( PLIST_FOUND )
+ endif()
+ target_include_directories( airplay PRIVATE ${PLIST_INCLUDE_DIRS} )
+ 
++# GLib >= 2.66 for g_uri_resolve_relative (RFC 3986), see airplay_video.c
++pkg_check_modules( GLIB2_URI REQUIRED glib-2.0>=2.66 )
++target_include_directories( airplay PRIVATE ${GLIB2_URI_INCLUDE_DIRS} )
++target_link_libraries( airplay PUBLIC ${GLIB2_URI_LINK_LIBRARIES} )
++
+ #libcrypto
+ if( APPLE )
+   # use static linking
+diff --git a/lib/airplay_video.c b/lib/airplay_video.c
+index 843fe61..dfb9c8f 100644
+--- a/lib/airplay_video.c
++++ b/lib/airplay_video.c
+@@ -22,6 +22,7 @@
+ #include <string.h>
+ #include <stdbool.h>
+ #include <assert.h>
++#include <glib.h>
+ 
+ #include "raop.h"
+ #include "airplay_video.h"
+@@ -792,48 +793,27 @@ char *adjust_master_playlist (char *fcup_response_data, int fcup_response_datale
+     return new_master;
+ }
+ 
+-/* Resolve a (possibly relative) playlist URI of length len against base_uri
+-   (the playlist's directory, without trailing '/') and append it to out. */
+-static char *append_resolved_uri(char *out, const char *uri, size_t len, const char *base_uri) {
+-    const char *scheme = strstr(base_uri, "://");
+-    const char *host_end = scheme ? strchr(scheme + 3, '/') : NULL;
+-    size_t origin_len = host_end ? (size_t) (host_end - base_uri) : strlen(base_uri);
+-    size_t scheme_len = strspn(uri, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+.-");
+-    if (scheme_len > 0 && scheme_len < len && uri[scheme_len] == ':') {
+-        /* absolute URI with a scheme, e.g. https:// or YouTube's mlhls:// */
+-    } else if (len > 0 && uri[0] == '/') {
+-        memcpy(out, base_uri, origin_len);
+-        out += origin_len;
+-    } else {
+-        size_t base_len = strlen(base_uri);
+-        memcpy(out, base_uri, base_len);
+-        out += base_len;
+-        *out++ = '/';
+-    }
+-    memcpy(out, uri, len);
+-    return out + len;
++/* Resolve the playlist URI reference ref (len bytes) against base_uri, the
++   playlist's own URI, per RFC 3986, and append it to out. A reference that
++   cannot be resolved is kept as it is. */
++static void append_resolved_uri(GString *out, const char *ref, size_t len, const char *base_uri) {
++    char *reference = g_strndup(ref, len);
++    char *resolved = g_uri_resolve_relative(base_uri, reference, G_URI_FLAGS_ENCODED, NULL);
++    g_string_append(out, resolved ? resolved : reference);
++    g_free(resolved);
++    g_free(reference);
+ }
+ 
+ /* Rewrite the relative URIs of an HLS playlist -- its URI lines and URI="..."
+-   attributes -- into absolute ones under base_uri. YouTube's playlists only
+-   use absolute URIs, but others (e.g. Jellyfin's) are relative to the
+-   playlist's own location, which the media player, given the playlist from
+-   http://localhost, would otherwise resolve against the server itself.
+-   It returns a new playlist, WHICH MUST BE FREED AFTER USE */
++   attributes -- into absolute ones, resolved against base_uri, the playlist's
++   own URI (RFC 8216, section 4.1). YouTube's playlists only use absolute
++   URIs, but others (e.g. Jellyfin's) are relative to the playlist's location,
++   which the media player, given the playlist from http://localhost, would
++   otherwise resolve against the server itself.
++   It returns a new playlist, WHICH MUST BE FREED AFTER USE (with free(): GLib
++   allocates with malloc since 2.46) */
+ char *absolutize_playlist_uris(const char *playlist, const char *base_uri) {
+-    size_t count = 1;
+-    for (const char *p = playlist; *p; p++) {
+-        if (*p == '\n' || !strncmp(p, "URI=\"", 5)) {
+-            count++;
+-        }
+-    }
+-    size_t len = strlen(playlist) + count * (strlen(base_uri) + 1);
+-    char *new_playlist = (char *) malloc(len + 1);
+-    if (!new_playlist) {
+-        printf("Memory allocation failure (new_playlist)\n");
+-        exit(1);
+-    }
+-    char *out = new_playlist;
++    GString *out = g_string_sized_new(strlen(playlist));
+     const char *line = playlist;
+     while (*line) {
+         size_t line_len = strcspn(line, "\r\n");
+@@ -847,25 +827,20 @@ char *absolutize_playlist_uris(const char *playlist, const char *base_uri) {
+                 if (!close) {
+                     break;
+                 }
+-                memcpy(out, p, attr - p);
+-                out += attr - p;
+-                out = append_resolved_uri(out, attr, close - attr, base_uri);
++                g_string_append_len(out, p, attr - p);
++                append_resolved_uri(out, attr, close - attr, base_uri);
+                 p = close;
+             }
+-            memcpy(out, p, line_end - p);
+-            out += line_end - p;
++            g_string_append_len(out, p, line_end - p);
+         } else if (line_len > 0) {
+-            out = append_resolved_uri(out, line, line_len, base_uri);
++            append_resolved_uri(out, line, line_len, base_uri);
+         }
+         line += line_len;
+         size_t eol_len = strspn(line, "\r\n");
+-        memcpy(out, line, eol_len);
+-        out += eol_len;
++        g_string_append_len(out, line, eol_len);
+         line += eol_len;
+     }
+-    *out = '\0';
+-    assert((size_t) (out - new_playlist) <= len);
+-    return new_playlist;
++    return g_string_free(out, FALSE);
+ }
+ 
+ char *adjust_yt_condensed_playlist(const char *media_playlist) {
+diff --git a/lib/http_handlers.h b/lib/http_handlers.h
+index a1b7bb8..90820a7 100644
+--- a/lib/http_handlers.h
++++ b/lib/http_handlers.h
+@@ -662,7 +662,7 @@ http_handler_action(raop_conn_t *conn, http_request_t *request, http_response_t
+             int num_uri = 0;
+             char *uri_local_prefix = get_uri_local_prefix(airplay_video);
+             playlist = select_master_playlist_language(airplay_video, playlist);
+-            char *absolute = absolutize_playlist_uris(playlist, uri_prefix);
++            char *absolute = absolutize_playlist_uris(playlist, fcup_response_url);
+             free(playlist);
+             playlist = absolute;
+             playlist_len = strlen(playlist);
+@@ -677,19 +677,7 @@ http_handler_action(raop_conn_t *conn, http_request_t *request, http_response_t
+         } else {
+             /* this is a media playlist */
+             if (!strstr(playlist, "#YT-EXT-CONDENSED-URL")) {
+-                size_t path_len = strcspn(fcup_response_url, "?");
+-                char *base = (char *) calloc(path_len + 1, sizeof(char));
+-                if (!base) {
+-                    printf("Memory allocation failed (base)\n");
+-                    exit(1);
+-                }
+-                memcpy(base, fcup_response_url, path_len);
+-                char *dir_end = strrchr(base, '/');
+-                if (dir_end) {
+-                    *dir_end = '\0';
+-                }
+-                char *absolute = absolutize_playlist_uris(playlist, base);
+-                free(base);
++                char *absolute = absolutize_playlist_uris(playlist, fcup_response_url);
+                 free(playlist);
+                 playlist = absolute;
+             }

@@ -1,0 +1,197 @@
+diff --git a/lib/airplay_video.c b/lib/airplay_video.c
+index 19505b2..843fe61 100644
+--- a/lib/airplay_video.c
++++ b/lib/airplay_video.c
+@@ -703,7 +703,8 @@ int create_media_uri_table(const char *url_prefix, const char *master_playlist_d
+         if (end == NULL) {
+             return 1;
+         }
+-        end += sizeof("m3u8");
++        /* include a query string, e.g. Jellyfin's "main.m3u8?...&ApiKey=..." */
++        end += strcspn(end, "\r\n\"");
+         count++;
+         ptr = strstr(end, url_prefix);
+     }
+@@ -722,8 +723,8 @@ int create_media_uri_table(const char *url_prefix, const char *master_playlist_d
+         if (end == NULL) {
+             return 0;
+         }
+-        end += sizeof("m3u8");
+-        size_t len = end - ptr - 1;
++        end += strcspn(end, "\r\n\"");
++        size_t len = end - ptr;
+ 	    uri  = (char *) calloc(len + 1, sizeof(char));
+         if (!uri) {
+             printf("Memory allocation failure (uri)\n");
+@@ -791,6 +792,82 @@ char *adjust_master_playlist (char *fcup_response_data, int fcup_response_datale
+     return new_master;
+ }
+ 
++/* Resolve a (possibly relative) playlist URI of length len against base_uri
++   (the playlist's directory, without trailing '/') and append it to out. */
++static char *append_resolved_uri(char *out, const char *uri, size_t len, const char *base_uri) {
++    const char *scheme = strstr(base_uri, "://");
++    const char *host_end = scheme ? strchr(scheme + 3, '/') : NULL;
++    size_t origin_len = host_end ? (size_t) (host_end - base_uri) : strlen(base_uri);
++    size_t scheme_len = strspn(uri, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+.-");
++    if (scheme_len > 0 && scheme_len < len && uri[scheme_len] == ':') {
++        /* absolute URI with a scheme, e.g. https:// or YouTube's mlhls:// */
++    } else if (len > 0 && uri[0] == '/') {
++        memcpy(out, base_uri, origin_len);
++        out += origin_len;
++    } else {
++        size_t base_len = strlen(base_uri);
++        memcpy(out, base_uri, base_len);
++        out += base_len;
++        *out++ = '/';
++    }
++    memcpy(out, uri, len);
++    return out + len;
++}
++
++/* Rewrite the relative URIs of an HLS playlist -- its URI lines and URI="..."
++   attributes -- into absolute ones under base_uri. YouTube's playlists only
++   use absolute URIs, but others (e.g. Jellyfin's) are relative to the
++   playlist's own location, which the media player, given the playlist from
++   http://localhost, would otherwise resolve against the server itself.
++   It returns a new playlist, WHICH MUST BE FREED AFTER USE */
++char *absolutize_playlist_uris(const char *playlist, const char *base_uri) {
++    size_t count = 1;
++    for (const char *p = playlist; *p; p++) {
++        if (*p == '\n' || !strncmp(p, "URI=\"", 5)) {
++            count++;
++        }
++    }
++    size_t len = strlen(playlist) + count * (strlen(base_uri) + 1);
++    char *new_playlist = (char *) malloc(len + 1);
++    if (!new_playlist) {
++        printf("Memory allocation failure (new_playlist)\n");
++        exit(1);
++    }
++    char *out = new_playlist;
++    const char *line = playlist;
++    while (*line) {
++        size_t line_len = strcspn(line, "\r\n");
++        if (line[0] == '#') {
++            const char *p = line;
++            const char *line_end = line + line_len;
++            const char *attr;
++            while ((attr = strstr(p, "URI=\"")) && attr < line_end) {
++                attr += 5;
++                const char *close = memchr(attr, '"', line_end - attr);
++                if (!close) {
++                    break;
++                }
++                memcpy(out, p, attr - p);
++                out += attr - p;
++                out = append_resolved_uri(out, attr, close - attr, base_uri);
++                p = close;
++            }
++            memcpy(out, p, line_end - p);
++            out += line_end - p;
++        } else if (line_len > 0) {
++            out = append_resolved_uri(out, line, line_len, base_uri);
++        }
++        line += line_len;
++        size_t eol_len = strspn(line, "\r\n");
++        memcpy(out, line, eol_len);
++        out += eol_len;
++        line += eol_len;
++    }
++    *out = '\0';
++    assert((size_t) (out - new_playlist) <= len);
++    return new_playlist;
++}
++
+ char *adjust_yt_condensed_playlist(const char *media_playlist) {
+ /* this copies a Media Playlist into a null-terminated string. 
+    If it has the "#YT-EXT-CONDENSED-URI" header, it is also expanded into 
+diff --git a/lib/airplay_video.h b/lib/airplay_video.h
+index 95ad87c..797512e 100644
+--- a/lib/airplay_video.h
++++ b/lib/airplay_video.h
+@@ -78,6 +78,7 @@ char *process_media_data(void *media_data_store, const char *url, const char *da
+ char *adjust_master_playlist (char *fcup_response_data, int fcup_response_datalen,
+                               const char *uri_prefix, char *uri_local_prefix);
+ char *adjust_yt_condensed_playlist(const char *media_playlist);
++char *absolutize_playlist_uris(const char *playlist, const char *base_uri);
+ 
+ //called by the POST /play handler
+ bool request_media_data(void *media_data_store, const char *primary_url, const char * session_id);
+diff --git a/lib/http_handlers.h b/lib/http_handlers.h
+index 7984be8..a1b7bb8 100644
+--- a/lib/http_handlers.h
++++ b/lib/http_handlers.h
+@@ -662,6 +662,9 @@ http_handler_action(raop_conn_t *conn, http_request_t *request, http_response_t
+             int num_uri = 0;
+             char *uri_local_prefix = get_uri_local_prefix(airplay_video);
+             playlist = select_master_playlist_language(airplay_video, playlist);
++            char *absolute = absolutize_playlist_uris(playlist, uri_prefix);
++            free(playlist);
++            playlist = absolute;
+             playlist_len = strlen(playlist);
+             create_media_uri_table(uri_prefix, playlist, playlist_len, &uri_list, &num_uri);	
+             char *new_master = adjust_master_playlist (playlist, playlist_len,  uri_prefix, uri_local_prefix);
+@@ -673,6 +676,23 @@ http_handler_action(raop_conn_t *conn, http_request_t *request, http_response_t
+             set_next_media_uri_id(airplay_video, 0);
+         } else {
+             /* this is a media playlist */
++            if (!strstr(playlist, "#YT-EXT-CONDENSED-URL")) {
++                size_t path_len = strcspn(fcup_response_url, "?");
++                char *base = (char *) calloc(path_len + 1, sizeof(char));
++                if (!base) {
++                    printf("Memory allocation failed (base)\n");
++                    exit(1);
++                }
++                memcpy(base, fcup_response_url, path_len);
++                char *dir_end = strrchr(base, '/');
++                if (dir_end) {
++                    *dir_end = '\0';
++                }
++                char *absolute = absolutize_playlist_uris(playlist, base);
++                free(base);
++                free(playlist);
++                playlist = absolute;
++            }
+             float duration = 0.0f;
+             bool endlist = false;
+             int count = analyze_media_playlist(playlist, &duration, &endlist);
+@@ -967,7 +987,8 @@ http_handler_hls(raop_conn_t *conn,  http_request_t *request, http_response_t *r
+     }
+     airplay_video_t *airplay_video = (airplay_video_t *) hls_get_current_video(raop);
+     assert(airplay_video);
+-    if (!strcmp(url, "/master.m3u8")){
++    if (!strncmp(url, "/master.m3u8", strlen("/master.m3u8")) &&
++        (url[strlen("/master.m3u8")] == '\0' || url[strlen("/master.m3u8")] == '?')) {
+         char * master_playlist  = get_master_playlist(airplay_video);
+         if (master_playlist) {
+             size_t len = strlen(master_playlist);
+@@ -993,9 +1014,12 @@ http_handler_hls(raop_conn_t *conn,  http_request_t *request, http_response_t *r
+             *response_data = data;
+             *response_datalen = strlen(data);
+             logger_log(raop->logger, LOGGER_INFO,
+-                       "Requested media_playlist %s has %5d chunks, total duration %9.3f secs", url, chunks, duration); 
++                       "Requested media_playlist %.*s has %5d chunks, total duration %9.3f secs",
++                       (int) strcspn(url, "?"), url, chunks, duration);
+         } else {
+-            logger_log(raop->logger, LOGGER_ERR,"requested media playlist %s not found", url); 
++            /* without the query string, which may carry an access token (e.g. Jellyfin's ApiKey) */
++            logger_log(raop->logger, LOGGER_ERR,"requested media playlist %.*s not found",
++                       (int) strcspn(url, "?"), url);
+         }
+ 	    
+     }
+diff --git a/uxplay.cpp b/uxplay.cpp
+index fad6c1e..5a2439b 100644
+--- a/uxplay.cpp
++++ b/uxplay.cpp
+@@ -2595,7 +2595,8 @@ extern "C" void on_video_play(void *cls, const char* location, const float start
+     url.append(location);
+     relaunch_video = true;
+     preserve_connections = true;
+-    LOGI("********************on_video_play: location = %s*** start position %f ********************", url.c_str(), start_position);
++    /* without the query string, which may carry an access token */
++    LOGI("********************on_video_play: location = %s*** start position %f ********************", url.substr(0, url.find('?')).c_str(), start_position);
+     video_reset(cls, RESET_TYPE_ON_VIDEO_PLAY);
+ }
+ 
