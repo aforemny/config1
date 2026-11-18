@@ -75,6 +75,7 @@ src/
 - For HTTPS: `services.nginx.enable`, ACME (`security.acme.acceptTerms` + `defaults.email`), `forceSSL`/`enableACME` on the vhost, open firewall 80/443, and persist `/var/lib/acme`.
 
 ## Active Issues
+- HTTP/2 is force-disabled on every nginx vhost (`src/nginx-http2-workaround.nix`) as a workaround for CVE-2026-123633 / CVE-2026-123007 (nginx HTTP/2 RCE, fixed in 1.30.7 / 1.31.9). **Remove that file once the nixpkgs pin ships nginx >= 1.30.7** (check `nix-instantiate --eval -A config.systems.tower.config.services.nginx.package.version`).
 <!-- List any known issues or ongoing work here -->
 - 1&1 delegates a *dynamic* IPv6 prefix (new on every PPPoE reconnect), so LAN addresses renumber. To eliminate renumbering churn entirely, a stable ULA + NPTv6 (or a static PD, if 1&1 offers one) would be needed.
 
