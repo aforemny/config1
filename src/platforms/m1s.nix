@@ -17,7 +17,7 @@
       # SPI flash, so U-Boot lives on the eMMC itself, at sector 64 (in front
       # of the first partition, see disko below):
       #
-      #   cake build --expr config.systems.m1s.config.system.build.uboot
+      #   nix-build -A config.systems.m1s.config.system.build.uboot
       #   dd if=result/u-boot-rockchip.bin of=/dev/mmcblk0 seek=64 conv=notrunc,fsync
       system.build.uboot = pkgs.buildUBoot {
         defconfig = "odroid-m1s-rk3566_defconfig";

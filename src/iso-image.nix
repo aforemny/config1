@@ -89,7 +89,7 @@ in
   };
   # TODO `systems.m1.config.system.build.isoImage`
   # Installer for reinstalling `tower`. Build with:
-  #   cake build --expr config.isoImages.tower.config.system.build.isoImage
+  #   nix-build -A config.isoImages.tower.config.system.build.isoImage
   # then `dd` it to a USB stick.
   config.isoImages.tower = import "${pkgs.path}/nixos/lib/eval-config.nix" {
     modules = [
@@ -114,7 +114,7 @@ in
     #system = "aarch64-linux";
   };
   # Bootable installer image for `ap` (a second apu4d4). Build with:
-  #   cake build --expr config.isoImages.ap.config.system.build.isoImage
+  #   nix-build -A config.isoImages.ap.config.system.build.isoImage
   # then `dd` it to a USB stick and boot the apu over its serial console.
   config.isoImages.ap = import "${pkgs.path}/nixos/lib/eval-config.nix" {
     modules = [
@@ -136,7 +136,7 @@ in
   # Bootable installer image for `m1`, built on nixos-apple-silicon's own
   # installer configuration (EFI boot via U-Boot, iwd, peripheral firmware
   # extracted from the ESP at boot). Build with:
-  #   cake build --expr config.isoImages.m1.config.system.build.isoImage
+  #   nix-build -A config.isoImages.m1.config.system.build.isoImage
   # then `dd` it to a USB stick and boot it from the U-Boot boot menu.
   config.isoImages.m1 = import "${pkgs.path}/nixos/lib/eval-config.nix" {
     modules = [
@@ -160,7 +160,7 @@ in
   # SD card installer for `m1s` (ODROID-M1S). Its eMMC is empty until the
   # install, so the board boots from SD. The image carries m1s's own U-Boot at
   # sector 64, like the eMMC will. Build with:
-  #   cake build --expr config.isoImages.m1s.config.system.build.sdImage
+  #   nix-build -A config.isoImages.m1s.config.system.build.sdImage
   # then `zstdcat result/sd-image/*.img.zst | dd of=/dev/<sd card> bs=4M`
   # and watch the serial console (UART header, 1500000 baud).
   config.isoImages.m1s = import "${pkgs.path}/nixos/lib/eval-config.nix" {
@@ -201,7 +201,7 @@ in
   # platforms/pinebookpro.nix in the SPI flash. (An old Tow-Boot fails on
   # extlinux, as it places the initrd inside the kernel.) GRUB keeps the
   # firmware's device tree. Build with:
-  #   cake build --expr config.isoImages.pinebookpro.config.system.build.isoImage
+  #   nix-build -A config.isoImages.pinebookpro.config.system.build.isoImage
   # then `dd if=result/iso/*.iso of=/dev/<usb stick> bs=4M`.
   # The Pinebook Pro has no Ethernet: join WiFi from the console with
   # `nmcli --ask connection up apu` (or use a USB-C adapter), and put U-Boot
@@ -211,8 +211,8 @@ in
   #   mkdir -p host/persist/etc/ssh
   #   ssh-keygen -t ed25519 -N "" -f host/persist/etc/ssh/ssh_host_ed25519_key
   # add its .pub to src/host-keys.nix, `agenix rekey`, then
-  #   cake build --expr config.systems.pinebookpro.config.system.build.diskoScript
-  #   cake build --expr config.systems.pinebookpro.config.system.build.toplevel
+  #   nix-build -A config.systems.pinebookpro.config.system.build.diskoScript
+  #   nix-build -A config.systems.pinebookpro.config.system.build.toplevel
   #   nixos-anywhere --store-paths <diskoScript> <toplevel> \
   #     --extra-files host \
   #     --disk-encryption-keys /tmp/secret.key <(read -rs p; printf %s "$p") \

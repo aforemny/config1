@@ -10,15 +10,15 @@ src/
 ├── platforms/      # Hardware platform definitions (disko, facter, boot)
 ├── features/       # Cross-cutting infra modules (state, persistence, rollback-rootfs)
 ├── conventions/    # Wiring conventions (e.g. tie platforms to systems)
-├── options/        # Cake / module-system option declarations
+├── options/        # Top-level module-system option declarations
 ├── users/          # User configurations
 └── *.nix           # Individual service/program modules (all of src/ is auto-imported)
 ```
 
 ## Architecture
-- Not a flake: `default.nix` evaluates every `src/**/*.nix` with `lib.evalModules` (the "cake" framework); dependencies are pinned with **npins** in `npins/`.
-- `cake-module.nix` auto-imports all of `src/` recursively (`*.nix` only — editor `*.nix~` backups are ignored), so a new module is active just by existing.
-- Top-level (cake) options live in `src/options/` (`systems`, `platforms`, `nixosModules`, `overlays`, …). Reach a host's evaluated NixOS config at `config.systems.<name>.config`.
+- Not a flake: `default.nix` evaluates every `src/**/*.nix` with `lib.evalModules`; dependencies are pinned with **npins** in `npins/`.
+- `default.nix` auto-imports all of `src/` recursively (`*.nix` only — editor `*.nix~` backups are ignored), so a new module is active just by existing.
+- Top-level options live in `src/options/` (`systems`, `platforms`, `nixosModules`, `overlays`, …). Reach a host's evaluated NixOS config at `config.systems.<name>.config`.
 - **Runtime-state pairings** (declarative service config applied via OpenTofu *after* the unit starts) come from the `declarative-runtime` pin, imported as `${sources.declarative-runtime}/services/<svc>/module.nix`: Keycloak (`services.keycloak.runtime`) and Jellyfin (`services.jellyfin.runtime` — libraries/users/plugins). Each adds a `declarative-<svc>` reconciler unit whose tfstate lives under the service's (persisted) state dir. The pin tracks the `jellyfin` branch (carries the keycloak/jellyfin/forgejo/hetzner-dns pairings); re-point it in `npins/sources.json` (`npins update`) to pick up new services.
 
 ## Common Tasks
@@ -26,10 +26,10 @@ src/
 ### System Configuration Updates
 - Primary systems: `apu` (router/gateway), `ap` (L2 WiFi access point, bridged to `apu`), `x1e` (laptop), `tower` (headless ZFS NAS/server), `m1` (Apple Silicon Mac)
 - Configuration pattern: platforms provide hardware, systems compose features
-- After changes: `cake build --expr config.systems.<system>.config.system.build.toplevel`
+- After changes: `nix-build -A config.systems.<system>.config.system.build.toplevel` (or `colmena build --on <system>`)
 
 ### Code Standards
-- Two layers: a top-level `src/*.nix` is a *cake* module (`{ config, lib, pkgs, sources, ... }`) that usually defines `nixosModules.<name> = { config, lib, pkgs, ... }: …`; these apply to every host.
+- Two layers: a top-level `src/*.nix` is a *top-level* module (`{ config, lib, pkgs, sources, ... }`) that usually defines `nixosModules.<name> = { config, lib, pkgs, ... }: …`; these apply to every host.
 - Scope config to one host with `systems.<name>.modules = [ { /* nixos module */ } ];` (see `radicle.nix`, `dns.nix`).
 - Maintain existing code style and indentation; format with `nixfmt` (RFC style, via `treefmt`) before committing.
 - Verify changes before committing (see Quick Commands).
@@ -80,26 +80,26 @@ src/
 
 ## Quick Commands
 
-Run eval/build **inside the devshell** (`.envrc` = `use nix`, or `nix-shell`), which provides `cake`, `agenix`, `colmena` and `npins`. Evaluation needs no secrets (no GPG).
+Run eval/build **inside the devshell** (`.envrc` = `use nix`, or `nix-shell`), which provides `agenix`, `colmena` and `npins`. Evaluation needs no secrets (no GPG).
 
 ### Build a system
 ```bash
-cake build --expr config.systems.<system>.config.system.build.toplevel
+nix-build -A config.systems.<system>.config.system.build.toplevel
 ```
 
 ### Fast verify (eval only, no build)
-`cake eval` runs `with (import ./. {}); <expr>` with `--read-write-mode`, so freshly added/rekeyed secret files are picked up.
+`default.nix` is a function with defaults, so `-A` paths start at its result (`config`, `pkgs`, `lib`, …). Pass `--read-write-mode` to `nix-instantiate --eval` so freshly added/rekeyed secret files are picked up.
 ```bash
-cake eval --expr 'config.systems.<system>.config.system.build.toplevel.drvPath'
-cake eval --expr 'config.systems.<system>.config.services.<svc>.enable'
+nix-instantiate --eval --read-write-mode -A config.systems.<system>.config.system.build.toplevel.drvPath
+nix-instantiate --eval --read-write-mode --json -A config.systems.<system>.config.services.<svc>.enable
 ```
-- Evaluating the **whole** toplevel forces every module — it pulls unfree packages (`minecraft-server`, `replace`; a raw `cake build`/`eval` then needs `NIXPKGS_ALLOW_UNFREE=1`). To check a change without that, eval the specific attribute, not the toplevel: `…config.systemd.services.<svc>`, `…config.systemd.mounts`, `…config.fileSystems."/path"`.
+- Evaluating the **whole** toplevel forces every module — it pulls unfree packages (`minecraft-server`, `replace`; a raw `nix-build`/`nix-instantiate` then needs `NIXPKGS_ALLOW_UNFREE=1`). To check a change without that, eval the specific attribute, not the toplevel: `…config.systemd.services.<svc>`, `…config.systemd.mounts`, `…config.fileSystems."/path"`.
 
 ### Deploy a system
-`cake deploy <system>` = build → `nix-copy-closure` → set `/nix/var/nix/profiles/system` → `switch-to-configuration switch`; Reminder (see *Persistence*): `state.directories` / persistence / secret-content / DynamicUser changes only fully apply on a **reboot**. To deploy by hand: `nix-copy-closure --to root@<host> "$sys"` → `ssh … nix-env -p /nix/var/nix/profiles/system --set "$sys"` → `ssh … "$sys"/bin/switch-to-configuration switch` (or `boot` to only set the next-boot default).
+Deploy with colmena (below). Reminder (see *Persistence*): `state.directories` / persistence / secret-content / DynamicUser changes only fully apply on a **reboot**. To deploy by hand: `nix-copy-closure --to root@<host> "$sys"` → `ssh … nix-env -p /nix/var/nix/profiles/system --set "$sys"` → `ssh … "$sys"/bin/switch-to-configuration switch` (or `boot` to only set the next-boot default).
 
 ### Deploy with colmena
-`hive.nix` (plain Nix, no flakes) turns every `config.systems.<name>` into a colmena node with the identical module list (same toplevel drv as cake). The devshell's `colmena` wrapper (`src/colmena.nix`) adds `-f hive.nix`, because colmena otherwise prefers the `flake.nix`. Nodes target `root@<name>`; x1e deploys itself with `colmena apply-local --sudo`.
+`hive.nix` (plain Nix, no flakes) turns every `config.systems.<name>` into a colmena node with the identical module list (same toplevel drv as `nix-build -A config.systems.<name>…`). The devshell's `colmena` wrapper (`src/colmena.nix`) adds `-f hive.nix`, because colmena otherwise prefers the `flake.nix`. Nodes target `root@<name>`; x1e deploys itself with `colmena apply-local --sudo`.
 ```bash
 colmena apply --on tower            # or: build, apply boot, apply --on @tag
 colmena eval -E '{ nodes, ... }: nodes.tower.config.services.transmission.enable'

@@ -22,6 +22,5 @@
   };
   config.devShell.packages = with pkgs; [
     npins
-    cake-cli
   ];
 }

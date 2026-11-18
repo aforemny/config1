@@ -2,16 +2,16 @@
 # `colmena` wrapper passes `-f hive.nix` (src/colmena.nix), since colmena
 # would otherwise prefer the flake.nix next to this file.
 #
-# Every cake system becomes a node built from the very same module list as
-# `config.systems.<name>` (see src/options/systems.nix), so colmena and cake
-# evaluate identical configurations.
+# Every system becomes a node built from the very same module list as
+# `config.systems.<name>` (see src/options/systems.nix), so colmena and
+# `nix-build -A config.systems.<name>...` evaluate identical configurations.
 #
 # Secrets are agenix-rekey only and ship rekeyed in the closure, so there is
 # nothing to copy besides it.
 let
-  cake = import ./. { };
-  inherit (cake) lib sources;
-  inherit (cake.config) systems;
+  root = import ./. { };
+  inherit (root) lib sources;
+  inherit (root.config) systems;
 in
 {
   meta = {
@@ -30,7 +30,7 @@ in
     targetUser = "root";
     # x1e is the workstation: `colmena apply-local --sudo` deploys it.
     allowLocalDeployment = name == "x1e";
-    # Build on the deploying machine, like cake deploy -- except m1 when
+    # Build on the deploying machine, as colmena does by default -- except m1 when
     # deployed from x86_64-linux: binfmt emulation (src/emulated-systems.nix)
     # takes hours for webkitgtk or the Asahi kernel, which m1 builds natively.
     # (Non-flake evaluation is impure, so builtins.currentSystem is the

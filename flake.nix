@@ -1,5 +1,5 @@
 {
-  description = "aforemny/config — NixOS systems (cake framework) re-exposed as a flake";
+  description = "aforemny/config — NixOS systems (evalModules tree in default.nix) re-exposed as a flake";
   inputs = { };
   outputs =
     _:
@@ -8,10 +8,10 @@
       inherit (probe) lib;
       hostPlatforms = lib.mapAttrs (_: sys: sys.config.nixpkgs.hostPlatform.system) probe.config.systems;
       platforms = lib.unique (lib.attrValues hostPlatforms);
-      cakeFor = system: import ./. { inherit system; };
-      cakes = lib.genAttrs platforms cakeFor;
+      rootFor = system: import ./. { inherit system; };
+      roots = lib.genAttrs platforms rootFor;
       nixosConfigurations = lib.mapAttrs (
-        name: platform: (cakeFor platform).config.systems.${name}
+        name: platform: (rootFor platform).config.systems.${name}
       ) hostPlatforms;
     in
     {
@@ -31,12 +31,12 @@
       );
       formatter = lib.genAttrs platforms (
         platform:
-        (import cakes.${platform}.sources.treefmt-nix).mkWrapper cakes.${platform}.pkgs (
+        (import roots.${platform}.sources.treefmt-nix).mkWrapper roots.${platform}.pkgs (
           import ./treefmt.nix
         )
       );
       devShells = lib.genAttrs platforms (platform: {
-        default = cakes.${platform}.config.devShell.package;
+        default = roots.${platform}.config.devShell.package;
       });
     };
 }

@@ -56,19 +56,6 @@
       "url": "https://github.com/applicative-systems/artcraft-nix/archive/f369624c9cf9524182324149cd1dd093772db57c.tar.gz",
       "hash": "sha256-P/pDwjT+i6ARHSlK/MDzNHKPBUgE4wL1o//Q7LOVBrc="
     },
-    "cake": {
-      "type": "Git",
-      "repository": {
-        "type": "GitHub",
-        "owner": "aforemny",
-        "repo": "cake"
-      },
-      "branch": "main",
-      "submodules": false,
-      "revision": "e38a18a5be0c25001c1ea1671e1664bfd408b682",
-      "url": "https://github.com/aforemny/cake/archive/e38a18a5be0c25001c1ea1671e1664bfd408b682.tar.gz",
-      "hash": "sha256-lyCCJkJVhgb0t/4GJHjrCBgwxAqXg6gqGQR/u+SR1E8="
-    },
     "declarative-runtime": {
       "type": "Git",
       "repository": {
