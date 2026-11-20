@@ -19,6 +19,11 @@
             "zdata"
             "zroot"
           ];
+          # Cap the ARC at 6 GiB of the 16 GiB. OpenZFS' default (all but 1 GiB)
+          # let it grow to ~10 GiB under pinchflat's download bursts, pushing the
+          # services into swap: Funkwhale's gunicorn workers then missed their
+          # 30 s timeout and were SIGKILLed (502/504 on music.nomath.org).
+          kernelParams = [ "zfs.zfs_arc_max=${toString (6 * 1024 * 1024 * 1024)}" ];
         };
         disko.devices.disk.ssd.device = "/dev/disk/by-id/ata-INTENSO_SSD_1642606001001109";
         hardware.facter = {
