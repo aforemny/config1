@@ -58,14 +58,37 @@
 
       # Radio spec:
       #   { interface; band; channel; wifi4Capabilities;
+      #     bssid;                      # the BSS's MAC (= the radio's MAC)
+      #     neighborReport;             # 802.11k NR element, see below
       #     wifi5Capabilities ? null;   # null => no VHT (e.g. a 2.4 GHz radio)
       #     wifi5Width ? "80";          # VHT operating width ("20or40" | "80" | ...)
       #     wps ? false;                # offer WPS-PBC on this radio's BSS
       #     radioSettings ? { }; }
+      #
+      # neighborReport is the hex NR element hostapd builds for the BSS itself,
+      # copied from `hostapd_cli -i <interface> show_neighbor` (the `nr=` field).
+      # It encodes BSSID, operating class, channel and PHY type, so re-copy it
+      # after changing a radio's channel or width (the assertion below catches
+      # a stale channel).
       hostapd =
         radios:
         { config, pkgs, ... }:
+        let
+          cli = "${config.services.hostapd.package}/bin/hostapd_cli";
+          # Every other BSS of the same ESS, on either host.
+          neighborsOf =
+            r: lib.filter (n: n.bssid != r.bssid && (n.ssid or ssid) == (r.ssid or ssid)) allRadios;
+          hex = s: lib.toLower (lib.replaceStrings [ ":" ] [ "" ] s);
+        in
         {
+          assertions = map (r: {
+            assertion =
+              lib.substring 0 12 r.neighborReport == hex r.bssid
+              &&
+                lib.substring 22 2 r.neighborReport
+                == lib.toLower (lib.fixedWidthString 2 "0" (lib.toHexString r.channel));
+            message = "hostapd.nix: neighborReport of ${r.interface} does not match its bssid/channel; re-copy it from `hostapd_cli -i ${r.interface} show_neighbor`.";
+          }) radios;
           age.secrets = {
             wifi-apu-password.rekeyFile = ../secrets/wifi/apu.age;
             # Shared 256-bit RRB key. Generated on first use: after enabling
@@ -144,6 +167,19 @@
               "wifi-password:${config.age.secrets.wifi-apu-password.path}"
             ]
             ++ lib.optional fastRoaming "ft-key:${config.age.secrets.hostapd-ft-key.path}";
+            # 802.11k: hostapd's neighbor report only ever lists the BSS itself,
+            # so a client asking where else it could go learns nothing and scans
+            # every channel blind before roaming. Seed each BSS with the other
+            # BSSes of its ESS -- apu's and ap's -- once the control socket is up.
+            postStart = lib.concatMapStrings (
+              r:
+              lib.optionalString (neighborsOf r != [ ]) ''
+                until [ "$(${cli} -i ${r.interface} ping)" = PONG ]; do sleep 0.2; done
+                ${lib.concatMapStrings (n: ''
+                  [ "$(${cli} -i ${r.interface} set_neighbor ${n.bssid} 'ssid="${n.ssid or ssid}"' nr=${n.neighborReport})" = OK ]
+                '') (neighborsOf r)}
+              ''
+            ) radios;
           };
           # hostapd adds each radio to the `lan` bridge once it enters master mode.
           # facter declares every NIC with `useDHCP = true`, so turn that off here.
@@ -187,42 +223,75 @@
         "TX-ANTENNA-PATTERN"
         "MAX-A-MPDU-LEN-EXP7"
       ];
+
+      apuRadios = [
+        {
+          interface = "wlan24";
+          bssid = "00:0a:52:0f:61:36";
+          neighborReport = "000a520f6136af0800005101070603000100";
+          band = "2g";
+          # Pinned to ch1 at 20 MHz (2401-2423 MHz), clear of the Zigbee
+          # network (tower's ConBee II, Zigbee ch20 = 2450 MHz). ACS had
+          # picked ch9 HT40 (2442-2482 MHz), which swamped the ConBee's
+          # clear-channel check: every transmission, permit-join included,
+          # failed with MAC_CHANNEL_ACCESS_FAILURE. ap emits no 2.4 GHz.
+          channel = 1;
+          wifi4Capabilities = lib.subtractLists [
+            "HT40+"
+            "SHORT-GI-40"
+          ] mt7915Wifi4;
+          # Only the 2.4 GHz BSS offers WPS: the enrollees that need it (the
+          # HP Laser MFP) are 802.11b/g/n, i.e. 2.4 GHz-only. ap is 5 GHz-only
+          # and therefore cannot serve them at all.
+          wps = true;
+        }
+        {
+          interface = "wlan5";
+          bssid = "00:0a:52:0f:61:37";
+          neighborReport = "000a520f6137af180000742c090603010000";
+          band = "5g";
+          # Different channel from ap (required: iOS rejects a same-SSID ESS
+          # whose APs share a channel, and DE's single UNII-1 80 MHz block
+          # can't hold two APs). ap keeps ch36 (HT40+ = 36+40); wlan5 takes
+          # ch44 (HT40+ = 44+48). Two non-overlapping UNII-1 40 MHz channels,
+          # both at the full 23 dBm, no DFS.
+          channel = 44;
+          wifi5Width = "20or40";
+          wifi4Capabilities = mt7915Wifi4;
+          wifi5Capabilities = mt7915Wifi5;
+        }
+      ];
+      apRadios = [
+        {
+          interface = "wlp0s16u1i2";
+          bssid = "30:68:93:05:a2:f0";
+          neighborReport = "30689305a2f0af1800007424090603010000";
+          band = "5g";
+          channel = 36;
+          # 40 MHz (HT40+ = 36+40) so apu's wlan5 can take the adjacent ch44
+          # (44+48) block: two non-overlapping UNII-1 channels rather than one
+          # shared 80 MHz block, which iOS rejects for a same-SSID ESS.
+          wifi5Width = "20or40";
+          wifi4Capabilities = [
+            "HT40+"
+            "SHORT-GI-20"
+            "SHORT-GI-40"
+            "RX-STBC1"
+            "MAX-AMSDU-7935"
+          ];
+          wifi5Capabilities = [
+            "MAX-MPDU-11454"
+            "SHORT-GI-80"
+            "RX-STBC-1"
+            "MAX-A-MPDU-LEN-EXP7"
+          ];
+        }
+      ];
+      allRadios = apuRadios ++ apRadios;
     in
     {
       apu.modules = [
-        (hostapd [
-          {
-            interface = "wlan24";
-            band = "2g";
-            # Pinned to ch1 at 20 MHz (2401-2423 MHz), clear of the Zigbee
-            # network (tower's ConBee II, Zigbee ch20 = 2450 MHz). ACS had
-            # picked ch9 HT40 (2442-2482 MHz), which swamped the ConBee's
-            # clear-channel check: every transmission, permit-join included,
-            # failed with MAC_CHANNEL_ACCESS_FAILURE. ap emits no 2.4 GHz.
-            channel = 1;
-            wifi4Capabilities = lib.subtractLists [
-              "HT40+"
-              "SHORT-GI-40"
-            ] mt7915Wifi4;
-            # Only the 2.4 GHz BSS offers WPS: the enrollees that need it (the
-            # HP Laser MFP) are 802.11b/g/n, i.e. 2.4 GHz-only. ap is 5 GHz-only
-            # and therefore cannot serve them at all.
-            wps = true;
-          }
-          {
-            interface = "wlan5";
-            band = "5g";
-            # Different channel from ap (required: iOS rejects a same-SSID ESS
-            # whose APs share a channel, and DE's single UNII-1 80 MHz block
-            # can't hold two APs). ap keeps ch36 (HT40+ = 36+40); wlan5 takes
-            # ch44 (HT40+ = 44+48). Two non-overlapping UNII-1 40 MHz channels,
-            # both at the full 23 dBm, no DFS.
-            channel = 44;
-            wifi5Width = "20or40";
-            wifi4Capabilities = mt7915Wifi4;
-            wifi5Capabilities = mt7915Wifi5;
-          }
-        ])
+        (hostapd apuRadios)
         {
           # The radio exposes both NICs with the same PCI address.
           systemd.network.links = {
@@ -237,31 +306,6 @@
           };
         }
       ];
-      ap.modules = [
-        (hostapd [
-          {
-            interface = "wlp0s16u1i2";
-            band = "5g";
-            channel = 36;
-            # 40 MHz (HT40+ = 36+40) so apu's wlan5 can take the adjacent ch44
-            # (44+48) block: two non-overlapping UNII-1 channels rather than one
-            # shared 80 MHz block, which iOS rejects for a same-SSID ESS.
-            wifi5Width = "20or40";
-            wifi4Capabilities = [
-              "HT40+"
-              "SHORT-GI-20"
-              "SHORT-GI-40"
-              "RX-STBC1"
-              "MAX-AMSDU-7935"
-            ];
-            wifi5Capabilities = [
-              "MAX-MPDU-11454"
-              "SHORT-GI-80"
-              "RX-STBC-1"
-              "MAX-A-MPDU-LEN-EXP7"
-            ];
-          }
-        ])
-      ];
+      ap.modules = [ (hostapd apRadios) ];
     };
 }
