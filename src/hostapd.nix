@@ -124,7 +124,19 @@
                         operatingChannelWidth = r.wifi5Width or "80";
                         capabilities = r.wifi5Capabilities;
                       };
-                  settings = r.radioSettings or { };
+                  settings = {
+                    # Turn away (re)associations heard below -80 dBm. Without
+                    # this an iPhone leaving apu's range rejoined wlan5 at
+                    # -86..-91 dBm (6 Mbit/s) and wlan24 at -75 dBm every few
+                    # seconds instead of moving on to ap at -62 dBm. The reject
+                    # carries an MBO retry delay; keep it short so a client
+                    # with no better BSS in reach is not locked out for long.
+                    # hostapd warns the decision rests on a single frame's
+                    # RSSI, hence a threshold well below any usable link.
+                    rssi_reject_assoc_rssi = -80;
+                    rssi_reject_assoc_timeout = 10;
+                  }
+                  // r.radioSettings or { };
                   networks.${r.interface} = {
                     inherit ssid authentication;
                     dynamicConfigScripts = lib.mkIf fastRoaming {
