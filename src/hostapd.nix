@@ -2,9 +2,11 @@
 {
   systems =
     let
-      # apu and ap advertise the exact same WiFi -- identical SSID, password
-      # and roaming ESS -- each bridging its wireless NIC(s) into its local
-      # `lan` bridge, so the two extend apu's single network.
+      # apu and ap advertise the exact same 5 GHz WiFi -- identical SSID,
+      # password and roaming ESS -- each bridging its wireless NIC(s) into its
+      # local `lan` bridge, so the two extend apu's single network. apu's
+      # 2.4 GHz BSS joins the same `lan` (same password) under its own SSID,
+      # see wlan24 below.
       #
       # apu now runs a MediaTek MT7915 (PCI 14c3:7915, mt7915e). It is a DBDC
       # part that exposes 2.4 GHz and 5 GHz as two independent radios (wlan24
@@ -62,6 +64,7 @@
       #     neighborReport;             # 802.11k NR element, see below
       #     wifi5Capabilities ? null;   # null => no VHT (e.g. a 2.4 GHz radio)
       #     wifi5Width ? "80";          # VHT operating width ("20or40" | "80" | ...)
+      #     ssid ? ssid;                # override the shared SSID
       #     wps ? false;                # offer WPS-PBC on this radio's BSS
       #     radioSettings ? { }; }
       #
@@ -138,7 +141,8 @@
                   }
                   // r.radioSettings or { };
                   networks.${r.interface} = {
-                    inherit ssid authentication;
+                    inherit authentication;
+                    ssid = r.ssid or ssid;
                     dynamicConfigScripts = lib.mkIf fastRoaming {
                       # Wildcards: learn peer key holders over the bridge on demand.
                       "30-ftKey" = pkgs.writeShellScript "ft-key" ''
@@ -256,6 +260,11 @@
           # HP Laser MFP) are 802.11b/g/n, i.e. 2.4 GHz-only. ap is 5 GHz-only
           # and therefore cannot serve them at all.
           wps = true;
+          # Its own SSID, outside the 5 GHz ESS: sharing "apu", an iPhone at
+          # the edge of 5 GHz coverage flipped between wlan5 and wlan24 every
+          # few seconds -- a full SAE join each time -- and dropped streams.
+          # 2.4 GHz-only devices (printer, IoT) join apu-2g instead.
+          ssid = "apu-2g";
         }
         {
           interface = "wlan5";
