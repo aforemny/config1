@@ -127,6 +127,13 @@
         (
           let
             fqdn = "radicle-ci.nomath.org";
+            cacheDir = "/var/lib/argunix-cache"; # keep in sync with argunix.nix
+            nixSocket = "/run/nix-daemon-ci/socket";
+            cachePush = pkgs.writeShellScript "radicle-ci-cache-push" ''
+              set -efu
+              exec ${config.nix.package}/bin/nix --extra-experimental-features nix-command \
+                copy --to "file://${cacheDir}?secret-key=${config.age.secrets.argunix-cache-key.path}" $OUT_PATHS
+            '';
           in
           {
             services.radicle.ci = {
@@ -164,15 +171,48 @@
 
             systemd.services.radicle-ci-broker.serviceConfig.UMask = lib.mkForce "0022";
 
-            nix.settings.post-build-hook =
-              let
-                cacheDir = "/var/lib/argunix-cache"; # keep in sync with argunix.nix
-              in
-              pkgs.writeShellScript "radicle-ci-cache-push" ''
-                set -efu
-                exec ${pkgs.nix}/bin/nix --extra-experimental-features nix-command \
-                  copy --to "file://${cacheDir}?secret-key=${config.age.secrets.argunix-cache-key.path}" $OUT_PATHS
-              '';
+            # CI builds go through a Nix daemon of their own, whose post-build hook
+            # signs and pushes the outputs to the binary cache. In nix.conf the hook
+            # would run for every build on tower: home-manager's user environments
+            # were published, too, and pushing them timed out its units on boot.
+            # The hook runs as root in the daemon, so CI jobs never see the key.
+            services.radicle.ci.broker.settings.adapters.native.env.NIX_REMOTE = "unix://${nixSocket}";
+
+            systemd.sockets.nix-daemon-ci = {
+              description = "Nix Daemon Socket for Radicle CI";
+              wantedBy = [ "sockets.target" ];
+              listenStreams = [ nixSocket ];
+              socketConfig = {
+                SocketUser = "radicle";
+                SocketMode = "0600";
+              };
+            };
+
+            systemd.services.nix-daemon-ci = {
+              description = "Nix Daemon for Radicle CI";
+              requires = [ "nix-daemon-ci.socket" ];
+              path = [
+                config.nix.package
+                config.programs.ssh.package
+              ];
+              environment = {
+                inherit (config.systemd.services.nix-daemon.environment) CURL_CA_BUNDLE;
+                NIX_CONFIG = "post-build-hook = ${cachePush}";
+              };
+              unitConfig.RequiresMountsFor = [
+                "/nix/store"
+                "/nix/var"
+                cacheDir
+              ];
+              serviceConfig = {
+                ExecStart = "${config.nix.package}/bin/nix-daemon --daemon";
+                # As in nix-daemon.service: don't kill running builds.
+                KillMode = "process";
+                LimitNOFILE = 1048576;
+                TasksMax = 1048576;
+                Delegate = true;
+              };
+            };
 
             services.nginx = {
               enable = true;
