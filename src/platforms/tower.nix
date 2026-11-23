@@ -25,7 +25,7 @@
           # 30 s timeout and were SIGKILLed (502/504 on music.nomath.org).
           kernelParams = [ "zfs.zfs_arc_max=${toString (6 * 1024 * 1024 * 1024)}" ];
         };
-        disko.devices.disk.ssd.device = "/dev/disk/by-id/ata-INTENSO_SSD_1642606001001109";
+        disko.devices.disk.ssd.device = "/dev/disk/by-id/ata-WDC_WD20EFRX-68EUZN0_WD-WCC4M4KNYKHE";
         hardware.facter = {
           enable = true;
           reportPath = ./tower.json;

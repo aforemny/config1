@@ -16,7 +16,7 @@
         enable = true;
         devices = [
           {
-            device = "/dev/disk/by-id/ata-INTENSO_SSD_1642606001001109";
+            device = "/dev/disk/by-id/WDC_WD20EFRX-68EUZN0_WD-WCC4M4KNYKHE";
             options = "-a -o on -S on";
           }
         ];
