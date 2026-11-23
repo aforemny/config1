@@ -15,6 +15,9 @@
       config = {
         home-manager = {
           useGlobalPkgs = true;
+          # Install packages with the system closure. Otherwise activation builds a
+          # user environment on boot, within home-manager-<user>.service's timeout.
+          useUserPackages = true;
           users = {
             aforemny = {
               imports = lib.attrValues homeManagerModules;
