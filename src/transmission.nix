@@ -76,6 +76,12 @@
             # i.e. RPC and t.nomath.org time out for minutes on large torrents.
             incomplete-dir-enabled = false;
             umask = "002";
+            # Local peer discovery multicasts our infohashes; inside the netns
+            # it can only reach the tunnel, where it finds no peers.
+            lpd-enabled = false;
+            # Require peer encryption (2), so the VPN exit sees no plaintext
+            # BitTorrent traffic either; costs some unencrypted-only peers.
+            encryption = 2;
           };
         };
         systemd.services.transmission.unitConfig.RequiresMountsFor = [ "/srv/media" ];
