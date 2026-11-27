@@ -91,12 +91,16 @@
           group = "transmission";
           settings.auth = externalAuth;
         };
-        # Bazarr has no declarative settings; its own auth defaults to off, so
-        # oauth2-proxy (src/oauth2-proxy.nix) is its only gate.
+        # Bazarr's own auth defaults to off, so oauth2-proxy
+        # (src/oauth2-proxy.nix) is its only gate. Listen only on the
+        # namespace address nginx proxies to, not on the tunnel interface.
         services.bazarr = {
           enable = true;
           group = "transmission";
-          listenPort = arr.bazarr;
+          settings.general = {
+            ip = nsAddr;
+            port = arr.bazarr;
+          };
         };
 
         # Bazarr writes .srt files next to the videos, i.e. into the series /
@@ -115,6 +119,8 @@
         # Solves Cloudflare challenges for Prowlarr. Stateless (DynamicUser,
         # RuntimeDirectory only), so nothing to persist; no UI, so no vhost.
         services.flaresolverr.enable = true;
+        # Only Prowlarr (same namespace) uses it, so keep it off the tunnel.
+        systemd.services.flaresolverr.environment.HOST = "127.0.0.1";
 
         # YouTube downloader (yt-dlp) for channels and playlists.
         services.pinchflat = {
@@ -127,6 +133,9 @@
           port = arr.pinchflat;
           mediaDir = "/srv/media/library/youtube";
           secretsFile = config.age.secrets.pinchflat-env.path;
+          # No Erlang distribution: drops the epmd (4369) and node listeners
+          # on 0.0.0.0, which nothing uses (`migrate` is an `eval`).
+          extraConfig.RELEASE_DISTRIBUTION = "none";
         };
         # Read by systemd (as root) as EnvironmentFile=. SECRET_KEY_BASE needs at
         # least 64 bytes. No BASIC_AUTH_*: oauth2-proxy (src/oauth2-proxy.nix)
