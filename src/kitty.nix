@@ -44,6 +44,8 @@ in
             {
               settings = {
                 inherit (config.systemFont) font_family; # TODO font_size;
+                # Close windows/tabs without asking, even with a running program.
+                confirm_os_window_close = 0;
               };
             }
             {
