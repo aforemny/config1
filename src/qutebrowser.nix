@@ -3,6 +3,15 @@
     { pkgs, ... }:
     {
       unfree.packages = [ "widevine-cdm" ];
+      # tabs.tabs_are_windows makes every new tab a window, which niri would
+      # focus. The launcher's desktop entry refocuses on a plain launch (see
+      # homeManagerModules.qutebrowser).
+      programs.niri.config.settings.window-rules = [
+        {
+          matches = [ { app-id = "^org\\.qutebrowser\\.qutebrowser$"; } ];
+          open-focused = false;
+        }
+      ];
     }
   );
   homeManagerModules.qutebrowser =
@@ -78,6 +87,49 @@
                 tabs.tabs_are_windows = true;
               };
             };
+            # niri opens qutebrowser windows unfocused (nixosModules.qutebrowser
+            # above). Launching it from the app launcher without a URL should
+            # still focus the window it opens, so route the desktop entry
+            # through a wrapper that waits for that window and focuses it.
+            # URL opens (xdg-open, %u) stay in the background.
+            xdg.dataFile."applications/org.qutebrowser.qutebrowser.desktop".source =
+              let
+                niri = lib.getExe' osConfig.programs.niri.package "niri";
+                launch = pkgs.writeShellApplication {
+                  name = "qutebrowser-launch";
+                  runtimeInputs = [
+                    config.programs.qutebrowser.package
+                    pkgs.jq
+                  ];
+                  text = ''
+                    url=0 prev=""
+                    for a in "$@"; do
+                      if [ "$prev" = --untrusted-args ]; then url=1; fi
+                      prev=$a
+                    done
+                    if [ "$url" = 1 ]; then exec qutebrowser "$@"; fi
+                    windows() {
+                      ${niri} msg --json windows \
+                        | jq '[.[] | select(.app_id == "org.qutebrowser.qutebrowser") | .id]'
+                    }
+                    before=$(windows)
+                    qutebrowser "$@" &
+                    for _ in $(seq 100); do
+                      id=$(windows | jq --argjson b "$before" 'first((. - $b)[]) // empty')
+                      if [ -n "$id" ]; then
+                        ${niri} msg action focus-window --id "$id"
+                        break
+                      fi
+                      sleep 0.1
+                    done
+                    wait
+                  '';
+                };
+              in
+              pkgs.runCommand "org.qutebrowser.qutebrowser.desktop" { } ''
+                sed -E 's|^Exec=qutebrowser( \|$)|Exec=${lib.getExe launch}\1|' \
+                  ${config.programs.qutebrowser.package}/share/applications/org.qutebrowser.qutebrowser.desktop >$out
+              '';
             state.directories = [
               ".local/share/qutebrowser"
               # bookmarks/quickmarks live here; persist the directory (not
