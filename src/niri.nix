@@ -80,6 +80,8 @@ in
               programs.niri.config = lib.mkMerge [
                 {
                   settings = {
+                    # Move the pointer to the newly focused window.
+                    input.warp-mouse-to-focus = null;
                     outputs.eDP-1 = {
                       scale = 2;
                     };
