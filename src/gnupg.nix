@@ -21,17 +21,20 @@
               coreutils
               gawk
               gnupg
+              systemd
             ];
             inheritPath = false;
             text = ''
               set -x
 
-              secret_file="$HOME"/.secrets/'Password Storage Key.asc'
-              secret_name=$(basename "''${secret_file}" .asc)
+              # Sealed user secret (src/user-secrets.nix).
+              secret_file="$HOME"/.secrets/'Password Storage Key.asc.cred'
+              secret_name=$(basename "''${secret_file}" .asc.cred)
+              secret() { systemd-creds --user decrypt "$secret_file" -; }
               if ! gpg --list-secret-keys "$secret_name"; then
-                gpg --batch --import "$secret_file"
+                secret | gpg --batch --import
                 fpr=$(
-                  gpg --import-options show-only --import --with-colons "$secret_file" |
+                  secret | gpg --import-options show-only --import --with-colons |
                   awk -F: '/^fpr:/ { print $10; exit }'
                 )
                 echo "''${fpr}:6:" | gpg --import-ownertrust

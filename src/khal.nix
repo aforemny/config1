@@ -17,12 +17,10 @@
   systems.x1e.modules = [
     {
       # The family's `shared` Radicale account (src/systems/apostolforemny.nix), whose
-      # password is only encrypted for apostolforemny otherwise. Also used by plann
-      # (src/plann.nix).
-      age.secrets.radicale-shared-password = {
-        rekeyFile = ../secrets/per-host/apostolforemny/per-user/shared/password.age;
-        owner = "aforemny";
-      };
+      # password is only encrypted for apostolforemny otherwise. Sealed for
+      # aforemny (src/user-secrets.nix); also used by plann (src/plann.nix).
+      age.secrets.radicale-shared-password.rekeyFile = ../secrets/per-host/apostolforemny/per-user/shared/password.age;
+      user-secrets.sealed.aforemny."apostolforemny.de/shared/password" = "radicale-shared-password";
 
       home-manager.users.aforemny.imports = [
         (
@@ -36,7 +34,11 @@
           let
             mountDir = "${config.home.homeDirectory}/.calendar-dav";
 
-            secret = path: "${config.home.homeDirectory}/.secrets/${path}";
+            # Shell commands printing the password. User secrets are sealed
+            # (src/user-secrets.nix).
+            secret =
+              path:
+              "systemd-creds --user decrypt ${lib.escapeShellArg "${config.home.homeDirectory}/.secrets/${path}.cred"} -";
 
             # <unit suffix> = server; `dir` is the folder under mountDir.
             servers = {
@@ -45,7 +47,7 @@
                 dir = "nomath.org";
                 url = "https://cal.nomath.org/dav/cal/aforemny%40nomath.org/";
                 user = "aforemny@nomath.org";
-                passwordFile = secret "aforemny@nomath.org";
+                passwordCommand = secret "aforemny@nomath.org";
                 calendars.nomath = "default";
               };
               # apostolforemny's Radicale (src/radicale.nix), via its direct vhost:
@@ -54,7 +56,7 @@
                 dir = "apostolforemny.de";
                 url = "https://calendar1.apostolforemny.de/aforemny/";
                 user = "aforemny";
-                passwordFile = secret "apostolforemny.de/aforemny/password";
+                passwordCommand = secret "apostolforemny.de/aforemny/password";
                 calendars = {
                   "time-2026" = "6FC18416-4B9B-4F13-9FF2-422A149D9DFD";
                   "Groceries" = "24B68254-7F18-4BA4-8128-32EAB8D62397";
@@ -72,7 +74,7 @@
                 dir = "shared.apostolforemny.de";
                 url = "https://calendar1.apostolforemny.de/shared/";
                 user = "shared";
-                passwordFile = osConfig.age.secrets.radicale-shared-password.path;
+                passwordCommand = secret "apostolforemny.de/shared/password";
                 calendars."shared reminders" = "8993B452-4CAE-4EE7-9F9F-170CE308781D";
               };
             };
@@ -83,7 +85,10 @@
               name: server:
               pkgs.writeShellApplication {
                 name = unitName name;
-                runtimeInputs = [ pkgs.rclone ];
+                runtimeInputs = [
+                  osConfig.systemd.package
+                  pkgs.rclone
+                ];
                 text = ''
                   # The remote is defined in the environment only; no rclone.conf.
                   export RCLONE_CONFIG=/dev/null
@@ -91,7 +96,7 @@
                   export RCLONE_CONFIG_DAV_URL=${lib.escapeShellArg server.url}
                   export RCLONE_CONFIG_DAV_VENDOR=other
                   export RCLONE_CONFIG_DAV_USER=${lib.escapeShellArg server.user}
-                  RCLONE_CONFIG_DAV_PASS="$(rclone obscure - < ${lib.escapeShellArg server.passwordFile})"
+                  RCLONE_CONFIG_DAV_PASS="$(${server.passwordCommand} | rclone obscure -)"
                   export RCLONE_CONFIG_DAV_PASS
 
                   # Short directory cache: changes made elsewhere show up within

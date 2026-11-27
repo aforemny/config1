@@ -147,8 +147,8 @@
         ...
       }:
       {
-        # Outgoing mail via msmtp. The SMTP password is aforemny's user secret
-        # (src/user-secrets.nix), so only aforemny and root can send. No setuid
+        # Outgoing mail via msmtp. The SMTP password is aforemny's sealed user
+        # secret (src/user-secrets.nix), so only aforemny and root can send. No setuid
         # wrapper to widen that: NixOS refuses setuid scripts, and msmtp
         # running as root would take -C and other options from any caller.
         programs.msmtp = {
@@ -161,7 +161,7 @@
             port = "587";
             user = "a@foremny.me";
             from = "a@foremny.me";
-            passwordeval = "cat ${lib.escapeShellArg config.age.secrets."user-aforemny-a-at-foremny.me".path}";
+            passwordeval = "${config.systemd.package}/bin/systemd-creds decrypt --uid=aforemny /run/user-secrets/aforemny/a@foremny.me.cred -";
           };
         };
       }

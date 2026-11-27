@@ -71,7 +71,7 @@
                 ];
               };
               userName = "aforemny@posteo.de";
-              passwordCommand = "cat ~/.secrets/aforemny@posteo.de";
+              passwordCommand = "systemd-creds --user decrypt ~/.secrets/aforemny@posteo.de.cred -";
               imap = {
                 host = "posteo.de";
                 port = 993;
@@ -107,7 +107,7 @@
                 ];
               };
               userName = "a@foremny.me";
-              passwordCommand = "cat ~/.secrets/a@foremny.me";
+              passwordCommand = "systemd-creds --user decrypt ~/.secrets/a@foremny.me.cred -";
               imap = {
                 host = "mx.foremny.me";
                 port = 993;
@@ -140,7 +140,7 @@
                 ];
               };
               userName = "aforemny@nomath.org";
-              passwordCommand = "cat ~/.secrets/aforemny@nomath.org";
+              passwordCommand = "systemd-creds --user decrypt ~/.secrets/aforemny@nomath.org.cred -";
               imap = {
                 host = "mail1.nomath.org";
                 port = 993;
@@ -180,7 +180,7 @@
               # Google dropped password-only IMAP/SMTP for Workspace accounts in
               # 2025, so this must hold a 16-character app password (needs 2FA on
               # the account), not the login password.
-              passwordCommand = "cat ~/.secrets/alexander.foremny@applicative.systems";
+              passwordCommand = "systemd-creds --user decrypt ~/.secrets/alexander.foremny@applicative.systems.cred -";
               imap = {
                 host = "imap.gmail.com";
                 port = 993;

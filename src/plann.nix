@@ -103,11 +103,15 @@
             ...
           }:
           let
-            cat = path: [
-              "cat" # run without a shell, so no `~`
-              path
+            # Sealed user secret (src/user-secrets.nix). Run without a shell,
+            # so no `~`.
+            secret = path: [
+              "${osConfig.systemd.package}/bin/systemd-creds"
+              "--user"
+              "decrypt"
+              "${config.home.homeDirectory}/.secrets/${path}.cred"
+              "-"
             ];
-            secret = path: cat "${config.home.homeDirectory}/.secrets/${path}";
           in
           {
             home.packages = [ pkgs.plann ];
@@ -126,7 +130,7 @@
               shared = {
                 url = "https://calendar1.apostolforemny.de/shared/";
                 username = "shared";
-                password_command = cat osConfig.age.secrets.radicale-shared-password.path;
+                password_command = secret "apostolforemny.de/shared/password";
               };
               default.contains = [
                 "nomath"
